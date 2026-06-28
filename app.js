@@ -887,38 +887,55 @@ function initSeeAllButtons() {
   if (explorBtn) explorBtn.addEventListener('click', () => showToast('🏆 Explorando GOATCINE Originais...'));
 }
 
-// ---- USER SESSION ----
+// ---- USER SESSION (JWT Real) ----
 function initUserSession() {
   try {
-    const user = JSON.parse(localStorage.getItem('goatcine_user'));
+    const token = localStorage.getItem('goatcine_token');
+    const user  = JSON.parse(localStorage.getItem('goatcine_user') || 'null');
     if (!user) return;
 
-    // Update avatar letter
+    // Avatar: use first letter of name (or Discord avatar placeholder)
     const avatarLetter = $('nav-avatar-letter');
     if (avatarLetter) {
-      avatarLetter.textContent = (user.avatar || user.name?.[0] || 'G').toUpperCase();
+      const letter = (user.name?.[0] || 'G').toUpperCase();
+      avatarLetter.textContent = letter;
     }
 
-    // Logout on avatar click
+    // Tooltip
     const avatar = $('nav-avatar');
     if (avatar) {
-      // Dropdown-style tooltip hint
-      avatar.style.cursor = 'pointer';
-      avatar.addEventListener('click', () => {
-        const confirmed = confirm(`👋 Sair da conta?\n\nUsuário: ${user.name}\nEmail: ${user.email}`);
-        if (confirmed) {
-          localStorage.removeItem('goatcine_user');
-          showToast('👋 Até logo! Redirecionando...');
-          setTimeout(() => {
-            window.location.href = 'login.html';
-          }, 1200);
-        }
+      avatar.title = `${user.name}\n${user.email || 'Discord'}\n\nClique para sair`;
+
+      avatar.addEventListener('click', async () => {
+        const confirmed = confirm(`👋 Sair da conta?\n\n👤 ${user.name}\n📧 ${user.email || 'Login via Discord'}`);
+        if (!confirmed) return;
+
+        showToast('👋 Saindo...');
+
+        // Call logout API to invalidate token on server
+        try {
+          if (token) {
+            await fetch('/api/auth/logout', {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${token}` },
+            });
+          }
+        } catch { /* server may be offline */ }
+
+        // Clear local storage
+        localStorage.removeItem('goatcine_token');
+        localStorage.removeItem('goatcine_user');
+
+        setTimeout(() => {
+          window.location.href = '/login.html';
+        }, 900);
       });
     }
+
   } catch (e) {
-    // If session is corrupt, redirect to login
+    localStorage.removeItem('goatcine_token');
     localStorage.removeItem('goatcine_user');
-    window.location.href = 'login.html';
+    window.location.href = '/login.html';
   }
 }
 

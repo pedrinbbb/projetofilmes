@@ -7,13 +7,25 @@
   <meta name="description" content="GOATCINE é a plataforma premium de streaming com os melhores filmes e séries. Design dourado, experiência cinematográfica única." />
   <meta name="theme-color" content="#0A0A0A" />
 
-  <!-- Auth Guard -->
+  <!-- Auth Guard: verifica token JWT com o servidor -->
   <script>
     (function() {
-      try {
-        const user = JSON.parse(localStorage.getItem('goatcine_user'));
-        if (!user) { window.location.replace('login.html'); }
-      } catch(e) { window.location.replace('login.html'); }
+      const token = localStorage.getItem('goatcine_token');
+      if (!token) { window.location.replace('/login.html'); return; }
+      // Verify token with server asynchronously
+      fetch('/api/auth/verify', {
+        headers: { Authorization: 'Bearer ' + token }
+      }).then(function(r) {
+        if (!r.ok) {
+          localStorage.removeItem('goatcine_token');
+          localStorage.removeItem('goatcine_user');
+          window.location.replace('/login.html');
+        }
+      }).catch(function() {
+        // If server is down, allow access with cached user
+        const u = localStorage.getItem('goatcine_user');
+        if (!u) window.location.replace('/login.html');
+      });
     })();
   <\/script>
 

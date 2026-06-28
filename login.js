@@ -1,30 +1,36 @@
 /* =============================================
-   GOATCINE — Login Page Logic
+   GOATCINE — Login Page Logic (API Real)
    ============================================= */
 
-// ---- AUTH STATE ----
-const AUTH_KEY = 'goatcine_user';
+const API = '';  // mesmo servidor (porta 3000)
 
-function getUser() {
+// ---- AUTH CHECK ----
+// Se já tem token válido, ir direto para o site
+(async function checkExisting() {
+  const token = localStorage.getItem('goatcine_token');
+  if (!token) return;
   try {
-    return JSON.parse(localStorage.getItem(AUTH_KEY));
+    const res = await fetch(`${API}/api/auth/verify`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (res.ok) {
+      window.location.replace('/index.html');
+    } else {
+      // Token inválido — limpar
+      localStorage.removeItem('goatcine_token');
+      localStorage.removeItem('goatcine_user');
+    }
   } catch {
-    return null;
+    // Servidor offline — limpar token
+    localStorage.removeItem('goatcine_token');
+    localStorage.removeItem('goatcine_user');
   }
-}
-
-function setUser(user) {
-  localStorage.setItem(AUTH_KEY, JSON.stringify(user));
-}
-
-// If already logged in, redirect to main site
-if (getUser()) {
-  window.location.href = 'index.html';
-}
+})();
 
 // ---- PARTICLES ----
 function createParticles() {
   const container = document.getElementById('bg-particles');
+  if (!container) return;
   for (let i = 0; i < 18; i++) {
     const dot = document.createElement('div');
     dot.className = 'p-dot';
@@ -41,9 +47,30 @@ function createParticles() {
   }
 }
 
+// ---- CHECK AUTH ERROR FROM URL ----
+(function checkUrlError() {
+  const params = new URLSearchParams(window.location.search);
+  const err = params.get('auth_error');
+  if (!err) return;
+
+  const msgs = {
+    discord_not_configured: 'Discord OAuth não configurado no servidor. Configure o arquivo .env.',
+    discord_denied:         'Autenticação com Discord cancelada.',
+    discord_token_failed:   'Falha ao autenticar com Discord. Tente novamente.',
+    discord_user_failed:    'Não foi possível obter seus dados do Discord.',
+    server_error:           'Erro interno. Tente novamente mais tarde.',
+  };
+
+  // Show global error toast
+  showApiError(msgs[err] || 'Erro ao autenticar com Discord');
+
+  // Clean URL
+  window.history.replaceState({}, '', '/login.html');
+})();
+
 // ---- TAB SWITCHING ----
-const tabSlider = document.getElementById('tab-slider');
-const formLogin = document.getElementById('form-login');
+const tabSlider  = document.getElementById('tab-slider');
+const formLogin  = document.getElementById('form-login');
 const formRegister = document.getElementById('form-register');
 
 function switchTab(tab) {
@@ -51,22 +78,18 @@ function switchTab(tab) {
 
   document.getElementById('tab-login').classList.toggle('active', isLogin);
   document.getElementById('tab-register').classList.toggle('active', !isLogin);
-
   document.getElementById('tab-login').setAttribute('aria-selected', String(isLogin));
   document.getElementById('tab-register').setAttribute('aria-selected', String(!isLogin));
 
   tabSlider.classList.toggle('right', !isLogin);
 
-  // Animate form switch
   const outForm = isLogin ? formRegister : formLogin;
-  const inForm = isLogin ? formLogin : formRegister;
+  const inForm  = isLogin ? formLogin : formRegister;
 
   outForm.classList.add('hidden');
   inForm.classList.remove('hidden');
-
-  // Re-trigger animation
   inForm.style.animation = 'none';
-  inForm.offsetHeight; // reflow
+  inForm.offsetHeight;
   inForm.style.animation = '';
 }
 
@@ -77,15 +100,13 @@ document.getElementById('go-login').addEventListener('click', () => switchTab('l
 
 // ---- TOGGLE PASSWORD VISIBILITY ----
 function initPasswordToggle(toggleId, inputId) {
-  const btn = document.getElementById(toggleId);
+  const btn   = document.getElementById(toggleId);
   const input = document.getElementById(inputId);
   if (!btn || !input) return;
 
   btn.addEventListener('click', () => {
     const isPass = input.type === 'password';
     input.type = isPass ? 'text' : 'password';
-
-    // Update icon
     btn.querySelector('.eye-icon').innerHTML = isPass
       ? `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>`
       : `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
@@ -98,24 +119,24 @@ initPasswordToggle('register-toggle-confirm', 'register-confirm');
 
 // ---- PASSWORD STRENGTH ----
 const registerPassword = document.getElementById('register-password');
-const strengthBar = document.getElementById('strength-bar');
-const strengthLabel = document.getElementById('strength-label');
+const strengthBar      = document.getElementById('strength-bar');
+const strengthLabel    = document.getElementById('strength-label');
 
 const strengthLevels = [
-  { max: 1, label: 'Muito fraca', color: '#FF4444', width: '15%' },
-  { max: 2, label: 'Fraca', color: '#FF8800', width: '35%' },
-  { max: 3, label: 'Razoável', color: '#FFD700', width: '60%' },
-  { max: 4, label: 'Forte', color: '#88DD00', width: '80%' },
-  { max: 5, label: 'Muito forte 💪', color: '#4ADE80', width: '100%' },
+  { label: 'Muito fraca',   color: '#FF4444', width: '15%' },
+  { label: 'Fraca',         color: '#FF8800', width: '35%' },
+  { label: 'Razoável',      color: '#FFD700', width: '60%' },
+  { label: 'Forte',         color: '#88DD00', width: '80%' },
+  { label: 'Muito forte 💪', color: '#4ADE80', width: '100%' },
 ];
 
 function checkStrength(pw) {
   let score = 0;
-  if (pw.length >= 8) score++;
-  if (pw.length >= 12) score++;
-  if (/[A-Z]/.test(pw)) score++;
-  if (/[0-9]/.test(pw)) score++;
-  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  if (pw.length >= 8)            score++;
+  if (pw.length >= 12)           score++;
+  if (/[A-Z]/.test(pw))          score++;
+  if (/[0-9]/.test(pw))          score++;
+  if (/[^A-Za-z0-9]/.test(pw))   score++;
   return Math.max(0, Math.min(score, 5));
 }
 
@@ -125,7 +146,6 @@ if (registerPassword) {
     if (!pw) {
       strengthBar.style.width = '0%';
       strengthLabel.textContent = '';
-      strengthLabel.style.color = '';
       return;
     }
     const score = checkStrength(pw);
@@ -139,98 +159,88 @@ if (registerPassword) {
 
 // ---- VALIDATION HELPERS ----
 function showError(groupId, errorId, message) {
-  const group = document.getElementById(groupId);
-  const error = document.getElementById(errorId);
-  if (group) group.classList.add('error');
-  if (group) group.classList.remove('success');
-  if (error) error.textContent = '⚠ ' + message;
+  document.getElementById(groupId)?.classList.add('error');
+  document.getElementById(groupId)?.classList.remove('success');
+  const el = document.getElementById(errorId);
+  if (el) el.textContent = '⚠ ' + message;
 }
 
 function clearError(groupId, errorId) {
-  const group = document.getElementById(groupId);
-  const error = document.getElementById(errorId);
-  if (group) group.classList.remove('error');
-  if (error) error.textContent = '';
+  document.getElementById(groupId)?.classList.remove('error');
+  const el = document.getElementById(errorId);
+  if (el) el.textContent = '';
 }
 
 function markSuccess(groupId) {
-  const group = document.getElementById(groupId);
-  if (group) {
-    group.classList.remove('error');
-    group.classList.add('success');
-  }
+  const g = document.getElementById(groupId);
+  if (g) { g.classList.remove('error'); g.classList.add('success'); }
 }
 
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-// Real-time validation
-document.getElementById('login-email').addEventListener('input', function() {
-  if (this.value && !isValidEmail(this.value)) {
-    showError('login-email-group', 'login-email-error', 'Email inválido');
-  } else {
-    clearError('login-email-group', 'login-email-error');
-    if (this.value) markSuccess('login-email-group');
+// Global API error toast (no group)
+function showApiError(msg) {
+  // Inject a toast at top of auth container if not exists
+  let toast = document.getElementById('api-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'api-toast';
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'assertive');
+    toast.style.cssText = `
+      background: rgba(255,107,107,0.12);
+      border: 1px solid rgba(255,107,107,0.35);
+      color: #FF8080;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 16px;
+      animation: fade-slide-up 0.3s ease both;
+      line-height: 1.5;
+    `;
+    const container = document.querySelector('.auth-container');
+    container?.insertBefore(toast, container.firstChild);
   }
-});
-
-document.getElementById('register-email').addEventListener('input', function() {
-  if (this.value && !isValidEmail(this.value)) {
-    showError('register-email-group', 'register-email-error', 'Email inválido');
-  } else {
-    clearError('register-email-group', 'register-email-error');
-    if (this.value) markSuccess('register-email-group');
-  }
-});
-
-document.getElementById('register-confirm').addEventListener('input', function() {
-  const pw = document.getElementById('register-password').value;
-  if (this.value && this.value !== pw) {
-    showError('register-confirm-group', 'register-confirm-error', 'As senhas não coincidem');
-  } else {
-    clearError('register-confirm-group', 'register-confirm-error');
-    if (this.value) markSuccess('register-confirm-group');
-  }
-});
-
-// ---- DISCORD LOGIN ----
-function handleDiscordAuth(mode) {
-  const btn = document.getElementById(mode === 'login' ? 'login-discord-btn' : 'register-discord-btn');
-  btn.disabled = true;
-  btn.style.opacity = '0.7';
-  btn.innerHTML = `
-    <svg class="discord-icon" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057.1 18.08.114 18.1.132 18.11a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/>
-    </svg>
-    Conectando ao Discord...
-  `;
-
-  // Simulate Discord OAuth (in production, redirect to Discord OAuth URL)
-  setTimeout(() => {
-    const discordUser = {
-      name: 'Usuário Discord',
-      email: 'discord@goatcine.com',
-      avatar: '🎮',
-      method: 'discord',
-      joinedAt: new Date().toISOString()
-    };
-    loginSuccess(discordUser);
-  }, 1800);
+  toast.textContent = '⚠️ ' + msg;
+  setTimeout(() => toast?.remove(), 6000);
 }
 
-document.getElementById('login-discord-btn').addEventListener('click', () => handleDiscordAuth('login'));
-document.getElementById('register-discord-btn').addEventListener('click', () => handleDiscordAuth('register'));
+// ---- REAL-TIME VALIDATION ----
+document.getElementById('login-email')?.addEventListener('input', function() {
+  if (this.value && !isValidEmail(this.value)) showError('login-email-group', 'login-email-error', 'Email inválido');
+  else { clearError('login-email-group', 'login-email-error'); if (this.value) markSuccess('login-email-group'); }
+});
+
+document.getElementById('register-email')?.addEventListener('input', function() {
+  if (this.value && !isValidEmail(this.value)) showError('register-email-group', 'register-email-error', 'Email inválido');
+  else { clearError('register-email-group', 'register-email-error'); if (this.value) markSuccess('register-email-group'); }
+});
+
+document.getElementById('register-confirm')?.addEventListener('input', function() {
+  const pw = document.getElementById('register-password')?.value;
+  if (this.value && this.value !== pw) showError('register-confirm-group', 'register-confirm-error', 'As senhas não coincidem');
+  else { clearError('register-confirm-group', 'register-confirm-error'); if (this.value) markSuccess('register-confirm-group'); }
+});
+
+// ---- DISCORD AUTH (redireciona para o servidor) ----
+function handleDiscordAuth() {
+  window.location.href = '/auth/discord';
+}
+
+document.getElementById('login-discord-btn')?.addEventListener('click', handleDiscordAuth);
+document.getElementById('register-discord-btn')?.addEventListener('click', handleDiscordAuth);
 
 // ---- FORGOT PASSWORD ----
-document.getElementById('forgot-btn').addEventListener('click', () => {
-  const email = document.getElementById('login-email').value;
+document.getElementById('forgot-btn')?.addEventListener('click', () => {
+  const email = document.getElementById('login-email')?.value;
   if (!email || !isValidEmail(email)) {
     showError('login-email-group', 'login-email-error', 'Digite seu email primeiro');
-    document.getElementById('login-email').focus();
+    document.getElementById('login-email')?.focus();
     return;
   }
-  // Simulate email sent
   const btn = document.getElementById('forgot-btn');
   btn.textContent = '✓ Email enviado!';
   btn.style.color = '#4ADE80';
@@ -243,12 +253,12 @@ document.getElementById('forgot-btn').addEventListener('click', () => {
 });
 
 // ---- LOGIN FORM SUBMIT ----
-document.getElementById('login-email-form').addEventListener('submit', function(e) {
+document.getElementById('login-email-form')?.addEventListener('submit', async function(e) {
   e.preventDefault();
-  let valid = true;
 
-  const email = document.getElementById('login-email').value.trim();
+  const email    = document.getElementById('login-email').value.trim();
   const password = document.getElementById('login-password').value;
+  let valid = true;
 
   clearError('login-email-group', 'login-email-error');
   clearError('login-password-group', 'login-password-error');
@@ -266,59 +276,70 @@ document.getElementById('login-email-form').addEventListener('submit', function(
   if (!password) {
     showError('login-password-group', 'login-password-error', 'A senha é obrigatória');
     valid = false;
-  } else if (password.length < 6) {
-    showError('login-password-group', 'login-password-error', 'Senha muito curta');
-    valid = false;
   } else {
     markSuccess('login-password-group');
   }
 
   if (!valid) return;
 
-  // Simulate login
-  const submitBtn = document.getElementById('login-submit-btn');
-  submitBtn.classList.add('loading');
-  submitBtn.disabled = true;
+  // Loading state
+  const btn = document.getElementById('login-submit-btn');
+  btn.classList.add('loading');
+  btn.disabled = true;
 
-  setTimeout(() => {
-    const user = {
-      name: email.split('@')[0],
-      email: email,
-      avatar: email[0].toUpperCase(),
-      method: 'email',
-      joinedAt: new Date().toISOString()
-    };
-    loginSuccess(user);
-  }, 1600);
+  try {
+    const res  = await fetch(`${API}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      // Show specific error
+      if (res.status === 401) {
+        showError('login-email-group', 'login-email-error', ' ');
+        showError('login-password-group', 'login-password-error', data.error || 'Email ou senha incorretos');
+      } else {
+        showApiError(data.error || 'Erro ao fazer login');
+      }
+      btn.classList.remove('loading');
+      btn.disabled = false;
+      return;
+    }
+
+    // Success!
+    saveAuthAndRedirect(data.token, data.user);
+
+  } catch (err) {
+    showApiError('Servidor offline. Verifique se o servidor está rodando (npm start).');
+    btn.classList.remove('loading');
+    btn.disabled = false;
+  }
 });
 
 // ---- REGISTER FORM SUBMIT ----
-document.getElementById('register-email-form').addEventListener('submit', function(e) {
+document.getElementById('register-email-form')?.addEventListener('submit', async function(e) {
   e.preventDefault();
+
+  const name     = document.getElementById('register-name').value.trim();
+  const email    = document.getElementById('register-email').value.trim();
+  const password = document.getElementById('register-password').value;
+  const confirm  = document.getElementById('register-confirm').value;
+  const terms    = document.getElementById('terms-check').checked;
   let valid = true;
 
-  const name = document.getElementById('register-name').value.trim();
-  const email = document.getElementById('register-email').value.trim();
-  const password = document.getElementById('register-password').value;
-  const confirm = document.getElementById('register-confirm').value;
-  const terms = document.getElementById('terms-check').checked;
-
-  // Clear all errors
-  ['register-name-group', 'register-email-group', 'register-password-group', 'register-confirm-group'].forEach(id => {
-    const group = document.getElementById(id);
-    if (group) { group.classList.remove('error', 'success'); }
-  });
-  ['register-name-error', 'register-email-error', 'register-password-error', 'register-confirm-error', 'terms-error'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = '';
-  });
+  // Clear all
+  ['register-name-group', 'register-email-group', 'register-password-group', 'register-confirm-group']
+    .forEach(id => { document.getElementById(id)?.classList.remove('error', 'success'); });
+  ['register-name-error', 'register-email-error', 'register-password-error', 'register-confirm-error', 'terms-error']
+    .forEach(id => { const el = document.getElementById(id); if (el) el.textContent = ''; });
 
   if (!name || name.length < 2) {
-    showError('register-name-group', 'register-name-error', 'Digite seu nome completo');
+    showError('register-name-group', 'register-name-error', 'Nome deve ter ao menos 2 caracteres');
     valid = false;
-  } else {
-    markSuccess('register-name-group');
-  }
+  } else { markSuccess('register-name-group'); }
 
   if (!email) {
     showError('register-email-group', 'register-email-error', 'O email é obrigatório');
@@ -326,19 +347,15 @@ document.getElementById('register-email-form').addEventListener('submit', functi
   } else if (!isValidEmail(email)) {
     showError('register-email-group', 'register-email-error', 'Digite um email válido');
     valid = false;
-  } else {
-    markSuccess('register-email-group');
-  }
+  } else { markSuccess('register-email-group'); }
 
   if (!password) {
     showError('register-password-group', 'register-password-error', 'Escolha uma senha');
     valid = false;
   } else if (password.length < 8) {
-    showError('register-password-group', 'register-password-error', 'A senha deve ter no mínimo 8 caracteres');
+    showError('register-password-group', 'register-password-error', 'Mínimo 8 caracteres');
     valid = false;
-  } else {
-    markSuccess('register-password-group');
-  }
+  } else { markSuccess('register-password-group'); }
 
   if (!confirm) {
     showError('register-confirm-group', 'register-confirm-error', 'Confirme sua senha');
@@ -346,71 +363,90 @@ document.getElementById('register-email-form').addEventListener('submit', functi
   } else if (confirm !== password) {
     showError('register-confirm-group', 'register-confirm-error', 'As senhas não coincidem');
     valid = false;
-  } else {
-    markSuccess('register-confirm-group');
-  }
+  } else { markSuccess('register-confirm-group'); }
 
   if (!terms) {
-    const termsError = document.getElementById('terms-error');
-    if (termsError) {
-      termsError.textContent = '⚠ Você precisa aceitar os termos';
-      termsError.style.opacity = '1';
-    }
+    const el = document.getElementById('terms-error');
+    if (el) { el.textContent = '⚠ Aceite os termos para continuar'; el.style.opacity = '1'; }
     valid = false;
   }
 
   if (!valid) return;
 
-  // Simulate registration
-  const submitBtn = document.getElementById('register-submit-btn');
-  submitBtn.classList.add('loading');
-  submitBtn.disabled = true;
+  const btn = document.getElementById('register-submit-btn');
+  btn.classList.add('loading');
+  btn.disabled = true;
 
-  setTimeout(() => {
-    const user = {
-      name: name,
-      email: email,
-      avatar: name[0].toUpperCase(),
-      method: 'email',
-      joinedAt: new Date().toISOString()
-    };
-    loginSuccess(user, true);
-  }, 1800);
+  try {
+    const res  = await fetch(`${API}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      if (res.status === 409) {
+        showError('register-email-group', 'register-email-error', data.error || 'Email já cadastrado');
+      } else {
+        showApiError(data.error || 'Erro ao criar conta');
+      }
+      btn.classList.remove('loading');
+      btn.disabled = false;
+      return;
+    }
+
+    // Success!
+    saveAuthAndRedirect(data.token, data.user, true);
+
+  } catch (err) {
+    showApiError('Servidor offline. Verifique se o servidor está rodando (npm start).');
+    btn.classList.remove('loading');
+    btn.disabled = false;
+  }
 });
 
-// ---- SUCCESS FLOW ----
-function loginSuccess(user, isNew = false) {
-  setUser(user);
+// ---- SAVE AUTH & REDIRECT ----
+function saveAuthAndRedirect(token, user, isNew = false) {
+  localStorage.setItem('goatcine_token', token);
+  localStorage.setItem('goatcine_user', JSON.stringify({
+    id:     user.id,
+    name:   user.name,
+    email:  user.email,
+    avatar: user.avatar,
+    method: user.method,
+  }));
 
-  const overlay = document.getElementById('success-overlay');
-  const title = document.getElementById('success-title');
-  const sub = document.getElementById('success-sub');
-  const bar = document.getElementById('success-bar');
+  // Show success overlay
+  const overlay   = document.getElementById('success-overlay');
+  const titleEl   = document.getElementById('success-title');
+  const subEl     = document.getElementById('success-sub');
+  const barEl     = document.getElementById('success-bar');
 
-  title.textContent = isNew
-    ? `Bem-vindo(a) à GOATCINE, ${user.name.split(' ')[0]}! 🎉`
-    : `Bem-vindo de volta, ${user.name.split(' ')[0]}!`;
+  if (overlay) {
+    titleEl.textContent = isNew
+      ? `Conta criada! Bem-vindo(a), ${user.name.split(' ')[0]}! 🎉`
+      : `Bem-vindo de volta, ${user.name.split(' ')[0]}!`;
+    subEl.textContent = 'Carregando GOATCINE...';
+    overlay.setAttribute('aria-hidden', 'false');
+    overlay.classList.add('show');
 
-  sub.textContent = 'Preparando sua experiência cinematográfica...';
-
-  overlay.setAttribute('aria-hidden', 'false');
-  overlay.classList.add('show');
-
-  // Loading bar animation
-  let progress = 0;
-  const barInterval = setInterval(() => {
-    progress += Math.random() * 20 + 8;
-    if (progress >= 100) {
-      progress = 100;
-      bar.style.width = '100%';
-      clearInterval(barInterval);
-      setTimeout(() => {
-        window.location.href = 'index.html';
-      }, 300);
-    } else {
-      bar.style.width = progress + '%';
-    }
-  }, 90);
+    let p = 0;
+    const iv = setInterval(() => {
+      p += Math.random() * 22 + 10;
+      if (p >= 100) {
+        p = 100;
+        barEl.style.width = '100%';
+        clearInterval(iv);
+        setTimeout(() => window.location.href = '/index.html', 320);
+      } else {
+        barEl.style.width = p + '%';
+      }
+    }, 80);
+  } else {
+    window.location.href = '/index.html';
+  }
 }
 
 // ---- INIT ----

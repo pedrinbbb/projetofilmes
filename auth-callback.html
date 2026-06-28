@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GOATCINE — Autenticando...</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700;900&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #080808;
+      color: #F5F5F5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-font-smoothing: antialiased;
+    }
+    .container {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+    .logo {
+      font-size: 48px;
+      filter: drop-shadow(0 0 20px rgba(255,215,0,0.5));
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { filter: drop-shadow(0 0 12px rgba(255,215,0,0.4)); }
+      50% { filter: drop-shadow(0 0 28px rgba(255,215,0,0.8)); }
+    }
+    .title {
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: -0.3px;
+    }
+    .title span { color: #FFD700; }
+    .status {
+      font-size: 14px;
+      color: #777;
+      min-height: 20px;
+    }
+    .bar-wrap {
+      width: 240px;
+      height: 3px;
+      background: rgba(255,215,0,0.1);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #B8860B, #FFD700, #FFE44D);
+      border-radius: 3px;
+      transition: width 0.1s linear;
+    }
+    .error-box {
+      display: none;
+      background: rgba(255,107,107,0.1);
+      border: 1px solid rgba(255,107,107,0.3);
+      border-radius: 12px;
+      padding: 16px 24px;
+      color: #FF6B6B;
+      font-size: 14px;
+      max-width: 320px;
+    }
+    .back-btn {
+      display: none;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #DAA520, #FFD700);
+      color: #000;
+      font-weight: 700;
+      font-size: 14px;
+      border-radius: 10px;
+      text-decoration: none;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo" id="logo">🏆</div>
+    <div class="title">GOAT<span>CINE</span></div>
+    <div class="status" id="status">Autenticando com Discord...</div>
+    <div class="bar-wrap">
+      <div class="bar" id="bar"></div>
+    </div>
+    <div class="error-box" id="error-box"></div>
+    <a class="back-btn" id="back-btn" href="/login.html">Voltar ao login</a>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const token  = params.get('token');
+    const name   = params.get('name');
+    const authError = params.get('auth_error');
+
+    const status  = document.getElementById('status');
+    const bar     = document.getElementById('bar');
+    const errorBox = document.getElementById('error-box');
+    const backBtn  = document.getElementById('back-btn');
+    const logo    = document.getElementById('logo');
+
+    // Error messages
+    const errorMessages = {
+      discord_not_configured: 'Discord OAuth não está configurado no servidor. Configure o arquivo .env.',
+      discord_denied: 'Você cancelou a autenticação com o Discord.',
+      discord_token_failed: 'Falha ao obter token do Discord. Tente novamente.',
+      discord_user_failed: 'Não foi possível obter dados do Discord. Tente novamente.',
+      server_error: 'Erro interno no servidor. Tente novamente mais tarde.',
+    };
+
+    function showError(msg) {
+      status.textContent = 'Falha na autenticação';
+      errorBox.textContent = '⚠️ ' + (errorMessages[msg] || msg || 'Erro desconhecido');
+      errorBox.style.display = 'block';
+      backBtn.style.display = 'inline-block';
+      bar.style.width = '100%';
+      bar.style.background = '#FF6B6B';
+      logo.textContent = '❌';
+    }
+
+    if (authError) {
+      showError(authError);
+    } else if (token) {
+      // Animate progress
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += Math.random() * 25 + 15;
+        if (progress >= 100) {
+          progress = 100;
+          bar.style.width = '100%';
+          clearInterval(interval);
+
+          // Verify token with server
+          fetch('/api/auth/verify', {
+            headers: { Authorization: 'Bearer ' + token }
+          })
+          .then(r => r.json())
+          .then(data => {
+            if (data.valid && data.user) {
+              // Save to localStorage for frontend use
+              localStorage.setItem('goatcine_token', token);
+              localStorage.setItem('goatcine_user', JSON.stringify({
+                id:     data.user.id,
+                name:   data.user.name || name || 'Usuário',
+                email:  data.user.email,
+                avatar: data.user.avatar,
+                method: 'discord',
+              }));
+              status.textContent = 'Bem-vindo(a), ' + (data.user.name || name) + '! 🎉';
+              logo.textContent = '🏆';
+              setTimeout(() => { window.location.href = '/index.html'; }, 800);
+            } else {
+              showError('Token inválido recebido do servidor');
+            }
+          })
+          .catch(() => showError('server_error'));
+        } else {
+          bar.style.width = progress + '%';
+        }
+      }, 80);
+    } else {
+      showError('Nenhum token recebido. Tente fazer login novamente.');
+    }
+  </script>
+</body>
+</html>

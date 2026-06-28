@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GOATCINE — O Melhor do Cinema</title>
+  <meta name="description" content="GOATCINE é a plataforma premium de streaming com os melhores filmes e séries. Design dourado, experiência cinematográfica única." />
+  <meta name="theme-color" content="#0A0A0A" />
+
+  <!-- Auth Guard -->
+  <script>
+    (function() {
+      try {
+        const user = JSON.parse(localStorage.getItem('goatcine_user'));
+        if (!user) { window.location.replace('login.html'); }
+      } catch(e) { window.location.replace('login.html'); }
+    })();
+  <\/script>
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="GOATCINE — O Melhor do Cinema" />
+  <meta property="og:description" content="Plataforma premium de streaming com design dourado." />
+  <meta property="og:type" content="website" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ========== NAVBAR ========== -->
+  <nav class="navbar" id="navbar" role="navigation" aria-label="Navegação principal">
+    <div class="nav-container">
+
+      <!-- Logo -->
+      <a href="#" class="nav-logo" id="nav-logo-link" aria-label="GOATCINE - Página inicial">
+        <span class="logo-icon">🏆</span>
+        <span class="logo-text">GOAT<span class="logo-accent">CINE</span></span>
+      </a>
+
+      <!-- Nav Links -->
+      <ul class="nav-links" id="nav-links" role="list">
+        <li><a href="#" class="nav-link active" id="nav-home">Início</a></li>
+        <li><a href="#filmes" class="nav-link" id="nav-movies">Filmes</a></li>
+        <li><a href="#series" class="nav-link" id="nav-series">Séries</a></li>
+        <li><a href="#originais" class="nav-link" id="nav-originals">
+          <span class="nav-badge">GOAT</span> Originais
+        </a></li>
+      </ul>
+
+      <!-- Right Actions -->
+      <div class="nav-actions">
+        <button class="nav-search-btn" id="nav-search-btn" aria-label="Buscar filmes">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+        </button>
+        <div class="nav-avatar" id="nav-avatar" aria-label="Perfil do usuário" title="Sair da conta">
+          <span id="nav-avatar-letter">G</span>
+        </div>
+      </div>
+
+      <!-- Mobile Menu Toggle -->
+      <button class="nav-hamburger" id="nav-hamburger" aria-label="Abrir menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="search-bar" id="search-bar" role="search">
+      <div class="search-inner">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input type="search" id="search-input" placeholder="Buscar filmes, séries, atores..." aria-label="Campo de busca" autocomplete="off" />
+        <button class="search-close" id="search-close" aria-label="Fechar busca">✕</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ========== HERO SECTION ========== -->
+  <section class="hero" id="hero" aria-label="Filme em destaque">
+    <div class="hero-bg" id="hero-bg">
+      <div class="hero-particles" id="hero-particles" aria-hidden="true"></div>
+      <div class="hero-gradient" aria-hidden="true"></div>
+    </div>
+
+    <div class="hero-content">
+      <div class="hero-badge" id="hero-badge">
+        <span class="badge-icon">🏆</span> GOATCINE ORIGINAL
+      </div>
+      <h1 class="hero-title" id="hero-title">Dune: Part Two</h1>
+      <div class="hero-meta" id="hero-meta">
+        <span class="meta-rating">⭐ 8.5</span>
+        <span class="meta-sep">·</span>
+        <span class="meta-year">2024</span>
+        <span class="meta-sep">·</span>
+        <span class="meta-duration">2h 46min</span>
+        <span class="meta-sep">·</span>
+        <span class="meta-genre">Ficção Científica</span>
+      </div>
+      <p class="hero-desc" id="hero-desc">
+        Paul Atreides se une a Chani e aos Fremen enquanto busca vingança contra os conspiradores que destruíram sua família. Uma épica jornada cinematográfica que redefine o gênero sci-fi.
+      </p>
+      <div class="hero-actions">
+        <button class="btn-primary" id="hero-watch-btn" aria-label="Assistir Dune: Part Two">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="5,3 19,12 5,21"/>
+          </svg>
+          Assistir Agora
+        </button>
+        <button class="btn-secondary" id="hero-list-btn" aria-label="Adicionar à minha lista">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/>
+          </svg>
+          Minha Lista
+        </button>
+        <button class="btn-info" id="hero-info-btn" aria-label="Mais informações sobre Dune: Part Two">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Hero Indicators -->
+    <div class="hero-indicators" id="hero-indicators" aria-label="Filmes em destaque">
+      <button class="indicator active" id="indicator-0" aria-label="Slide 1" aria-pressed="true"></button>
+      <button class="indicator" id="indicator-1" aria-label="Slide 2" aria-pressed="false"></button>
+      <button class="indicator" id="indicator-2" aria-label="Slide 3" aria-pressed="false"></button>
+    </div>
+
+    <!-- Scroll hint -->
+    <div class="hero-scroll-hint" aria-hidden="true">
+      <div class="scroll-line"></div>
+    </div>
+  </section>
+
+  <!-- ========== MAIN CONTENT ========== -->
+  <main class="main-content" id="main-content">
+
+    <!-- Category Tabs -->
+    <section class="categories-section" id="categories-section" aria-label="Categorias">
+      <div class="categories-tabs" id="categories-tabs" role="tablist">
+        <button class="cat-tab active" id="tab-trending" data-filter="trending" role="tab" aria-selected="true">🔥 Em Alta</button>
+        <button class="cat-tab" id="tab-new" data-filter="new" role="tab" aria-selected="false">✨ Novidades</button>
+        <button class="cat-tab" id="tab-action" data-filter="action" role="tab" aria-selected="false">⚡ Ação</button>
+        <button class="cat-tab" id="tab-drama" data-filter="drama" role="tab" aria-selected="false">🎭 Drama</button>
+        <button class="cat-tab" id="tab-scifi" data-filter="scifi" role="tab" aria-selected="false">🚀 Ficção</button>
+        <button class="cat-tab" id="tab-thriller" data-filter="thriller" role="tab" aria-selected="false">😱 Thriller</button>
+      </div>
+    </section>
+
+    <!-- ---- ROW: Em Alta ---- -->
+    <section class="row-section" id="filmes" aria-label="Filmes em alta">
+      <div class="row-header">
+        <h2 class="row-title">🔥 Em Alta esta Semana</h2>
+        <button class="row-see-all" id="see-all-trending" aria-label="Ver todos os filmes em alta">Ver Todos</button>
+      </div>
+      <div class="carousel-wrapper">
+        <button class="carousel-arrow left" id="arrow-left-0" aria-label="Anterior">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="15,18 9,12 15,6"/>
+          </svg>
+        </button>
+        <div class="carousel" id="carousel-trending" role="list">
+          <!-- Preenchido pelo JS -->
+        </div>
+        <button class="carousel-arrow right" id="arrow-right-0" aria-label="Próximo">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="9,18 15,12 9,6"/>
+          </svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- ---- GOATCINE ORIGINAIS BANNER ---- -->
+    <section class="originals-banner" id="originais" aria-label="GOATCINE Originais">
+      <div class="originals-content">
+        <div class="originals-badge">
+          <span>🏆</span> GOATCINE ORIGINAIS
+        </div>
+        <h2 class="originals-title">Conteúdo Exclusivo</h2>
+        <p class="originals-desc">Produções únicas disponíveis apenas na GOATCINE. Arte cinematográfica no seu melhor.</p>
+        <button class="btn-primary" id="originals-explore-btn">Explorar Originais</button>
+      </div>
+      <div class="originals-visual" aria-hidden="true">
+        <div class="originals-cards-stack">
+          <div class="stack-card c1"></div>
+          <div class="stack-card c2"></div>
+          <div class="stack-card c3"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---- ROW: Novidades ---- -->
+    <section class="row-section" aria-label="Novidades">
+      <div class="row-header">
+        <h2 class="row-title">✨ Novidades</h2>
+        <button class="row-see-all" id="see-all-new" aria-label="Ver todas as novidades">Ver Todos</button>
+      </div>
+      <div class="carousel-wrapper">
+        <button class="carousel-arrow left" id="arrow-left-1" aria-label="Anterior">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="15,18 9,12 15,6"/>
+          </svg>
+        </button>
+        <div class="carousel" id="carousel-new" role="list">
+          <!-- Preenchido pelo JS -->
+        </div>
+        <button class="carousel-arrow right" id="arrow-right-1" aria-label="Próximo">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="9,18 15,12 9,6"/>
+          </svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- ---- TOP 10 ---- -->
+    <section class="top10-section" id="series" aria-label="Top 10 da semana">
+      <div class="row-header">
+        <h2 class="row-title">🏆 Top 10 da Semana</h2>
+        <button class="row-see-all" id="see-all-top10" aria-label="Ver todo o Top 10">Ver Todos</button>
+      </div>
+      <div class="top10-grid" id="top10-grid" role="list">
+        <!-- Preenchido pelo JS -->
+      </div>
+    </section>
+
+    <!-- ---- ROW: Ação ---- -->
+    <section class="row-section" aria-label="Filmes de ação">
+      <div class="row-header">
+        <h2 class="row-title">⚡ Ação & Aventura</h2>
+        <button class="row-see-all" id="see-all-action" aria-label="Ver todos os filmes de ação">Ver Todos</button>
+      </div>
+      <div class="carousel-wrapper">
+        <button class="carousel-arrow left" id="arrow-left-2" aria-label="Anterior">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="15,18 9,12 15,6"/>
+          </svg>
+        </button>
+        <div class="carousel" id="carousel-action" role="list">
+          <!-- Preenchido pelo JS -->
+        </div>
+        <button class="carousel-arrow right" id="arrow-right-2" aria-label="Próximo">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="9,18 15,12 9,6"/>
+          </svg>
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ========== FOOTER ========== -->
+  <footer class="footer" id="footer" role="contentinfo">
+    <div class="footer-container">
+      <div class="footer-logo">
+        <span class="logo-icon">🏆</span>
+        <span class="logo-text">GOAT<span class="logo-accent">CINE</span></span>
+      </div>
+      <p class="footer-tagline">O Melhor do Cinema, em Dourado.</p>
+      <div class="footer-links" role="list">
+        <a href="#" class="footer-link" id="footer-about">Sobre</a>
+        <a href="#" class="footer-link" id="footer-privacy">Privacidade</a>
+        <a href="#" class="footer-link" id="footer-terms">Termos</a>
+        <a href="#" class="footer-link" id="footer-contact">Contato</a>
+      </div>
+      <p class="footer-copy">© 2024 GOATCINE. Todos os direitos reservados.</p>
+    </div>
+  </footer>
+
+  <!-- ========== MOVIE MODAL ========== -->
+  <div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-hidden="true">
+    <div class="modal" id="modal">
+      <button class="modal-close" id="modal-close" aria-label="Fechar modal">✕</button>
+
+      <div class="modal-hero" id="modal-hero">
+        <img class="modal-backdrop" id="modal-backdrop" src="" alt="" loading="lazy" />
+        <div class="modal-hero-gradient" aria-hidden="true"></div>
+        <div class="modal-hero-content">
+          <div class="modal-badge" id="modal-badge">🏆 GOATCINE</div>
+          <h2 class="modal-title" id="modal-title">Título do Filme</h2>
+          <div class="modal-meta" id="modal-meta"></div>
+          <div class="modal-actions">
+            <button class="btn-primary" id="modal-watch-btn" aria-label="Assistir filme">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="5,3 19,12 5,21"/>
+              </svg>
+              Assistir
+            </button>
+            <button class="btn-secondary" id="modal-list-btn" aria-label="Adicionar à lista">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/>
+              </svg>
+              Minha Lista
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-info-grid">
+          <div class="modal-synopsis">
+            <h3 class="modal-section-title">Sinopse</h3>
+            <p class="modal-desc" id="modal-desc"></p>
+          </div>
+          <div class="modal-details">
+            <h3 class="modal-section-title">Detalhes</h3>
+            <div class="modal-detail-list" id="modal-detail-list"></div>
+          </div>
+        </div>
+
+        <!-- Similar movies -->
+        <div class="modal-similar">
+          <h3 class="modal-section-title">Títulos Semelhantes</h3>
+          <div class="modal-similar-grid" id="modal-similar-grid"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== TOAST ========== -->
+  <div class="toast" id="toast" role="alert" aria-live="polite"></div>
+
+  <!-- ========== LOADING SCREEN ========== -->
+  <div class="loading-screen" id="loading-screen" aria-label="Carregando GOATCINE">
+    <div class="loading-content">
+      <div class="loading-logo">
+        <span class="loading-icon">🏆</span>
+        <span class="loading-text">GOAT<span class="logo-accent">CINE</span></span>
+      </div>
+      <div class="loading-bar-wrapper">
+        <div class="loading-bar" id="loading-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

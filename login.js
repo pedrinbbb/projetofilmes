@@ -208,6 +208,33 @@ function showApiError(msg) {
   setTimeout(() => toast?.remove(), 6000);
 }
 
+function showApiSuccessMessage(msg) {
+  let toast = document.getElementById('api-toast');
+  if (toast) toast.remove();
+  
+  toast = document.createElement('div');
+  toast.id = 'api-toast';
+  toast.setAttribute('role', 'status');
+  toast.setAttribute('aria-live', 'polite');
+  toast.style.cssText = `
+    background: rgba(74, 222, 128, 0.12);
+    border: 1px solid rgba(74, 222, 128, 0.35);
+    color: #4ADE80;
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    animation: fade-slide-up 0.3s ease both;
+    line-height: 1.5;
+    text-align: center;
+  toast.textContent = '✅ ' + msg;
+  const container = document.querySelector('.auth-container');
+  container?.insertBefore(toast, container.firstChild);
+  
+  setTimeout(() => toast?.remove(), 8000);
+}
+
 // ---- REAL-TIME VALIDATION ----
 document.getElementById('login-email')?.addEventListener('input', function() {
   if (this.value && !isValidEmail(this.value)) showError('login-email-group', 'login-email-error', 'Email inválido');
@@ -397,14 +424,209 @@ document.getElementById('register-email-form')?.addEventListener('submit', async
       return;
     }
 
-    // Success!
-    saveAuthAndRedirect(data.token, data.user, true);
+    // OTP FLOW
+    btn.classList.remove('loading');
+    btn.disabled = false;
+    openOtpVerification(data.email || email, data);
 
   } catch (err) {
     showApiError('Servidor offline. Verifique se o servidor está rodando (npm start).');
     btn.classList.remove('loading');
     btn.disabled = false;
   }
+});
+
+// ---- OTP FLOW LOGIC ----
+let otpEmail = '';
+let resendTimer = null;
+
+function openOtpVerification(email, responseData) {
+  otpEmail = email;
+  document.getElementById('otp-email-display').textContent = email;
+  
+  // Show dev mode code if provided by server
+  const devBox = document.getElementById('otp-dev-box');
+  const devCode = document.getElementById('otp-dev-code');
+  if (responseData.dev_code) {
+    devCode.textContent = responseData.dev_code;
+    devBox.classList.add('show');
+  } else {
+    devBox.classList.remove('show');
+  }
+
+  // Clear errors and inputs
+  document.getElementById('otp-error').textContent = '';
+  const inputs = document.querySelectorAll('.otp-input');
+  inputs.forEach(input => {
+    input.value = '';
+    input.classList.remove('error', 'success');
+  });
+
+  // Open overlay
+  const overlay = document.getElementById('otp-overlay');
+  overlay.setAttribute('aria-hidden', 'false');
+  overlay.classList.add('show');
+
+  // Focus first input
+  setTimeout(() => inputs[0].focus(), 100);
+
+  // Start Resend Cooldown
+  startResendCountdown(60);
+}
+
+// Bind OTP Inputs interactions (focus next/prev, paste)
+const otpInputs = document.querySelectorAll('.otp-input');
+otpInputs.forEach((input, idx) => {
+  input.addEventListener('input', (e) => {
+    const val = e.target.value;
+    if (val.length === 1) {
+      if (idx < otpInputs.length - 1) {
+        otpInputs[idx + 1].focus();
+      }
+    }
+  });
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Backspace' && !input.value) {
+      if (idx > 0) {
+        otpInputs[idx - 1].focus();
+      }
+    }
+  });
+
+  input.addEventListener('paste', (e) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData('text').trim();
+    if (/^\d{6}$/.test(pastedData)) {
+      pastedData.split('').forEach((char, i) => {
+        if (otpInputs[i]) {
+          otpInputs[i].value = char;
+        }
+      });
+      otpInputs[5].focus();
+    }
+  });
+});
+
+// Countdown helper
+function startResendCountdown(seconds) {
+  const resendBtn = document.getElementById('otp-resend-btn');
+  const countdownEl = document.getElementById('otp-countdown');
+  resendBtn.disabled = true;
+
+  clearInterval(resendTimer);
+  resendTimer = setInterval(() => {
+    seconds--;
+    if (seconds <= 0) {
+      clearInterval(resendTimer);
+      resendBtn.disabled = false;
+      countdownEl.textContent = '';
+    } else {
+      countdownEl.textContent = `Aguarde ${seconds}s para reenviar`;
+    }
+  }, 1000);
+}
+
+// Submit OTP Code
+document.getElementById('otp-form')?.addEventListener('submit', async function(e) {
+  e.preventDefault();
+  
+  const errorEl = document.getElementById('otp-error');
+  errorEl.textContent = '';
+
+  // Get full 6 digits
+  let code = '';
+  let complete = true;
+  otpInputs.forEach(input => {
+    if (!input.value) {
+      complete = false;
+    }
+    code += input.value;
+  });
+
+  if (!complete || code.length !== 6) {
+    errorEl.textContent = 'Digite o código de 6 dígitos';
+    return;
+  }
+
+  const btn = document.getElementById('otp-submit-btn');
+  btn.classList.add('loading');
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(`${API}/api/auth/verify-email`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: otpEmail, code }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      errorEl.textContent = data.error || 'Código inválido';
+      btn.classList.remove('loading');
+      btn.disabled = false;
+      return;
+    }
+
+    // Success! Hide OTP screen and switch to login tab
+    document.getElementById('otp-overlay').classList.remove('show');
+    document.getElementById('otp-overlay').setAttribute('aria-hidden', 'true');
+    clearInterval(resendTimer);
+
+    // Show a success message
+    showApiSuccessMessage('Cadastro realizado com sucesso! Faça login na sua conta para continuar.');
+
+    // Switch to Login Tab and pre-fill the email
+    switchTab('login');
+    const loginEmailInput = document.getElementById('login-email');
+    if (loginEmailInput) {
+      loginEmailInput.value = otpEmail;
+      markSuccess('login-email-group');
+      document.getElementById('login-password')?.focus();
+    }
+
+  } catch (err) {
+    errorEl.textContent = 'Erro de conexão com o servidor';
+    btn.classList.remove('loading');
+    btn.disabled = false;
+  }
+});
+
+// Resend Button handler
+document.getElementById('otp-resend-btn')?.addEventListener('click', async () => {
+  const errorEl = document.getElementById('otp-error');
+  errorEl.textContent = '';
+  
+  try {
+    const res = await fetch(`${API}/api/auth/resend-code`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: otpEmail }),
+    });
+    
+    const data = await res.json();
+    if (!res.ok) {
+      errorEl.textContent = data.error || 'Erro ao reenviar';
+      return;
+    }
+
+    if (data.dev_code) {
+      document.getElementById('otp-dev-code').textContent = data.dev_code;
+      document.getElementById('otp-dev-box').classList.add('show');
+    }
+    
+    startResendCountdown(60);
+  } catch (err) {
+    errorEl.textContent = 'Erro de conexão com o servidor';
+  }
+});
+
+// Back Button handler
+document.getElementById('otp-back-btn')?.addEventListener('click', () => {
+  document.getElementById('otp-overlay').classList.remove('show');
+  document.getElementById('otp-overlay').setAttribute('aria-hidden', 'true');
+  clearInterval(resendTimer);
 });
 
 // ---- SAVE AUTH & REDIRECT ----
@@ -451,3 +673,4 @@ function saveAuthAndRedirect(token, user, isNew = false) {
 
 // ---- INIT ----
 createParticles();
+

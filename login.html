@@ -343,9 +343,63 @@
           </p>
         </div>
 
-      </div>
-    </div>
+  </div>
 
+  <!-- ===== OTP VERIFICATION PANEL ===== -->
+  <div class="otp-overlay" id="otp-overlay" aria-hidden="true" role="dialog" aria-labelledby="otp-title" aria-modal="true">
+    <div class="otp-card">
+
+      <!-- Icon -->
+      <div class="otp-icon" aria-hidden="true">📧</div>
+
+      <h2 class="otp-title" id="otp-title">Verifique seu email</h2>
+      <p class="otp-subtitle" id="otp-subtitle">
+        Enviamos um código de 6 dígitos para<br />
+        <strong id="otp-email-display"></strong>
+      </p>
+
+      <!-- Dev mode warning -->
+      <div class="otp-dev-box" id="otp-dev-box" aria-hidden="true">
+        <span class="otp-dev-label">⚠️ Modo Dev</span>
+        Código: <strong id="otp-dev-code"></strong>
+        <span style="display:block;font-size:11px;margin-top:4px;opacity:0.7">Configure EMAIL_USER no .env para envio real</span>
+      </div>
+
+      <!-- OTP 6-digit input -->
+      <form id="otp-form" novalidate autocomplete="off">
+        <div class="otp-inputs" id="otp-inputs" role="group" aria-label="Código de 6 dígitos">
+          <input class="otp-input" type="text" inputmode="numeric" maxlength="1" id="otp-0" aria-label="Dígito 1" />
+          <input class="otp-input" type="text" inputmode="numeric" maxlength="1" id="otp-1" aria-label="Dígito 2" />
+          <input class="otp-input" type="text" inputmode="numeric" maxlength="1" id="otp-2" aria-label="Dígito 3" />
+          <span class="otp-separator" aria-hidden="true">—</span>
+          <input class="otp-input" type="text" inputmode="numeric" maxlength="1" id="otp-3" aria-label="Dígito 4" />
+          <input class="otp-input" type="text" inputmode="numeric" maxlength="1" id="otp-4" aria-label="Dígito 5" />
+          <input class="otp-input" type="text" inputmode="numeric" maxlength="1" id="otp-5" aria-label="Dígito 6" />
+        </div>
+
+        <span class="otp-error" id="otp-error" role="alert" aria-live="assertive"></span>
+
+        <button type="submit" class="btn-submit" id="otp-submit-btn" aria-label="Verificar código">
+          <span class="btn-text">Verificar e criar conta</span>
+          <span class="btn-loader" aria-hidden="true"></span>
+        </button>
+      </form>
+
+      <!-- Resend -->
+      <div class="otp-resend">
+        <span class="otp-resend-text">Não recebeu?</span>
+        <button type="button" class="otp-resend-btn" id="otp-resend-btn" aria-label="Reenviar código">
+          Reenviar código
+        </button>
+        <span class="otp-countdown" id="otp-countdown" aria-live="polite"></span>
+      </div>
+
+      <!-- Back -->
+      <button type="button" class="otp-back-btn" id="otp-back-btn" aria-label="Voltar ao cadastro">
+        ← Voltar
+      </button>
+
+    </div>
   </div>
 
   <!-- Success Overlay -->

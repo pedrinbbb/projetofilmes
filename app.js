@@ -1,7 +1,6 @@
 /* =============================================
    GOATCINE — App Logic
    ============================================= */
-
 // ---- MOVIE DATABASE ----
 const MOVIES = {
   trending: [
@@ -17,7 +16,8 @@ const MOVIES = {
       backdrop: "https://image.tmdb.org/t/p/w1280/xOMo8BRK7PfcJv9JCnx7s5hj0PX.jpg",
       director: "Denis Villeneuve",
       cast: "Timothée Chalamet, Zendaya, Rebecca Ferguson",
-      category: "trending"
+      category: "trending",
+      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" // MP4 Direto
     },
     {
       id: 2,
@@ -31,7 +31,8 @@ const MOVIES = {
       backdrop: "https://image.tmdb.org/t/p/w1280/rLb2cwF3Pazuxaj0sRXQ037tGI1.jpg",
       director: "Christopher Nolan",
       cast: "Cillian Murphy, Emily Blunt, Matt Damon",
-      category: "trending"
+      category: "trending",
+      videoUrl: "https://www.youtube.com/watch?v=F3OxA9C30dQ" // YouTube Iframe
     },
     {
       id: 3,
@@ -45,7 +46,8 @@ const MOVIES = {
       backdrop: "https://image.tmdb.org/t/p/w1280/5YZbUmjbMa3ClvSoRdnMYJi7LVKS.jpg",
       director: "Yorgos Lanthimos",
       cast: "Emma Stone, Mark Ruffalo, Willem Dafoe",
-      category: "trending"
+      category: "trending",
+      videoUrl: "https://www.youtube.com/watch?v=Rrvn_LSDzZg" // YouTube
     },
     {
       id: 4,
@@ -59,7 +61,8 @@ const MOVIES = {
       backdrop: "https://image.tmdb.org/t/p/w1280/b0PlSFdDwbyK0cf5RxwDpaOJQvQ.jpg",
       director: "Matt Reeves",
       cast: "Robert Pattinson, Zoë Kravitz, Paul Dano",
-      category: "trending"
+      category: "trending",
+      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4" // MP4 Direto
     },
     {
       id: 5,
@@ -73,7 +76,8 @@ const MOVIES = {
       backdrop: "https://image.tmdb.org/t/p/w1280/TU9NIjwzjoKPwQHoKn5HEhkEL3.jpg",
       director: "Bong Joon Ho",
       cast: "Song Kang-ho, Lee Sun-kyun, Cho Yeo-jeong",
-      category: "trending"
+      category: "trending",
+      videoUrl: "https://www.youtube.com/watch?v=5xH0HfJHsaY"
     },
     {
       id: 6,
@@ -87,7 +91,8 @@ const MOVIES = {
       backdrop: "https://image.tmdb.org/t/p/w1280/xJHokMbljvjADYdit5fK5VQsXEG.jpg",
       director: "Christopher Nolan",
       cast: "Matthew McConaughey, Anne Hathaway, Jessica Chastain",
-      category: "trending"
+      category: "trending",
+      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4" // MP4 Direto
     },
     {
       id: 7,
@@ -101,7 +106,8 @@ const MOVIES = {
       backdrop: "https://image.tmdb.org/t/p/w1280/eHMh7kChaNeD4VTdMhZuFlatNSA.jpg",
       director: "Celine Song",
       cast: "Greta Lee, Teo Yoo, John Magaro",
-      category: "trending"
+      category: "trending",
+      videoUrl: "https://www.youtube.com/watch?v=kA244xewjcI"
     },
     {
       id: 8,
@@ -115,7 +121,8 @@ const MOVIES = {
       backdrop: "https://image.tmdb.org/t/p/w1280/feSiISwgEpVzR1v3zv2n2LsbXLC.jpg",
       director: "Daniel Kwan",
       cast: "Michelle Yeoh, Ke Huy Quan, Jamie Lee Curtis",
-      category: "trending"
+      category: "trending",
+      videoUrl: "https://www.youtube.com/watch?v=wxN1T1UxQ2A"
     },
   ],
   new: [
@@ -131,7 +138,8 @@ const MOVIES = {
       backdrop: "https://image.tmdb.org/t/p/w1280/fqv8v6AycXKsivp1T5yKtLbGXce.jpg",
       director: "George Miller",
       cast: "Anya Taylor-Joy, Chris Hemsworth, Tom Burke",
-      category: "new"
+      category: "new",
+      videoUrl: "https://www.youtube.com/watch?v=XJMuhwVlca4"
     },
     {
       id: 10,
@@ -145,7 +153,8 @@ const MOVIES = {
       backdrop: "https://image.tmdb.org/t/p/w1280/ugS5FVfCI3RV0ZwZtBV3HAV75OX.jpg",
       director: "Alex Garland",
       cast: "Kirsten Dunst, Wagner Moura, Cailee Spaeny",
-      category: "new"
+      category: "new",
+      videoUrl: "https://www.youtube.com/watch?v=aDyQxtg0V2w"
     },
     {
       id: 11,
@@ -159,7 +168,8 @@ const MOVIES = {
       backdrop: "https://image.tmdb.org/t/p/w1280/3TNSoa0UHGEzEz5WZOE4BtaEsYE.jpg",
       director: "Osgood Perkins",
       cast: "Maika Monroe, Nicolas Cage, Alicia Witt",
-      category: "new"
+      category: "new",
+      videoUrl: "https://www.youtube.com/watch?v=ccWzW5W3S-4"
     },
     {
       id: 12,
@@ -173,7 +183,8 @@ const MOVIES = {
       backdrop: "https://image.tmdb.org/t/p/w1280/tEHbMiMU0wvtinCJzPAZoMRPWNX.jpg",
       director: "Kelsey Mann",
       cast: "Amy Poehler, Maya Hawke, Kensington Tallman",
-      category: "new"
+      category: "new",
+      videoUrl: "https://www.youtube.com/watch?v=LEjhY15eCx0"
     },
     {
       id: 13,
@@ -187,7 +198,8 @@ const MOVIES = {
       backdrop: "https://image.tmdb.org/t/p/w1280/9SSEUrSqhljBMzRe4aBTh17rUaC.jpg",
       director: "Fede Álvarez",
       cast: "Cailee Spaeny, David Jonsson, Archie Renaux",
-      category: "new"
+      category: "new",
+      videoUrl: "https://www.youtube.com/watch?v=x0XDEy1t9dI"
     },
     {
       id: 14,
@@ -196,12 +208,13 @@ const MOVIES = {
       duration: "2h 7min",
       rating: 7.7,
       genre: "Ação / Comédia",
-      desc: "Deadpool recruta um relutante Wolverine para uma missão que impacta a história do MCU. O duo mais improvável do cinema em uma aventura caótica e divertida.",
+      desc: "Deadpool recruta um relutante Wolverine para uma missão que impacta a história do MCU. O duo mais improbável do cinema em uma aventura caótica e divertida.",
       poster: "https://image.tmdb.org/t/p/w500/8cdWjvZQUExUUTzyp4t6EDMubfO.jpg",
       backdrop: "https://image.tmdb.org/t/p/w1280/yDHYTfA3R0jFYba16jBB1ef8oIt.jpg",
       director: "Shawn Levy",
       cast: "Ryan Reynolds, Hugh Jackman, Emma Corrin",
-      category: "new"
+      category: "new",
+      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4" // MP4 Direto
     },
     {
       id: 15,
@@ -215,7 +228,8 @@ const MOVIES = {
       backdrop: "https://image.tmdb.org/t/p/w1280/2rmK7mnchw9Xr3XdiAwdt5OXcIh.jpg",
       director: "Luca Guadagnino",
       cast: "Zendaya, Mike Faist, Josh O'Connor",
-      category: "new"
+      category: "new",
+      videoUrl: "https://www.youtube.com/watch?v=VobT0to272U"
     },
     {
       id: 16,
@@ -229,7 +243,8 @@ const MOVIES = {
       backdrop: "https://image.tmdb.org/t/p/w1280/cOXKUkFKqHQpIVaVZMornoTe6BP.jpg",
       director: "Lee Isaac Chung",
       cast: "Daisy Edgar-Jones, Glen Powell, Anthony Ramos",
-      category: "new"
+      category: "new",
+      videoUrl: "https://www.youtube.com/watch?v=l49T1Bq-580"
     },
   ],
   action: [
@@ -245,7 +260,8 @@ const MOVIES = {
       backdrop: "https://image.tmdb.org/t/p/w1280/8Up8DZ8PLRZ23VVUP9mfAzZjRMF.jpg",
       director: "Christopher McQuarrie",
       cast: "Tom Cruise, Hayley Atwell, Ving Rhames",
-      category: "action"
+      category: "action",
+      videoUrl: "https://www.youtube.com/watch?v=2m1drlOZSDw"
     },
     {
       id: 18,
@@ -259,7 +275,8 @@ const MOVIES = {
       backdrop: "https://image.tmdb.org/t/p/w1280/AkB5TbGRmItPMNIMODHHCxGBzgs.jpg",
       director: "Joseph Kosinski",
       cast: "Tom Cruise, Miles Teller, Jennifer Connelly",
-      category: "action"
+      category: "action",
+      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutback.mp4" // MP4 Direto
     },
     {
       id: 19,
@@ -273,7 +290,8 @@ const MOVIES = {
       backdrop: "https://image.tmdb.org/t/p/w1280/aeqZdp31F6VBqWmVYKkacfpj7RZ.jpg",
       director: "Chad Stahelski",
       cast: "Keanu Reeves, Donnie Yen, Bill Skarsgård",
-      category: "action"
+      category: "action",
+      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" // MP4 Direto
     },
     {
       id: 20,
@@ -287,7 +305,8 @@ const MOVIES = {
       backdrop: "https://image.tmdb.org/t/p/w1280/s16H6tpK2utvwDtzZ8Qy8tMp5ED.jpg",
       director: "James Cameron",
       cast: "Sam Worthington, Zoe Saldana, Sigourney Weaver",
-      category: "action"
+      category: "action",
+      videoUrl: "https://www.youtube.com/watch?v=d9MyW72ELq0"
     },
     {
       id: 21,
@@ -301,7 +320,8 @@ const MOVIES = {
       backdrop: "https://image.tmdb.org/t/p/w1280/xDMIl84Qo5Tsu62c9DGWhmPI67A.jpg",
       director: "Ryan Coogler",
       cast: "Letitia Wright, Lupita Nyong'o, Angela Bassett",
-      category: "action"
+      category: "action",
+      videoUrl: "https://www.youtube.com/watch?v=_Z3QKkl1WyM"
     },
     {
       id: 22,
@@ -315,7 +335,8 @@ const MOVIES = {
       backdrop: "https://image.tmdb.org/t/p/w1280/tkm9LkM7RfKpTNqpGKJJ8prIqYR.jpg",
       director: "Ridley Scott",
       cast: "Paul Mescal, Pedro Pascal, Denzel Washington",
-      category: "action"
+      category: "action",
+      videoUrl: "https://www.youtube.com/watch?v=gT3rXG40a6E"
     },
     {
       id: 23,
@@ -329,7 +350,8 @@ const MOVIES = {
       backdrop: "https://image.tmdb.org/t/p/w1280/H5HjE7Xb9N09rbWn1zBfxgI8uz.jpg",
       director: "David Leitch",
       cast: "Ryan Gosling, Emily Blunt, Winston Duke",
-      category: "action"
+      category: "action",
+      videoUrl: "https://www.youtube.com/watch?v=j7jPnwVGdZ8"
     },
     {
       id: 24,
@@ -343,7 +365,8 @@ const MOVIES = {
       backdrop: "https://image.tmdb.org/t/p/w1280/57lGJCPuMjCDfRGCsJkEwN9XBKJ.jpg",
       director: "Taika Waititi",
       cast: "Chris Hemsworth, Natalie Portman, Christian Bale",
-      category: "action"
+      category: "action",
+      videoUrl: "https://www.youtube.com/watch?v=Go8nTmfrQd8"
     },
   ]
 };
@@ -456,6 +479,7 @@ function initApp() {
   initCategoryTabs();
   initHeroButtons();
   initSeeAllButtons();
+  initVideoPlayer();
 }
 
 // ---- PARTICLES ----
@@ -633,7 +657,8 @@ function initHeroButtons() {
 
   if (watchBtn) {
     watchBtn.addEventListener('click', () => {
-      showToast('▶ Reproduzindo ' + HERO_SLIDES[currentHeroSlide].title + '...');
+      const movie = findMovieById(HERO_SLIDES[currentHeroSlide].movieId);
+      if (movie) openVideoPlayer(movie);
     });
   }
 
@@ -822,8 +847,8 @@ function openModal(movie) {
 
   // Watch & List buttons
   modalWatchBtn.onclick = () => {
-    showToast(`▶ Reproduzindo ${movie.title}...`);
     closeModal();
+    openVideoPlayer(movie);
   };
 
   modalListBtn.onclick = () => {
@@ -849,12 +874,319 @@ function closeModal() {
   document.body.style.overflow = '';
 }
 
+// =============================================
+//  PREMIUM CUSTOM VIDEO PLAYER LOGIC
+// =============================================
+let controlsTimeout;
+let isSpeedMenuOpen = false;
+
+function initVideoPlayer() {
+  const playerOverlay = $('player-overlay');
+  const video = $('video-element');
+  const iframeWrapper = $('iframe-element-wrapper');
+  const iframe = $('iframe-element');
+  const playPauseBtn = $('ctrl-play-pause');
+  const rewindBtn = $('ctrl-rewind');
+  const forwardBtn = $('ctrl-forward');
+  const volumeBtn = $('ctrl-volume');
+  const volumeSlider = $('volume-slider');
+  const progressContainer = $('progress-container');
+  const progressFill = $('progress-bar-fill');
+  const progressHandle = $('progress-bar-handle');
+  const timeCurrent = $('time-current');
+  const timeDuration = $('time-duration');
+  const speedBtn = $('ctrl-speed');
+  const speedMenu = $('speed-menu');
+  const fullscreenBtn = $('ctrl-fullscreen');
+  const backBtn = $('player-back-btn');
+
+  if (!playerOverlay) return;
+
+  // Global open function
+  window.openVideoPlayer = function(movie) {
+    $('player-controls-title').textContent = movie.title;
+    playerOverlay.classList.add('show');
+    playerOverlay.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+
+    // Determinar se o link é Iframe (YouTube/Vimeo) ou vídeo direto (.mp4, .webm)
+    const url = movie.videoUrl || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+    
+    if (url.includes('youtube.com') || url.includes('youtu.be') || url.includes('vimeo.com')) {
+      // Configurar modo Iframe
+      video.style.display = 'none';
+      iframeWrapper.classList.add('active');
+      
+      let embedUrl = url;
+      if (url.includes('youtube.com/watch?v=')) {
+        const id = url.split('v=')[1]?.split('&')[0];
+        embedUrl = `https://www.youtube.com/embed/${id}?autoplay=1&modestbranding=1&rel=0`;
+      } else if (url.includes('youtu.be/')) {
+        const id = url.split('youtu.be/')[1]?.split('?')[0];
+        embedUrl = `https://www.youtube.com/embed/${id}?autoplay=1&modestbranding=1&rel=0`;
+      } else if (url.includes('vimeo.com/')) {
+        const id = url.split('vimeo.com/')[1]?.split('?')[0];
+        embedUrl = `https://player.vimeo.com/video/${id}?autoplay=1`;
+      }
+      
+      iframe.src = embedUrl;
+      // Ocultar controles customizados nativos para iframe
+      $('player-controls').style.display = 'none';
+    } else {
+      // Configurar modo Vídeo Nativo
+      iframeWrapper.classList.remove('active');
+      iframe.src = '';
+      video.style.display = 'block';
+      $('player-controls').style.display = 'flex';
+      
+      video.src = url;
+      video.load();
+      video.play().catch(() => {});
+      updatePlayPauseIcon(true);
+    }
+
+    // Iniciar monitoramento do mouse para ocultar os controles
+    resetControlsTimer();
+    document.addEventListener('mousemove', resetControlsTimer);
+  };
+
+  // Close player function
+  window.closeVideoPlayer = function() {
+    playerOverlay.classList.remove('show');
+    playerOverlay.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    
+    // Parar vídeos e limpar fontes
+    video.pause();
+    video.src = '';
+    iframe.src = '';
+    
+    document.removeEventListener('mousemove', resetControlsTimer);
+    clearTimeout(controlsTimeout);
+    playerOverlay.classList.remove('controls-hidden');
+  };
+
+  backBtn.addEventListener('click', closeVideoPlayer);
+
+  // Play / Pause Toggle
+  function togglePlay() {
+    if (video.paused) {
+      video.play().catch(() => {});
+      updatePlayPauseIcon(true);
+      playerOverlay.classList.add('playing');
+    } else {
+      video.pause();
+      updatePlayPauseIcon(false);
+      playerOverlay.classList.remove('playing');
+    }
+  }
+
+  function updatePlayPauseIcon(isPlaying) {
+    const playIcon = playPauseBtn.querySelector('.icon-play');
+    const pauseIcon = playPauseBtn.querySelector('.icon-pause');
+    if (isPlaying) {
+      playIcon.style.display = 'none';
+      pauseIcon.style.display = 'block';
+    } else {
+      playIcon.style.display = 'block';
+      pauseIcon.style.display = 'none';
+    }
+  }
+
+  playPauseBtn.addEventListener('click', togglePlay);
+  video.addEventListener('click', togglePlay);
+
+  // Rewind / Forward 10s
+  rewindBtn.addEventListener('click', () => {
+    video.currentTime = Math.max(0, video.currentTime - 10);
+  });
+
+  forwardBtn.addEventListener('click', () => {
+    video.currentTime = Math.min(video.duration, video.currentTime + 10);
+  });
+
+  // Time formatting helper (HH:MM:SS ou MM:SS)
+  function formatTime(seconds) {
+    if (isNaN(seconds)) return "00:00";
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor(seconds % 60);
+
+    const formattedM = String(m).padStart(2, '0');
+    const formattedS = String(s).padStart(2, '0');
+
+    if (h > 0) {
+      return `${h}:${formattedM}:${formattedS}`;
+    }
+    return `${formattedM}:${formattedS}`;
+  }
+
+  // Update progress bar
+  video.addEventListener('timeupdate', () => {
+    if (!video.duration) return;
+    const pct = (video.currentTime / video.duration) * 100;
+    progressFill.style.width = `${pct}%`;
+    progressHandle.style.left = `${pct}%`;
+    timeCurrent.textContent = formatTime(video.currentTime);
+  });
+
+  // Load duration when metadata is ready
+  video.addEventListener('loadedmetadata', () => {
+    timeDuration.textContent = formatTime(video.duration);
+  });
+
+  // Scrubbing/Seeking on click
+  function seek(e) {
+    const rect = progressContainer.getBoundingClientRect();
+    const pct = (e.clientX - rect.left) / rect.width;
+    const clampedPct = Math.max(0, Math.min(1, pct));
+    video.currentTime = clampedPct * video.duration;
+  }
+
+  let isDragging = false;
+  progressContainer.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    seek(e);
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (isDragging) seek(e);
+  });
+
+  document.addEventListener('mouseup', () => {
+    isDragging = false;
+  });
+
+  // Volume control
+  volumeSlider.addEventListener('input', (e) => {
+    const val = parseFloat(e.target.value);
+    video.volume = val;
+    video.muted = (val === 0);
+    updateVolumeIcon(val, video.muted);
+  });
+
+  volumeBtn.addEventListener('click', () => {
+    video.muted = !video.muted;
+    updateVolumeIcon(video.volume, video.muted);
+  });
+
+  function updateVolumeIcon(volume, isMuted) {
+    const highIcon = volumeBtn.querySelector('.icon-volume-high');
+    const mutedIcon = volumeBtn.querySelector('.icon-volume-muted');
+    if (isMuted || volume === 0) {
+      highIcon.style.display = 'none';
+      mutedIcon.style.display = 'block';
+    } else {
+      highIcon.style.display = 'block';
+      mutedIcon.style.display = 'none';
+    }
+  }
+
+  // Speed Menu Control
+  speedBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    isSpeedMenuOpen = !isSpeedMenuOpen;
+    speedMenu.classList.toggle('show', isSpeedMenuOpen);
+  });
+
+  document.addEventListener('click', () => {
+    isSpeedMenuOpen = false;
+    speedMenu.classList.remove('show');
+  });
+
+  speedMenu.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const speed = parseFloat(e.target.dataset.speed);
+      video.playbackRate = speed;
+      speedBtn.textContent = speed === 1.0 ? 'Normal' : `${speed}x`;
+      
+      speedMenu.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+      e.target.classList.add('active');
+    });
+  });
+
+  // Fullscreen toggle
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      playerOverlay.requestFullscreen()
+        .then(() => {
+          fullscreenBtn.querySelector('.icon-fullscreen-enter').style.display = 'none';
+          fullscreenBtn.querySelector('.icon-fullscreen-exit').style.display = 'block';
+        })
+        .catch(() => {});
+    } else {
+      document.exitFullscreen()
+        .then(() => {
+          fullscreenBtn.querySelector('.icon-fullscreen-enter').style.display = 'block';
+          fullscreenBtn.querySelector('.icon-fullscreen-exit').style.display = 'none';
+        })
+        .catch(() => {});
+    }
+  }
+
+  fullscreenBtn.addEventListener('click', toggleFullscreen);
+  video.addEventListener('dblclick', toggleFullscreen);
+
+  // Keyboard Shortcuts
+  document.addEventListener('keydown', (e) => {
+    if (!playerOverlay.classList.contains('show')) return;
+    
+    // Ignore keys if inside elements
+    if (e.target.tagName === 'INPUT') return;
+
+    if (e.key === ' ') {
+      e.preventDefault();
+      togglePlay();
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      video.currentTime = Math.min(video.duration, video.currentTime + 10);
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      video.currentTime = Math.max(0, video.currentTime - 10);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const val = Math.min(1, video.volume + 0.1);
+      video.volume = val;
+      volumeSlider.value = val;
+      updateVolumeIcon(val, false);
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const val = Math.max(0, video.volume - 0.1);
+      video.volume = val;
+      volumeSlider.value = val;
+      updateVolumeIcon(val, val === 0);
+    } else if (e.key === 'Escape') {
+      closeVideoPlayer();
+    }
+  });
+
+  // HUD Auto hide
+  function resetControlsTimer() {
+    playerOverlay.classList.remove('controls-hidden');
+    clearTimeout(controlsTimeout);
+    if (!video.paused) {
+      controlsTimeout = setTimeout(() => {
+        if (!isDragging && !isSpeedMenuOpen) {
+          playerOverlay.classList.add('controls-hidden');
+        }
+      }, 3500);
+    }
+  }
+
+  video.addEventListener('play', resetControlsTimer);
+  video.addEventListener('pause', () => {
+    playerOverlay.classList.remove('controls-hidden');
+    clearTimeout(controlsTimeout);
+  });
+}
+
 function initModal() {
   modalClose.addEventListener('click', closeModal);
   modalOverlay.addEventListener('click', (e) => {
     if (e.target === modalOverlay) closeModal();
   });
 }
+
 
 // ---- TOAST ----
 let toastTimeout;

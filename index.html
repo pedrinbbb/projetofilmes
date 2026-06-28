@@ -335,6 +335,134 @@
     </div>
   </div>
 
+  <!-- ========== PREMIUM VIDEO PLAYER OVERLAY ========== -->
+  <div class="player-overlay" id="player-overlay" role="dialog" aria-modal="true" aria-hidden="true">
+    
+    <!-- Ambient Glow (Efeito Cinema) -->
+    <div class="player-ambient-glow" id="player-ambient-glow" aria-hidden="true"></div>
+
+    <!-- Back/Close Button -->
+    <button class="player-back-btn" id="player-back-btn" aria-label="Voltar para detalhes">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12,19 5,12 12,5"></polyline>
+      </svg>
+      <span>Voltar</span>
+    </button>
+
+    <!-- Main Container -->
+    <div class="player-container" id="player-container">
+      
+      <!-- HTML5 Native Video Tag (for direct MP4/WebM files) -->
+      <video class="video-element" id="video-element" playsinline>
+        Seu navegador não suporta a reprodução deste formato de vídeo.
+      </video>
+
+      <!-- Iframe wrapper (for YouTube / Vimeo) -->
+      <div class="iframe-element-wrapper" id="iframe-element-wrapper">
+        <iframe class="iframe-element" id="iframe-element" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+      </div>
+
+      <!-- Controls Wrapper (Overlay) -->
+      <div class="player-controls" id="player-controls">
+        
+        <!-- Top Title Indicator -->
+        <div class="player-controls-title" id="player-controls-title">Nome do Filme</div>
+
+        <!-- Progress Bar Slider -->
+        <div class="progress-container" id="progress-container" role="slider" aria-label="Barra de progresso" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div class="progress-bar-bg"></div>
+          <div class="progress-bar-hover" id="progress-bar-hover"></div>
+          <div class="progress-bar-fill" id="progress-bar-fill"></div>
+          <div class="progress-bar-handle" id="progress-bar-handle"></div>
+        </div>
+
+        <div class="controls-row">
+          
+          <!-- Left Controls -->
+          <div class="controls-left">
+            <!-- Play/Pause -->
+            <button class="control-btn" id="ctrl-play-pause" aria-label="Play">
+              <svg class="icon-play" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="5,3 19,12 5,21"></polygon>
+              </svg>
+              <svg class="icon-pause" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+                <rect x="6" y="4" width="4" height="16" rx="1"></rect>
+                <rect x="14" y="4" width="4" height="16" rx="1"></rect>
+              </svg>
+            </button>
+
+            <!-- Rewind 10s -->
+            <button class="control-btn" id="ctrl-rewind" aria-label="Voltar 10 segundos">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                <polyline points="3 3 3 8 8 8"></polyline>
+              </svg>
+            </button>
+
+            <!-- Forward 10s -->
+            <button class="control-btn" id="ctrl-forward" aria-label="Avançar 10 segundos">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12a9 9 0 1 1-9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+                <polyline points="21 3 21 8 16 8"></polyline>
+              </svg>
+            </button>
+
+            <!-- Volume Slider & Button -->
+            <div class="volume-container">
+              <button class="control-btn" id="ctrl-volume" aria-label="Mudo">
+                <svg class="icon-volume-high" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                </svg>
+                <svg class="icon-volume-muted" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                  <line x1="23" y1="9" x2="17" y2="15"></line>
+                  <line x1="17" y1="9" x2="23" y2="15"></line>
+                </svg>
+              </button>
+              <input type="range" class="volume-slider" id="volume-slider" min="0" max="1" step="0.05" value="1" aria-label="Volume" />
+            </div>
+
+            <!-- Time indicator -->
+            <div class="time-indicator">
+              <span id="time-current">00:00</span>
+              <span class="time-divider">/</span>
+              <span id="time-duration">00:00</span>
+            </div>
+          </div>
+
+          <!-- Right Controls -->
+          <div class="controls-right">
+            <!-- Speed Control -->
+            <div class="speed-container">
+              <button class="control-btn speed-btn" id="ctrl-speed" aria-haspopup="true" aria-label="Velocidade de reprodução">1.0x</button>
+              <div class="speed-menu" id="speed-menu">
+                <button data-speed="0.5">0.5x</button>
+                <button data-speed="0.75">0.75x</button>
+                <button data-speed="1.0" class="active">Normal</button>
+                <button data-speed="1.25">1.25x</button>
+                <button data-speed="1.5">1.5x</button>
+                <button data-speed="2.0">2.0x</button>
+              </div>
+            </div>
+
+            <!-- Fullscreen -->
+            <button class="control-btn" id="ctrl-fullscreen" aria-label="Tela cheia">
+              <svg class="icon-fullscreen-enter" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+              </svg>
+              <svg class="icon-fullscreen-exit" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;">
+                <path d="M4 14h6v6m10-6h-6v6M4 10h6V4m10 6h-6V4"></path>
+              </svg>
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ========== TOAST ========== -->
   <div class="toast" id="toast" role="alert" aria-live="polite"></div>
 

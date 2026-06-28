@@ -228,6 +228,7 @@ function showApiSuccessMessage(msg) {
     animation: fade-slide-up 0.3s ease both;
     line-height: 1.5;
     text-align: center;
+  `;
   toast.textContent = '✅ ' + msg;
   const container = document.querySelector('.auth-container');
   container?.insertBefore(toast, container.firstChild);

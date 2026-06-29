@@ -197,11 +197,6 @@ async function sendResetPasswordEmail(to, name, code) {
 
 
 // =============================================
-//  DATABASE SETUP (sql.js)
-// =============================================
-let db;
-
-// =============================================
 //  DATABASE SETUP (PostgreSQL / SQLite fallback)
 // =============================================
 let db;      // Armazena a base SQLite se usado fallback

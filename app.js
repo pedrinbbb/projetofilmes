@@ -593,6 +593,27 @@ function initVideoPlayer() {
 
   if (!playerOverlay) return;
 
+  function extractVideoUrl(url) {
+    if (!url) return '';
+    if (url.includes('goplayer.php') || url.includes('axplay.shop')) {
+      try {
+        const urlObj = new URL(url);
+        const d = urlObj.searchParams.get('d');
+        const primaryURL = urlObj.searchParams.get('primaryURL');
+        if (d && primaryURL) {
+          return `${primaryURL.replace(/\/$/, '')}${d}`;
+        }
+        const fallbackURL = urlObj.searchParams.get('fallbackURL');
+        if (d && fallbackURL) {
+          return `${fallbackURL.replace(/\/$/, '')}${d}`;
+        }
+      } catch (e) {
+        console.error('Erro ao extrair URL do player Axplay:', e);
+      }
+    }
+    return url;
+  }
+
   // Global open function
   window.openVideoPlayer = async function(movie) {
     const allowed = await checkSubscriptionAndScreens();
@@ -603,14 +624,17 @@ function initVideoPlayer() {
     playerOverlay.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
 
-    // Determinar se o link é Iframe (YouTube/Vimeo/Google Drive/Axplay) ou vídeo direto (.mp4, .webm)
-    const url = movie.videoUrl || movie.videourl || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+    // Determinar se o link é Iframe (YouTube/Vimeo/Google Drive/Axplay) ou vídeo direto (.mp4, .webm, .m3u8)
+    const rawUrl = movie.videoUrl || movie.videourl || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+    const url = extractVideoUrl(rawUrl);
     
     const cleanUrl = url.toLowerCase().split('?')[0];
     const isDirectVideo = cleanUrl.endsWith('.mp4') || 
                           cleanUrl.endsWith('.webm') || 
                           cleanUrl.endsWith('.m4v') || 
                           cleanUrl.endsWith('.ogv') || 
+                          cleanUrl.endsWith('.m3u8') ||
+                          url.includes('.m3u8?') ||
                           url.includes('/api/video/stream');
 
     if (!isDirectVideo || url.includes('youtube.com') || url.includes('youtu.be') || url.includes('vimeo.com') || url.includes('drive.google.com')) {
@@ -642,10 +666,35 @@ function initVideoPlayer() {
       iframe.src = '';
       video.style.display = 'block';
       $('player-controls').style.display = 'flex';
+
+      // Limpar qualquer instância anterior do Hls
+      if (window.hlsPlayer) {
+        window.hlsPlayer.destroy();
+        window.hlsPlayer = null;
+      }
       
-      video.src = url;
-      video.load();
-      video.play().catch(() => {});
+      if (url.includes('.m3u8')) {
+        if (typeof Hls !== 'undefined' && Hls.isSupported()) {
+          const hls = new Hls();
+          hls.loadSource(url);
+          hls.attachMedia(video);
+          window.hlsPlayer = hls;
+          hls.on(Hls.Events.MANIFEST_PARSED, function() {
+            video.play().catch(() => {});
+          });
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+          video.src = url;
+          video.addEventListener('loadedmetadata', function() {
+            video.play().catch(() => {});
+          });
+        } else {
+          showToast('⚠️ Seu navegador não suporta streaming HLS.');
+        }
+      } else {
+        video.src = url;
+        video.load();
+        video.play().catch(() => {});
+      }
       updatePlayPauseIcon(true);
     }
 
@@ -664,6 +713,11 @@ function initVideoPlayer() {
     video.pause();
     video.src = '';
     iframe.src = '';
+
+    if (window.hlsPlayer) {
+      window.hlsPlayer.destroy();
+      window.hlsPlayer = null;
+    }
     
     document.removeEventListener('mousemove', resetControlsTimer);
     clearTimeout(controlsTimeout);

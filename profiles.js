@@ -284,7 +284,13 @@ async function createProfile() {
       }),
     });
 
-    const data = await res.json();
+    let data;
+    try {
+      data = await res.json();
+    } catch {
+      createError.textContent = `Erro do servidor (${res.status}). Tente novamente em instantes.`;
+      return;
+    }
 
     if (!res.ok) {
       createError.textContent = data.error || 'Erro ao criar perfil.';
@@ -304,7 +310,7 @@ async function createProfile() {
     window.location.href = '/';
 
   } catch (err) {
-    createError.textContent = 'Erro de conexão com o servidor.';
+    createError.textContent = 'Sem conexão com o servidor. Verifique sua internet.';
   } finally {
     isSubmitting = false;
     submitBtn.disabled = false;

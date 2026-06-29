@@ -348,8 +348,11 @@ document.getElementById('login-email-form')?.addEventListener('submit', async fu
 });
 
 // ---- REGISTER FORM SUBMIT ----
+let isRegistering = false;
 document.getElementById('register-email-form')?.addEventListener('submit', async function(e) {
   e.preventDefault();
+
+  if (isRegistering) return;
 
   const name     = document.getElementById('register-name').value.trim();
   const email    = document.getElementById('register-email').value.trim();
@@ -401,6 +404,7 @@ document.getElementById('register-email-form')?.addEventListener('submit', async
 
   if (!valid) return;
 
+  isRegistering = true;
   const btn = document.getElementById('register-submit-btn');
   btn.classList.add('loading');
   btn.disabled = true;
@@ -422,6 +426,7 @@ document.getElementById('register-email-form')?.addEventListener('submit', async
       }
       btn.classList.remove('loading');
       btn.disabled = false;
+      isRegistering = false;
       return;
     }
 
@@ -430,6 +435,7 @@ document.getElementById('register-email-form')?.addEventListener('submit', async
     showApiSuccessMessage('Sua conta foi criada com sucesso! Redirecionando...');
     
     setTimeout(() => {
+      isRegistering = false;
       saveAuthAndRedirect(data.token, data.user);
     }, 2200);
 
@@ -437,6 +443,7 @@ document.getElementById('register-email-form')?.addEventListener('submit', async
     showApiError('Servidor offline. Verifique se o servidor está rodando (npm start).');
     btn.classList.remove('loading');
     btn.disabled = false;
+    isRegistering = false;
   }
 });
 

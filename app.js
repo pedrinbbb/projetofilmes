@@ -1175,7 +1175,7 @@ async function selectPlanForSub(planId, cardElement) {
     if (qrWrapper) {
       if (data.qrcodeImage) {
         // QR Code real da Efí (base64)
-        qrWrapper.innerHTML = `<img src="data:image/png;base64,${data.qrcodeImage}" width="180" height="180" style="display:block;margin:0 auto;border-radius:4px;" alt="QR Code Pix" />`;
+        qrWrapper.innerHTML = `<img src="${data.qrcodeImage}" width="180" height="180" style="display:block;margin:0 auto;border-radius:4px;" alt="QR Code Pix" />`;
       } else {
         // Sem imagem: instrução de usar o código copia e cola
         qrWrapper.innerHTML = `

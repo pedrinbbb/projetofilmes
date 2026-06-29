@@ -160,51 +160,28 @@
       <!-- ABA 3: GERENCIAR PLANOS -->
       <section class="panel-tab-content" id="section-plans">
         <div class="section-header">
-          <h2>Configurar Planos de Assinatura</h2>
+          <h2>Planos de Assinatura</h2>
+          <div class="header-actions">
+            <button id="btn-add-plan" class="btn-primary">+ Cadastrar Plano</button>
+          </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-top: 20px;">
-          <!-- Plano Bronze (ID 1) -->
-          <div class="stat-card" style="flex-direction: column; align-items: stretch; gap: 16px; background: var(--color-bg-card); border: 1px solid rgba(212, 175, 55, 0.15); padding: 24px; border-radius: 16px;">
-            <h3 style="font-family: var(--font-family-title); color: var(--color-gold-bright); font-size: 1.3rem;">🥉 Plano Bronze</h3>
-            <div class="form-group">
-              <label for="plan-1-price">Preço Mensal (R$)</label>
-              <input type="number" id="plan-1-price" step="0.01" min="0">
-            </div>
-            <div class="form-group">
-              <label for="plan-1-screens">Telas Simultâneas</label>
-              <input type="number" id="plan-1-screens" min="1" max="10">
-            </div>
-            <button type="button" class="btn-primary" onclick="savePlanConfig(1)" style="margin-top: 8px;">Salvar Bronze</button>
-          </div>
-
-          <!-- Plano Prata (ID 2) -->
-          <div class="stat-card" style="flex-direction: column; align-items: stretch; gap: 16px; background: var(--color-bg-card); border: 1px solid rgba(212, 175, 55, 0.15); padding: 24px; border-radius: 16px;">
-            <h3 style="font-family: var(--font-family-title); color: var(--color-gold-bright); font-size: 1.3rem;">🥈 Plano Prata</h3>
-            <div class="form-group">
-              <label for="plan-2-price">Preço Mensal (R$)</label>
-              <input type="number" id="plan-2-price" step="0.01" min="0">
-            </div>
-            <div class="form-group">
-              <label for="plan-2-screens">Telas Simultâneas</label>
-              <input type="number" id="plan-2-screens" min="1" max="10">
-            </div>
-            <button type="button" class="btn-primary" onclick="savePlanConfig(2)" style="margin-top: 8px;">Salvar Prata</button>
-          </div>
-
-          <!-- Plano Ouro (ID 3) -->
-          <div class="stat-card" style="flex-direction: column; align-items: stretch; gap: 16px; background: var(--color-bg-card); border: 1px solid rgba(212, 175, 55, 0.15); padding: 24px; border-radius: 16px;">
-            <h3 style="font-family: var(--font-family-title); color: var(--color-gold-bright); font-size: 1.3rem;">🥇 Plano Ouro</h3>
-            <div class="form-group">
-              <label for="plan-3-price">Preço Mensal (R$)</label>
-              <input type="number" id="plan-3-price" step="0.01" min="0">
-            </div>
-            <div class="form-group">
-              <label for="plan-3-screens">Telas Simultâneas</label>
-              <input type="number" id="plan-3-screens" min="1" max="10">
-            </div>
-            <button type="button" class="btn-primary" onclick="savePlanConfig(3)" style="margin-top: 8px;">Salvar Ouro</button>
-          </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nome do Plano</th>
+                <th>Valor Mensal (R$)</th>
+                <th>Telas Simultâneas</th>
+                <th>Duração (dias)</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="plans-list-tbody">
+              <!-- Inserido dinamicamente via JS -->
+            </tbody>
+          </table>
         </div>
       </section>
 
@@ -460,7 +437,44 @@
       </div>
     </div>
   </div>
+  <!-- =============================================
+       MODAL: ADICIONAR / EDITAR PLANO DE ASSINATURA
+       ============================================= -->
+  <div class="modal-overlay" id="plan-modal" aria-hidden="true">
+    <div class="modal" role="dialog" style="max-width: 460px;">
+      <button class="modal-close" id="plan-modal-close-btn" aria-label="Fechar Modal">&times;</button>
+      <h2 id="plan-modal-title">Cadastrar Novo Plano</h2>
+      
+      <form id="plan-form" style="display: flex; flex-direction: column; gap: 16px; margin-top: 20px;" novalidate>
+        <input type="hidden" id="plan-id">
 
+        <div class="form-group">
+          <label for="p-name">Nome do Plano</label>
+          <input type="text" id="p-name" required placeholder="Ex: Bronze, Trimestral, Anual...">
+        </div>
+
+        <div class="form-group">
+          <label for="p-price">Valor Mensal / Período (R$)</label>
+          <input type="number" id="p-price" required placeholder="Ex: 29.90" step="0.01" min="0">
+        </div>
+
+        <div class="form-group">
+          <label for="p-screens">Telas Simultâneas</label>
+          <input type="number" id="p-screens" required placeholder="Ex: 2" min="1" max="20">
+        </div>
+
+        <div class="form-group">
+          <label for="p-duration">Duração do Plano (em dias)</label>
+          <input type="number" id="p-duration" required placeholder="Ex: 30 para mensal, 90 para trimestral" min="1" max="9999">
+        </div>
+
+        <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid rgba(255, 215, 0, 0.1); padding-top: 16px; margin-top: 8px;">
+          <button type="button" id="btn-cancel-plan" class="btn-secondary">Cancelar</button>
+          <button type="submit" class="btn-primary" id="btn-save-plan">Salvar Plano</button>
+        </div>
+      </form>
+    </div>
+  </div>
   <script src="admin.js"></script>
 </body>
 </html>

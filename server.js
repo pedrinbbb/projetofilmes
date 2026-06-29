@@ -273,12 +273,16 @@ async function initDatabase() {
 
   db.run(`
     CREATE TABLE IF NOT EXISTS plans (
-      id      INTEGER PRIMARY KEY,
-      name    TEXT NOT NULL,
-      price   REAL NOT NULL,
-      screens INTEGER NOT NULL
+      id            INTEGER PRIMARY KEY AUTOINCREMENT,
+      name          TEXT NOT NULL,
+      price         REAL NOT NULL,
+      screens       INTEGER NOT NULL,
+      duration_days INTEGER NOT NULL DEFAULT 30
     );
   `);
+
+  // Migração de coluna duration_days se não existir
+  try { db.run('ALTER TABLE plans ADD COLUMN duration_days INTEGER DEFAULT 30'); } catch (e) {}
 
   // Migrações de colunas de assinatura se não existirem
   try { db.run('ALTER TABLE users ADD COLUMN sub_active INTEGER DEFAULT 0'); } catch (e) {}
@@ -306,9 +310,9 @@ async function initDatabase() {
     const plansCount = db.exec('SELECT COUNT(*) as count FROM plans')[0]?.values[0][0] ?? 0;
     if (plansCount === 0) {
       console.log('  📦 Semeando planos de assinatura padrão...');
-      db.run("INSERT INTO plans (id, name, price, screens) VALUES (1, 'Bronze', 14.90, 1)");
-      db.run("INSERT INTO plans (id, name, price, screens) VALUES (2, 'Prata', 24.90, 2)");
-      db.run("INSERT INTO plans (id, name, price, screens) VALUES (3, 'Ouro', 44.90, 5)");
+      db.run("INSERT INTO plans (id, name, price, screens, duration_days) VALUES (1, 'Bronze', 14.90, 1, 30)");
+      db.run("INSERT INTO plans (id, name, price, screens, duration_days) VALUES (2, 'Prata', 24.90, 2, 30)");
+      db.run("INSERT INTO plans (id, name, price, screens, duration_days) VALUES (3, 'Ouro', 44.90, 5, 30)");
       saveDb();
     }
   } catch (err) {
@@ -1569,16 +1573,42 @@ app.get('/api/admin/plans', requireAdminAuth, (req, res) => {
   }
 });
 
+// Criar Novo Plano de Assinatura (Admin)
+app.post('/api/admin/plans', requireAdminAuth, (req, res) => {
+  try {
+    const { name, price, screens, duration_days } = req.body;
+
+    if (!name || price === undefined || screens === undefined || duration_days === undefined) {
+      return res.status(400).json({ error: 'Todos os campos são obrigatórios (nome, preço, telas, duração em dias)' });
+    }
+
+    const planId = dbRun(
+      'INSERT INTO plans (name, price, screens, duration_days) VALUES (?, ?, ?, ?)',
+      [name, parseFloat(price), parseInt(screens), parseInt(duration_days)]
+    );
+    saveDb();
+
+    const plan = dbGet('SELECT * FROM plans WHERE id = ?', [planId]);
+    return res.json({ success: true, plan });
+  } catch (err) {
+    console.error('[ADMIN POST PLAN ERROR]', err);
+    return res.status(500).json({ error: 'Erro ao criar plano' });
+  }
+});
+
 // Atualizar Configuração de um Plano (Admin)
 app.put('/api/admin/plans/:id', requireAdminAuth, (req, res) => {
   try {
     const { id } = req.params;
-    const { price, screens } = req.body;
+    const { name, price, screens, duration_days } = req.body;
 
-    if (price === undefined || screens === undefined)
-      return res.status(400).json({ error: 'Preço e quantidade de telas são obrigatórios' });
+    if (!name || price === undefined || screens === undefined || duration_days === undefined)
+      return res.status(400).json({ error: 'Nome, preço, telas e duração são obrigatórios' });
 
-    db.run('UPDATE plans SET price = ?, screens = ? WHERE id = ?', [parseFloat(price), parseInt(screens), id]);
+    db.run(
+      'UPDATE plans SET name = ?, price = ?, screens = ?, duration_days = ? WHERE id = ?',
+      [name, parseFloat(price), parseInt(screens), parseInt(duration_days), id]
+    );
     saveDb();
 
     const plan = dbGet('SELECT * FROM plans WHERE id = ?', [id]);
@@ -1586,6 +1616,26 @@ app.put('/api/admin/plans/:id', requireAdminAuth, (req, res) => {
   } catch (err) {
     console.error('[ADMIN PUT PLAN ERROR]', err);
     return res.status(500).json({ error: 'Erro ao atualizar plano' });
+  }
+});
+
+// Excluir Plano de Assinatura (Admin)
+app.delete('/api/admin/plans/:id', requireAdminAuth, (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Não permitir excluir planos padrão (1, 2, 3) se quiser manter consistência simples
+    if (parseInt(id) <= 3) {
+      return res.status(400).json({ error: 'Os planos padrão (Bronze, Prata, Ouro) não podem ser excluídos, apenas editados.' });
+    }
+
+    db.run('DELETE FROM plans WHERE id = ?', [id]);
+    saveDb();
+
+    return res.json({ success: true, message: 'Plano excluído com sucesso.' });
+  } catch (err) {
+    console.error('[ADMIN DELETE PLAN ERROR]', err);
+    return res.status(500).json({ error: 'Erro ao excluir plano' });
   }
 });
 
@@ -1835,7 +1885,9 @@ app.all('/api/webhook/pix', (req, res) => {
         const user = dbGet('SELECT id, pending_plan_id FROM users WHERE pending_txid = ?', [txid]);
         if (user) {
           const nowStr = new Date().toISOString();
-          const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+          const targetPlan = dbGet('SELECT duration_days FROM plans WHERE id = ?', [user.pending_plan_id]);
+          const days = targetPlan ? targetPlan.duration_days : 30;
+          const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
           
           db.run(
             'UPDATE users SET sub_active = 1, sub_plan_id = ?, sub_activated_at = ?, sub_expires_at = ?, pending_txid = NULL, pending_plan_id = NULL WHERE id = ?',

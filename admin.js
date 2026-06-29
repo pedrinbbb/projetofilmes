@@ -39,7 +39,22 @@ const subAdvCloseBtn = $('sub-advanced-close-btn');
 // ---- STATE ----
 let movies = [];
 let users = [];
+let plans = [];
 let paymentLogs = [];
+
+// Seletores do Plano
+const plansTbody = $('plans-list-tbody');
+const planModal = $('plan-modal');
+const planForm = $('plan-form');
+const planModalTitle = $('plan-modal-title');
+const planIdField = $('plan-id');
+const pNameInput = $('p-name');
+const pPriceInput = $('p-price');
+const pScreensInput = $('p-screens');
+const pDurationInput = $('p-duration');
+const btnCancelPlan = $('btn-cancel-plan');
+const planModalCloseBtn = $('plan-modal-close-btn');
+
 const movieModal = $('movie-modal');
 const movieForm = $('movie-form');
 const modalTitle = $('modal-title');
@@ -209,13 +224,14 @@ async function loadDashboardData() {
     });
     if (res.ok) {
       const data = await res.json();
-      const plans = data.plans || [];
-      plans.forEach(plan => {
-        const priceInput = $(`plan-${plan.id}-price`);
-        const screensInput = $(`plan-${plan.id}-screens`);
-        if (priceInput) priceInput.value = plan.price;
-        if (screensInput) screensInput.value = plan.screens;
-      });
+      plans = data.plans || [];
+      renderPlansTable();
+      
+      // Atualizar também o select de planos do modal de ativação manual avançada
+      const selectAdv = $('sub-adv-plan-id');
+      if (selectAdv) {
+        selectAdv.innerHTML = plans.map(p => `<option value="${p.id}">${p.name} (${p.screens} ${p.screens === 1 ? 'tela' : 'telas'} - R$ ${p.price.toFixed(2)})</option>`).join('');
+      }
     }
   } catch (err) {
     console.error('Erro ao carregar planos:', err);
@@ -863,28 +879,105 @@ subAdvancedForm.addEventListener('submit', async (e) => {
 btnCancelSubAdv.addEventListener('click', closeSubAdvancedModal);
 subAdvCloseBtn.addEventListener('click', closeSubAdvancedModal);
 
-window.savePlanConfig = async function(planId) {
-  const token = getAdminToken();
-  const price = parseFloat($(`plan-${planId}-price`).value);
-  const screens = parseInt($(`plan-${planId}-screens`).value);
+// ---- DYNAMIC PLAN CRUD & RENDERING (ADMIN) ----
 
-  if (isNaN(price) || isNaN(screens)) {
-    showToast("⚠️ Preço e quantidade de telas devem ser valores válidos.");
+window.renderPlansTable = function() {
+  plansTbody.innerHTML = '';
+
+  if (plans.length === 0) {
+    plansTbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--color-text-muted);">Nenhum plano cadastrado.</td></tr>`;
     return;
   }
 
+  plans.forEach(plan => {
+    const tr = document.createElement('tr');
+    
+    // Planos padrão 1, 2 e 3 não podem ser excluídos para manter consistência simples
+    const isDefault = plan.id <= 3;
+    const deleteBtn = isDefault 
+      ? `<button class="btn-icon delete" style="opacity: 0.3; cursor: not-allowed;" title="Planos padrão não podem ser excluídos" disabled>🗑️</button>`
+      : `<button class="btn-icon delete" title="Excluir Plano" onclick="deletePlan(${plan.id}, '${plan.name}')">🗑️</button>`;
+
+    tr.innerHTML = `
+      <td>${plan.id}</td>
+      <td><strong>${plan.name}</strong></td>
+      <td>R$ ${parseFloat(plan.price).toFixed(2)}</td>
+      <td>${plan.screens} ${plan.screens === 1 ? 'Tela' : 'Telas'}</td>
+      <td>${plan.duration_days} dias</td>
+      <td>
+        <div class="actions-cell">
+          <button class="btn-icon" title="Editar Plano" onclick="openPlanModal(${plan.id})">✏️</button>
+          ${deleteBtn}
+        </div>
+      </td>
+    `;
+    plansTbody.appendChild(tr);
+  });
+};
+
+window.openPlanModal = function(planId = null) {
+  if (planId) {
+    // Editar
+    const plan = plans.find(p => p.id === planId);
+    if (!plan) return;
+
+    planModalTitle.textContent = "Editar Plano";
+    planIdField.value = plan.id;
+    pNameInput.value = plan.name;
+    pPriceInput.value = plan.price;
+    pScreensInput.value = plan.screens;
+    pDurationInput.value = plan.duration_days;
+  } else {
+    // Cadastrar Novo
+    planModalTitle.textContent = "Cadastrar Novo Plano";
+    planIdField.value = "";
+    pNameInput.value = "";
+    pPriceInput.value = "";
+    pScreensInput.value = "";
+    pDurationInput.value = "30"; // Sugerir 30 dias (mensal)
+  }
+
+  planModal.classList.add('open');
+  planModal.setAttribute('aria-hidden', 'false');
+};
+
+window.closePlanModal = function() {
+  planModal.classList.remove('open');
+  planModal.setAttribute('aria-hidden', 'true');
+};
+
+// Enviar Formulário de Planos (Cadastrar ou Editar)
+planForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const id = planIdField.value;
+  const name = pNameInput.value.trim();
+  const price = parseFloat(pPriceInput.value);
+  const screens = parseInt(pScreensInput.value);
+  const duration_days = parseInt(pDurationInput.value);
+
+  if (!name || isNaN(price) || isNaN(screens) || isNaN(duration_days)) {
+    showToast("⚠️ Todos os campos devem ser preenchidos corretamente.");
+    return;
+  }
+
+  const token = getAdminToken();
+  const url = id ? `${API}/api/admin/plans/${id}` : `${API}/api/admin/plans`;
+  const method = id ? 'PUT' : 'POST';
+
   try {
-    const res = await fetch(`${API}/api/admin/plans/${planId}`, {
-      method: 'PUT',
+    const res = await fetch(url, {
+      method,
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`
       },
-      body: JSON.stringify({ price, screens })
+      body: JSON.stringify({ name, price, screens, duration_days })
     });
 
     if (res.ok) {
-      showToast("✓ Configurações do plano atualizadas com sucesso!");
+      showToast(id ? "✓ Plano atualizado com sucesso!" : "✓ Novo plano cadastrado com sucesso!");
+      closePlanModal();
       loadDashboardData();
     } else {
       const data = await res.json();
@@ -893,7 +986,34 @@ window.savePlanConfig = async function(planId) {
   } catch {
     showToast("Erro de rede ao salvar plano.");
   }
+});
+
+// Deletar Plano
+window.deletePlan = async function(planId, name) {
+  if (!confirm(`Tem certeza que deseja excluir o plano "${name}"?`)) return;
+
+  const token = getAdminToken();
+  try {
+    const res = await fetch(`${API}/api/admin/plans/${planId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (res.ok) {
+      showToast("✓ Plano excluído com sucesso!");
+      loadDashboardData();
+    } else {
+      const data = await res.json();
+      showToast(data.error || "Erro ao excluir plano.");
+    }
+  } catch {
+    showToast("Erro de rede ao excluir plano.");
+  }
 };
+
+btnCancelPlan.addEventListener('click', closePlanModal);
+planModalCloseBtn.addEventListener('click', closePlanModal);
+$('btn-add-plan')?.addEventListener('click', () => openPlanModal());
 
 // ---- TABELA DE COBRANÇAS E LOGS ----
 function renderPaymentsTable() {
@@ -961,4 +1081,3 @@ window.addEventListener('storage', checkAdminAuth);
 $('search-movies')?.addEventListener('input', renderMoviesTable);
 $('search-users')?.addEventListener('input', renderUsersTable);
 $('search-payments')?.addEventListener('input', renderPaymentsTable);
-

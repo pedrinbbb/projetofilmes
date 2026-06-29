@@ -1017,7 +1017,7 @@ function saveAuthAndRedirect(token, user, isNew = false) {
         const response = await fetch('/api/auth/reset-password', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: recoveryEmail, code, newPassword })
+          body: JSON.stringify({ email: recoveryEmail, code, password: newPassword })
         });
 
         const data = await response.json();

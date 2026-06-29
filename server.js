@@ -752,8 +752,15 @@ function generateOTP() {
 app.set('trust proxy', 1);
 
 app.use(cors({ origin: true, credentials: true }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.json({ limit: '15mb' })); // Aumentar limite para aceitar imagens em base64
+app.use(express.urlencoded({ extended: false, limit: '15mb' }));
+
+// Criar pasta de uploads se não existir
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir);
+}
+
 app.use(express.static(path.join(__dirname)));
 
 // =============================================
@@ -1698,6 +1705,36 @@ app.get('/api/admin/payments', requireAdminAuth, (req, res) => {
   } catch (err) {
     console.error('[ADMIN GET PAYMENTS ERROR]', err);
     return res.status(500).json({ error: 'Erro ao buscar pagamentos' });
+  }
+});
+
+// Upload de Logotipo e Favicon (Admin)
+app.post('/api/admin/settings/upload', requireAdminAuth, (req, res) => {
+  try {
+    const { type, fileData } = req.body; // type: 'logo' ou 'favicon', fileData: base64 string
+
+    if (!type || !fileData) {
+      return res.status(400).json({ error: 'Parâmetros inválidos.' });
+    }
+
+    if (!['logo', 'favicon'].includes(type)) {
+      return res.status(400).json({ error: 'Tipo de upload inválido.' });
+    }
+
+    // Limpar o prefixo data:image/...;base64, se existir
+    const base64Data = fileData.replace(/^data:image\/\w+;base64,/, "");
+    const buffer = Buffer.from(base64Data, 'base64');
+
+    const fileName = type === 'logo' ? 'logo.png' : 'favicon.png';
+    const filePath = path.join(__dirname, 'uploads', fileName);
+
+    fs.writeFileSync(filePath, buffer);
+    console.log(`[SETTINGS] ⚙️ Upload de ${type} salvo com sucesso em: ${filePath}`);
+
+    return res.json({ success: true, message: `Upload de ${type} concluído com sucesso!` });
+  } catch (err) {
+    console.error('[ADMIN UPLOAD SETTINGS ERROR]', err);
+    return res.status(500).json({ error: 'Erro ao salvar o arquivo.' });
   }
 });
 

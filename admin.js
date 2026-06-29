@@ -16,10 +16,12 @@ const tabMoviesBtn = $('tab-movies-btn');
 const tabUsersBtn = $('tab-users-btn');
 const tabPlansBtn = $('tab-plans-btn');
 const tabPaymentsBtn = $('tab-payments-btn');
+const tabCustomizeBtn = $('tab-customize-btn');
 const sectionMovies = $('section-movies');
 const sectionUsers = $('section-users');
 const sectionPlans = $('section-plans');
 const sectionPayments = $('section-payments');
+const sectionCustomize = $('section-customize');
 
 const moviesTbody = $('movies-list-tbody');
 const usersTbody = $('users-list-tbody');
@@ -168,17 +170,20 @@ function switchTab(target) {
   tabUsersBtn.classList.toggle('active', target === 'users');
   tabPlansBtn.classList.toggle('active', target === 'plans');
   tabPaymentsBtn.classList.toggle('active', target === 'payments');
+  tabCustomizeBtn.classList.toggle('active', target === 'customize');
 
   sectionMovies.classList.toggle('active', target === 'movies');
   sectionUsers.classList.toggle('active', target === 'users');
   sectionPlans.classList.toggle('active', target === 'plans');
   sectionPayments.classList.toggle('active', target === 'payments');
+  sectionCustomize.classList.toggle('active', target === 'customize');
 }
 
 tabMoviesBtn.addEventListener('click', () => switchTab('movies'));
 tabUsersBtn.addEventListener('click', () => switchTab('users'));
 tabPlansBtn.addEventListener('click', () => switchTab('plans'));
 tabPaymentsBtn.addEventListener('click', () => switchTab('payments'));
+tabCustomizeBtn.addEventListener('click', () => switchTab('customize'));
 
 // =============================================
 //  DASHBOARD LOAD DATA
@@ -1080,4 +1085,111 @@ window.addEventListener('storage', checkAdminAuth);
 // SEARCH LISTENERS (Real-time Filtering)
 $('search-movies')?.addEventListener('input', renderMoviesTable);
 $('search-users')?.addEventListener('input', renderUsersTable);
+$('search-payments')?.addEventListener('input', renderPaymentsTable);
+
+// ---- PERSONALIZAÇÃO DO SITE (LOGOTIPO E FAVICON) ----
+let uploadedLogoBase64 = null;
+let uploadedFaviconBase64 = null;
+
+// Lógica do Logotipo
+$('input-logo-file')?.addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    uploadedLogoBase64 = evt.target.result;
+    const preview = $('preview-logo');
+    if (preview) preview.src = uploadedLogoBase64;
+    
+    const saveBtn = $('btn-save-logo');
+    if (saveBtn) saveBtn.removeAttribute('disabled');
+  };
+  reader.readAsDataURL(file);
+});
+
+$('btn-save-logo')?.addEventListener('click', async function() {
+  if (!uploadedLogoBase64) return;
+  
+  const btn = $('btn-save-logo');
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+
+  const token = getAdminToken();
+  try {
+    const res = await fetch(`${API}/api/admin/settings/upload`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ type: 'logo', fileData: uploadedLogoBase64 })
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      showToast('✓ Logotipo atualizado com sucesso! Atualize a página do site para ver.');
+      btn.textContent = 'Salvar Logotipo';
+    } else {
+      showToast(data.error || 'Erro ao enviar logotipo.');
+      btn.disabled = false;
+      btn.textContent = 'Salvar Logotipo';
+    }
+  } catch (err) {
+    showToast('Erro de conexão ao salvar logotipo.');
+    btn.disabled = false;
+    btn.textContent = 'Salvar Logotipo';
+  }
+});
+
+// Lógica do Favicon
+$('input-favicon-file')?.addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    uploadedFaviconBase64 = evt.target.result;
+    const preview = $('preview-favicon');
+    if (preview) preview.src = uploadedFaviconBase64;
+
+    const saveBtn = $('btn-save-favicon');
+    if (saveBtn) saveBtn.removeAttribute('disabled');
+  };
+  reader.readAsDataURL(file);
+});
+
+$('btn-save-favicon')?.addEventListener('click', async function() {
+  if (!uploadedFaviconBase64) return;
+
+  const btn = $('btn-save-favicon');
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+
+  const token = getAdminToken();
+  try {
+    const res = await fetch(`${API}/api/admin/settings/upload`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ type: 'favicon', fileData: uploadedFaviconBase64 })
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      showToast('✓ Favicon atualizado com sucesso! Atualize a página do site para ver.');
+      btn.textContent = 'Salvar Favicon';
+    } else {
+      showToast(data.error || 'Erro ao enviar favicon.');
+      btn.disabled = false;
+      btn.textContent = 'Salvar Favicon';
+    }
+  } catch (err) {
+    showToast('Erro de conexão ao salvar favicon.');
+    btn.disabled = false;
+    btn.textContent = 'Salvar Favicon';
+  }
+});
 $('search-payments')?.addEventListener('input', renderPaymentsTable);

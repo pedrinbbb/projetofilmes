@@ -97,6 +97,7 @@
         <button class="tab-btn" id="tab-users-btn">Visualizar Contas</button>
         <button class="tab-btn" id="tab-plans-btn">Gerenciar Planos</button>
         <button class="tab-btn" id="tab-payments-btn">Cobranças & Logs</button>
+        <button class="tab-btn" id="tab-customize-btn">Personalizar Site</button>
       </nav>
 
       <!-- ABA 1: GERENCIAR FILMES -->
@@ -213,6 +214,58 @@
               <!-- Inserido dinamicamente via JS -->
             </tbody>
           </table>
+        </div>
+      </section>
+
+      <!-- ABA 5: PERSONALIZAR SITE -->
+      <section class="panel-tab-content" id="section-customize">
+        <div class="section-header">
+          <h2>Personalizar Identidade Visual do Site</h2>
+          <p style="color: var(--color-text-muted); font-size: 0.88rem;">Altere o logotipo e o favicon da sua plataforma.</p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 32px;">
+          <!-- Bloco do Logotipo -->
+          <div class="stat-card" style="flex-direction: column; align-items: stretch; background: var(--color-bg-card); border: 1px solid rgba(255, 215, 0, 0.1); padding: 28px; border-radius: 16px; gap: 20px;">
+            <h3 style="font-family: var(--font-family-title); color: var(--color-gold-bright); font-size: 1.2rem; display: flex; align-items: center; gap: 10px;">
+              <span>🖼️</span> Logotipo do Header
+            </h3>
+            <p style="color: var(--color-text-muted); font-size: 0.8rem; line-height: 1.5;">
+              Substitui o texto "GOATCINE" no cabeçalho. Formato recomendado: **PNG transparente** com altura proporcional (ex: 180x40 px).
+            </p>
+
+            <div style="background: rgba(0, 0, 0, 0.2); padding: 20px; border-radius: 10px; text-align: center; border: 1px dashed rgba(255,255,255,0.08);">
+              <img id="preview-logo" src="/uploads/logo.png?v=1" style="max-height: 50px; display: inline-block;" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%2240%22><text y=%2225%22 fill=%22%23555%22 font-family=%22sans-serif%22 font-size=%2214%22>Sem Logotipo</svg>'" />
+            </div>
+
+            <div class="form-group" style="margin-top: 10px;">
+              <input type="file" id="input-logo-file" accept="image/png, image/jpeg, image/jpg" style="display: none;" />
+              <button type="button" class="btn-secondary" onclick="document.getElementById('input-logo-file').click()" style="justify-content: center; width: 100%;">Escolher Imagem</button>
+            </div>
+            
+            <button type="button" class="btn-primary" id="btn-save-logo" disabled style="width: 100%;">Salvar Logotipo</button>
+          </div>
+
+          <!-- Bloco do Favicon -->
+          <div class="stat-card" style="flex-direction: column; align-items: stretch; background: var(--color-bg-card); border: 1px solid rgba(255, 215, 0, 0.1); padding: 28px; border-radius: 16px; gap: 20px;">
+            <h3 style="font-family: var(--font-family-title); color: var(--color-gold-bright); font-size: 1.2rem; display: flex; align-items: center; gap: 10px;">
+              <span>🌐</span> Ícone da Aba (Favicon)
+            </h3>
+            <p style="color: var(--color-text-muted); font-size: 0.8rem; line-height: 1.5;">
+              Ícone que aparece na aba do navegador. Formato recomendado: **PNG quadrado** ou **ICO** (ex: 32x32 px).
+            </p>
+
+            <div style="background: rgba(0, 0, 0, 0.2); padding: 20px; border-radius: 10px; text-align: center; border: 1px dashed rgba(255,255,255,0.08);">
+              <img id="preview-favicon" src="/uploads/favicon.png?v=1" style="width: 32px; height: 32px; display: inline-block; object-fit: contain;" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2232%22 height=%2232%22><text y=%2222%22 fill=%22%23555%22 font-size=%2220%22>🏆</text></svg>'" />
+            </div>
+
+            <div class="form-group" style="margin-top: 10px;">
+              <input type="file" id="input-favicon-file" accept="image/png, image/x-icon, image/ico" style="display: none;" />
+              <button type="button" class="btn-secondary" onclick="document.getElementById('input-favicon-file').click()" style="justify-content: center; width: 100%;">Escolher Ícone</button>
+            </div>
+            
+            <button type="button" class="btn-primary" id="btn-save-favicon" disabled style="width: 100%;">Salvar Favicon</button>
+          </div>
         </div>
       </section>
     </main>

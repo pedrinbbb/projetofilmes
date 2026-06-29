@@ -345,22 +345,22 @@ async function runMigrationsAndSeeds() {
 
   // Seed de planos
   try {
-    const plansCount = db.exec('SELECT COUNT(*) as count FROM plans')[0]?.values[0][0] ?? 0;
-    if (plansCount === 0) {
+    const plansRes = dbGet('SELECT COUNT(*) as count FROM plans');
+    const plansCount = plansRes ? (plansRes.count ?? plansRes.COUNT ?? 0) : 0;
+    if (Number(plansCount) === 0) {
       console.log('  📦 Semeando planos de assinatura padrão...');
-      db.run("INSERT INTO plans (id, name, price, screens, duration_days) VALUES (1, 'Bronze', 14.90, 1, 30)");
-      db.run("INSERT INTO plans (id, name, price, screens, duration_days) VALUES (2, 'Prata', 24.90, 2, 30)");
-      db.run("INSERT INTO plans (id, name, price, screens, duration_days) VALUES (3, 'Ouro', 44.90, 5, 30)");
-      saveDb();
+      dbRun("INSERT INTO plans (id, name, price, screens, duration_days) VALUES (1, 'Bronze', 14.90, 1, 30)");
+      dbRun("INSERT INTO plans (id, name, price, screens, duration_days) VALUES (2, 'Prata', 24.90, 2, 30)");
+      dbRun("INSERT INTO plans (id, name, price, screens, duration_days) VALUES (3, 'Ouro', 44.90, 5, 30)");
     }
   } catch (err) {
     console.error('Erro ao semear planos:', err);
   }
 
   // Seed de filmes se a tabela estiver vazia
-  const countRes = db.exec('SELECT COUNT(*) as count FROM movies');
-  const count = countRes[0]?.values[0][0] ?? 0;
-  if (count === 0) {
+  const countRes = dbGet('SELECT COUNT(*) as count FROM movies');
+  const count = countRes ? (countRes.count ?? countRes.COUNT ?? 0) : 0;
+  if (Number(count) === 0) {
     console.log('  📦 Populando tabela de filmes (Seeding)...');
     const defaultMovies = [
       {

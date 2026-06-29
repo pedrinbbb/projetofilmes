@@ -1134,17 +1134,24 @@ async function selectPlanForSub(planId, cardElement) {
   cardElement.style.borderColor = 'var(--gold-primary)';
   cardElement.style.background = 'rgba(255, 215, 0, 0.05)';
 
-  // Show checkout area and set loading
+  // Mostrar área de checkout com loading
   $('sub-checkout-area').classList.remove('hidden');
   $('pix-copy-paste').value = 'Gerando cobrança PIX...';
-  
+
   const qrWrapper = $('qrcode-container-wrapper');
   if (qrWrapper) {
-    qrWrapper.innerHTML = '<div style="width:180px; height:180px; display:flex; align-items:center; justify-content:center; color:#000;">Carregando...</div>';
+    qrWrapper.innerHTML = `
+      <div style="width:180px;height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#555;gap:8px;">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+        <span style="font-size:12px;">Gerando...</span>
+      </div>`;
   }
 
-  // Clear any existing polling
-  if (subPollInterval) clearInterval(subPollInterval);
+  // Parar qualquer polling anterior
+  if (subPollInterval) {
+    clearInterval(subPollInterval);
+    subPollInterval = null;
+  }
 
   const token = localStorage.getItem('goatcine_token');
 
@@ -1158,25 +1165,30 @@ async function selectPlanForSub(planId, cardElement) {
       body: JSON.stringify({ planId })
     });
 
-    if (!res.ok) throw new Error('Erro ao gerar cobrança');
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error || 'Erro ao gerar cobrança');
+    }
     const data = await res.json();
 
-    // Render QR Code
-    if (data.qrcodeImage && qrWrapper) {
-      // Real QR Code image from Efí
-      qrWrapper.innerHTML = `<img src="data:image/png;base64,${data.qrcodeImage}" width="180" height="180" style="display:block; margin:0 auto; border-radius:4px;" alt="QR Code Pix" />`;
-    } else if (qrWrapper) {
-      // Fallback Mock SVG QR Code
-      qrWrapper.innerHTML = `
-        <svg width="180" height="180" viewBox="0 0 29 29" style="display: block; margin: 0 auto;">
-          <path d="M0 0h7v7H0zm1 1v5h5V1zm1 1v3h3V2zM0 22h7v7H0zm1 1v5h5v-5zm1 1v3h3v-3zM22 0h7v7h-7zm1 1v5h5V1zm1 1v3h3V2zM9 0h2v4H9zm4 0h3v2h-3zm5 0h2v3h-2zm-3 3h2v2h-2zm-6 2h2v4H8zm3 0h2v2h-2zm3 2h2v2h-3zm-1 3h2v3h-2zm3 0h3v2h-3zm-9 3h2v2H8zm3 0h3v2h-3zm6 0h2v4h-2zm-3 3h2v2h-2zm-6 2h3v2H8zm5 0h2v2h-2zm3 0h2v2h-2zm-9 3h2v4H7zm5 0h3v2h-3zm4 0h2v2h-2zm-9 3h3v2H7zm5 0h2v2h-2zm4 0h3v2h-3zm-9-19h2v2H9zm3 0h3v2h-3zm4 0h2v2h-2zm-9 3h3v2H7zm5 0h2v2h-2zm4 0h3v2h-3zm-9 3h2v3H9zm4 0h2v2h-2zm3 0h2v3h-2zm-3 4h2v2h-2zm3 0h2v2h-2z" fill="#000"/>
-        </svg>
-      `;
+    // Renderizar QR Code
+    if (qrWrapper) {
+      if (data.qrcodeImage) {
+        // QR Code real da Efí (base64)
+        qrWrapper.innerHTML = `<img src="data:image/png;base64,${data.qrcodeImage}" width="180" height="180" style="display:block;margin:0 auto;border-radius:4px;" alt="QR Code Pix" />`;
+      } else {
+        // Sem imagem: instrução de usar o código copia e cola
+        qrWrapper.innerHTML = `
+          <div style="width:180px;height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:12px;text-align:center;">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="1.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="4" height="4"/></svg>
+            <span style="font-size:11px;color:#888;">Use o código Copia e Cola abaixo</span>
+          </div>`;
+      }
     }
 
     $('pix-copy-paste').value = data.qrcodeText || '';
 
-    // Start polling to detect payment success automatically
+    // Iniciar polling a cada 3s — só libera quando o webhook da Efí confirmar
     subPollInterval = setInterval(async () => {
       try {
         const checkRes = await fetch('/api/user/subscription', {
@@ -1187,55 +1199,23 @@ async function selectPlanForSub(planId, cardElement) {
           if (checkData.subscription && checkData.subscription.sub_active === 1) {
             clearInterval(subPollInterval);
             subPollInterval = null;
-            showToast('🎉 Pagamento confirmado via Pix! Assinatura ativada.');
+            showToast('🎉 Pagamento confirmado! Assinatura ativada.');
             closeSubModal();
             setTimeout(() => window.location.reload(), 1500);
           }
         }
       } catch (err) {
-        console.error('Erro ao verificar status do pagamento:', err);
+        // ignora erros de rede silenciosamente
       }
     }, 3000);
 
   } catch (err) {
-    showToast('⚠️ Erro ao gerar Pix. Tente novamente.');
+    console.error('[PIX CHECKOUT ERROR]', err);
+    showToast(`⚠️ ${err.message || 'Erro ao gerar Pix. Tente novamente.'}`);
     $('pix-copy-paste').value = 'Erro ao gerar PIX.';
-    if (qrWrapper) qrWrapper.innerHTML = '<div style="color:var(--color-error); padding:20px;">Falha ao carregar QR Code.</div>';
-  }
-}
-
-async function simulatePixPayment() {
-  if (!selectedPlanIdForSub) return;
-  const token = localStorage.getItem('goatcine_token');
-
-  const btn = $('btn-simulate-payment');
-  btn.disabled = true;
-  btn.textContent = 'Processando...';
-
-  try {
-    const res = await fetch('/api/user/simulate-pix', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify({ planId: selectedPlanIdForSub })
-    });
-
-    if (res.ok) {
-      showToast('🎉 Assinatura ativada com sucesso! Divirta-se.');
-      closeSubModal();
-      setTimeout(() => window.location.reload(), 1500);
-    } else {
-      const data = await res.json();
-      showToast(data.error || 'Erro ao processar assinatura');
-      btn.disabled = false;
-      btn.textContent = 'Simular Confirmação Automática';
+    if (qrWrapper) {
+      qrWrapper.innerHTML = `<div style="width:180px;height:180px;display:flex;align-items:center;justify-content:center;color:#e55;font-size:13px;text-align:center;padding:12px;">Falha ao carregar QR Code</div>`;
     }
-  } catch {
-    showToast('Erro de conexão ao simular PIX.');
-    btn.disabled = false;
-    btn.textContent = 'Simular Confirmação Automática';
   }
 }
 
@@ -1249,7 +1229,6 @@ function initSubscriptionEvents() {
       .then(() => showToast('📋 Código PIX copiado!'))
       .catch(() => showToast('⚠️ Falha ao copiar.'));
   });
-  $('btn-simulate-payment')?.addEventListener('click', simulatePixPayment);
 }
 
 // ---- START ----

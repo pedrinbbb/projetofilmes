@@ -19,12 +19,12 @@
         if (!r.ok) {
           localStorage.removeItem('goatcine_token');
           localStorage.removeItem('goatcine_user');
-          window.location.replace('/login.html');
+          window.location.replace('/login');
         }
       }).catch(function() {
         // If server is down, allow access with cached user
         const u = localStorage.getItem('goatcine_user');
-        if (!u) window.location.replace('/login.html');
+        if (!u) window.location.replace('/login');
       });
     })();
   </script>

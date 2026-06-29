@@ -639,9 +639,14 @@ app.get('/api/video/stream', async (req, res) => {
   }
 });
 
-// =============================================
-//  CATCH-ALL
-// =============================================
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'login.html'));
+});
+
+app.get('/auth-callback', (req, res) => {
+  res.sendFile(path.join(__dirname, 'auth-callback.html'));
+});
+
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
@@ -655,7 +660,7 @@ initDatabase().then(() => {
     console.log('  🏆 GOATCINE Server rodando!');
     console.log('  ─────────────────────────────────────────');
     console.log(`  🌐 Site:  http://localhost:${PORT}`);
-    console.log(`  🔑 Login: http://localhost:${PORT}/login.html`);
+    console.log(`  🔑 Login: http://localhost:${PORT}/login`);
     console.log('  ─────────────────────────────────────────');
 
     const discordOk = process.env.DISCORD_CLIENT_ID && process.env.DISCORD_CLIENT_ID !== 'SEU_CLIENT_ID_AQUI';

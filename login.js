@@ -14,7 +14,7 @@ const API = '';  // mesmo servidor (porta 3000)
       headers: { Authorization: `Bearer ${token}` }
     });
     if (res.ok) {
-      window.location.replace('/index.html');
+      window.location.replace('/');
     } else {
       // Token inválido — limpar
       localStorage.removeItem('goatcine_token');
@@ -65,7 +65,7 @@ function createParticles() {
   showApiError(msgs[err] || 'Erro ao autenticar com Discord');
 
   // Clean URL
-  window.history.replaceState({}, '', '/login.html');
+  window.history.replaceState({}, '', '/login');
 })();
 
 // ---- TAB SWITCHING ----
@@ -662,13 +662,13 @@ function saveAuthAndRedirect(token, user, isNew = false) {
         p = 100;
         barEl.style.width = '100%';
         clearInterval(iv);
-        setTimeout(() => window.location.href = '/index.html', 320);
+        setTimeout(() => window.location.href = '/', 320);
       } else {
         barEl.style.width = p + '%';
       }
     }, 80);
   } else {
-    window.location.href = '/index.html';
+    window.location.href = '/';
   }
 }
 

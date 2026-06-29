@@ -345,20 +345,20 @@ async function runMigrationsAndSeeds() {
 
   // Seed de planos
   try {
-    const plansRes = dbGet('SELECT COUNT(*) as count FROM plans');
+    const plansRes = await dbGetAsync('SELECT COUNT(*) as count FROM plans');
     const plansCount = plansRes ? (plansRes.count ?? plansRes.COUNT ?? 0) : 0;
     if (Number(plansCount) === 0) {
       console.log('  📦 Semeando planos de assinatura padrão...');
-      dbRun("INSERT INTO plans (id, name, price, screens, duration_days) VALUES (1, 'Bronze', 14.90, 1, 30)");
-      dbRun("INSERT INTO plans (id, name, price, screens, duration_days) VALUES (2, 'Prata', 24.90, 2, 30)");
-      dbRun("INSERT INTO plans (id, name, price, screens, duration_days) VALUES (3, 'Ouro', 44.90, 5, 30)");
+      await dbRunAsync("INSERT INTO plans (id, name, price, screens, duration_days) VALUES (1, 'Bronze', 14.90, 1, 30)");
+      await dbRunAsync("INSERT INTO plans (id, name, price, screens, duration_days) VALUES (2, 'Prata', 24.90, 2, 30)");
+      await dbRunAsync("INSERT INTO plans (id, name, price, screens, duration_days) VALUES (3, 'Ouro', 44.90, 5, 30)");
     }
   } catch (err) {
     console.error('Erro ao semear planos:', err);
   }
 
   // Seed de filmes se a tabela estiver vazia
-  const countRes = dbGet('SELECT COUNT(*) as count FROM movies');
+  const countRes = await dbGetAsync('SELECT COUNT(*) as count FROM movies');
   const count = countRes ? (countRes.count ?? countRes.COUNT ?? 0) : 0;
   if (Number(count) === 0) {
     console.log('  📦 Populando tabela de filmes (Seeding)...');
@@ -827,13 +827,13 @@ async function runMigrationsAndSeeds() {
           }
         ];
 
-        defaultMovies.forEach(m => {
-          dbRun(
+        for (const m of defaultMovies) {
+          await dbRunAsync(
             `INSERT INTO movies (title, year, duration, rating, genre, "desc", poster, backdrop, director, "cast", category, videoUrl) 
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [m.title, m.year, m.duration, m.rating, m.genre, m.desc, m.poster, m.backdrop, m.director, m.cast, m.category, m.videoUrl]
           );
-        });
+        }
         console.log(`  ✅ ${defaultMovies.length} filmes semeados com sucesso!`);
       }
     } catch (err) {
@@ -885,6 +885,44 @@ async function dbRunSync(sql) {
 function saveDb() {
   if (!IS_POSTGRES && db) {
     fs.writeFileSync(DB_PATH, Buffer.from(db.export()));
+  }
+}
+
+// ---- Helpers de Banco 100% Assíncronos para Inicialização ----
+async function dbGetAsync(sql, params = []) {
+  const translated = translateQuery(sql);
+  if (IS_POSTGRES) {
+    const res = await pgPool.query(translated, params);
+    return res.rows[0] || null;
+  } else {
+    try {
+      const stmt = db.prepare(translated);
+      stmt.bind(params);
+      const hasRow = stmt.step();
+      const result = hasRow ? stmt.getAsObject() : null;
+      stmt.free();
+      return result;
+    } catch (err) {
+      console.error('[DB SQLITE GET ASYNC ERROR]', err);
+      return null;
+    }
+  }
+}
+
+async function dbRunAsync(sql, params = []) {
+  const translated = translateQuery(sql);
+  if (IS_POSTGRES) {
+    const res = await pgPool.query(translated, params);
+    return res.rows[0]?.id || null;
+  } else {
+    try {
+      db.run(translated, params);
+      saveDb();
+      return null;
+    } catch (err) {
+      console.error('[DB SQLITE RUN ASYNC ERROR]', err);
+      return null;
+    }
   }
 }
 

@@ -291,6 +291,7 @@ async function initDatabase() {
   try { db.run('ALTER TABLE users ADD COLUMN sub_activated_at TEXT DEFAULT NULL'); } catch (e) {}
   try { db.run('ALTER TABLE users ADD COLUMN pending_txid TEXT DEFAULT NULL'); } catch (e) {}
   try { db.run('ALTER TABLE users ADD COLUMN pending_plan_id INTEGER DEFAULT NULL'); } catch (e) {}
+  try { db.run('ALTER TABLE users ADD COLUMN has_used_trial INTEGER DEFAULT 0'); } catch (e) {}
 
   db.run(`
     CREATE TABLE IF NOT EXISTS payment_logs (
@@ -1705,15 +1706,53 @@ app.get('/api/admin/payments', requireAdminAuth, (req, res) => {
 // Obter Assinatura do Usuário Logado
 app.get('/api/user/subscription', requireAuth, (req, res) => {
   try {
-    const user = dbGet('SELECT sub_active, sub_plan_id, sub_expires_at, pending_txid FROM users WHERE id = ?', [req.user.id]);
+    const user = dbGet('SELECT sub_active, sub_plan_id, sub_expires_at, sub_activated_at, pending_txid, has_used_trial FROM users WHERE id = ?', [req.user.id]);
     if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
     
-    // Obter também as configurações de todos os planos para exibir na tela de checkout
     const plans = dbAll('SELECT * FROM plans ORDER BY id ASC');
     return res.json({ subscription: user, plans });
   } catch (err) {
     console.error('[USER GET SUB ERROR]', err);
     return res.status(500).json({ error: 'Erro ao buscar dados de assinatura' });
+  }
+});
+
+// Ativar Teste Grátis de 2 Horas
+app.post('/api/user/trial', requireAuth, (req, res) => {
+  try {
+    const user = dbGet('SELECT has_used_trial, sub_active FROM users WHERE id = ?', [req.user.id]);
+    if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
+
+    if (user.has_used_trial === 1) {
+      return res.status(400).json({ error: 'Você já utilizou o seu período de teste grátis.' });
+    }
+
+    if (user.sub_active === 1) {
+      return res.status(400).json({ error: 'Você já possui uma assinatura ativa.' });
+    }
+
+    const nowStr = new Date().toISOString();
+    // Adicionar 2 horas de vigência (2 * 60 * 60 * 1000 = 7.200.000 ms)
+    const expiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
+
+    db.run(
+      'UPDATE users SET sub_active = 1, sub_plan_id = NULL, sub_activated_at = ?, sub_expires_at = ?, has_used_trial = 1 WHERE id = ?',
+      [nowStr, expiresAt, req.user.id]
+    );
+
+    // Salvar log de ativação de teste gratuito
+    db.run(
+      "INSERT OR REPLACE INTO payment_logs (user_id, plan_id, txid, amount, status, created_at, paid_at) VALUES (?, NULL, ?, 0.0, 'paid', ?, ?)",
+      [req.user.id, `trial_${Date.now()}`, nowStr, nowStr]
+    );
+
+    saveDb();
+
+    console.log(`[TRIAL] 🎁 Período de teste grátis (2h) ativado para usuário ID ${req.user.id}.`);
+    return res.json({ success: true, message: 'Teste gratuito de 2 horas ativado com sucesso!' });
+  } catch (err) {
+    console.error('[USER POST TRIAL ERROR]', err);
+    return res.status(500).json({ error: 'Erro ao ativar teste grátis' });
   }
 });
 

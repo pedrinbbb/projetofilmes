@@ -1033,6 +1033,7 @@ function initUserSession() {
 // ---- SUBSCRIPTION FLOW (USER) ----
 let allPlansList = [];
 let selectedPlanIdForSub = null;
+let hasUsedTrial = 0;
 
 async function checkSubscriptionAndScreens() {
   const token = localStorage.getItem('goatcine_token');
@@ -1047,6 +1048,7 @@ async function checkSubscriptionAndScreens() {
     
     allPlansList = data.plans || [];
     const sub = data.subscription;
+    hasUsedTrial = sub ? sub.has_used_trial : 0;
 
     if (sub && sub.sub_active === 1) {
       return true; // Subscription active!
@@ -1068,6 +1070,18 @@ function openSubModal() {
   overlay.classList.add('open');
   overlay.setAttribute('aria-hidden', 'false');
   document.body.style.overflow = 'hidden';
+
+  // Mostrar banner de teste grátis apenas se nunca usou
+  const trialPromo = $('trial-promo-container');
+  if (trialPromo) {
+    if (hasUsedTrial === 0) {
+      trialPromo.classList.remove('hidden');
+      trialPromo.style.display = 'inline-flex';
+    } else {
+      trialPromo.classList.add('hidden');
+      trialPromo.style.display = 'none';
+    }
+  }
 
   // Render plan cards
   const grid = $('sub-plans-grid');
@@ -1216,6 +1230,37 @@ async function selectPlanForSub(planId, cardElement) {
   }
 }
 
+async function activateTrial() {
+  const token = localStorage.getItem('goatcine_token');
+  if (!token) return;
+
+  const btn = $('btn-activate-trial');
+  if (btn) btn.disabled = true;
+
+  try {
+    const res = await fetch('/api/user/trial', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      showToast('🎉 Teste gratuito de 2 horas ativado!');
+      closeSubModal();
+      setTimeout(() => window.location.reload(), 1500);
+    } else {
+      showToast(data.error || 'Erro ao ativar o teste grátis.');
+      if (btn) btn.disabled = false;
+    }
+  } catch (err) {
+    showToast('Erro de rede ao ativar o teste grátis.');
+    if (btn) btn.disabled = false;
+  }
+}
+
 function initSubscriptionEvents() {
   $('sub-modal-close')?.addEventListener('click', closeSubModal);
   $('btn-copy-pix')?.addEventListener('click', () => {
@@ -1226,6 +1271,7 @@ function initSubscriptionEvents() {
       .then(() => showToast('📋 Código PIX copiado!'))
       .catch(() => showToast('⚠️ Falha ao copiar.'));
   });
+  $('btn-activate-trial')?.addEventListener('click', activateTrial);
 }
 
 // ---- START ----

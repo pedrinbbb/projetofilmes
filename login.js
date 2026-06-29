@@ -353,7 +353,7 @@ document.getElementById('register-email-form')?.addEventListener('submit', async
     .forEach(id => { const el = document.getElementById(id); if (el) el.textContent = ''; });
 
   if (!name || name.length < 2) {
-    showError('register-name-group', 'register-name-error', 'Nome deve ter ao menos 2 caracteres');
+    showError('register-name-group', 'register-name-error', 'Nome de usuário deve ter ao menos 2 caracteres');
     valid = false;
   } else { markSuccess('register-name-group'); }
 

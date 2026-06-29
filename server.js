@@ -1133,17 +1133,20 @@ app.post('/api/auth/login', async (req, res) => {
 // =============================================
 app.get('/auth/discord', (req, res) => {
   const CLIENT_ID    = process.env.DISCORD_CLIENT_ID;
-  const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
 
   if (!CLIENT_ID || CLIENT_ID === 'SEU_CLIENT_ID_AQUI')
     return res.redirect('/login.html?auth_error=discord_not_configured');
+
+  // Detecta automaticamente se está em produção ou local
+  const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI ||
+    `${req.protocol}://${req.get('host')}/auth/discord/callback`;
 
   const params = new URLSearchParams({
     client_id:     CLIENT_ID,
     redirect_uri:  REDIRECT_URI,
     response_type: 'code',
     scope:         'identify email',
-    prompt:        'consent', // Exige que o usuário leia e clique em Autorizar
+    prompt:        'consent',
   });
   res.redirect(`https://discord.com/api/oauth2/authorize?${params}`);
 });
@@ -1155,7 +1158,9 @@ app.get('/auth/discord/callback', async (req, res) => {
   try {
     const CLIENT_ID     = process.env.DISCORD_CLIENT_ID;
     const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
-    const REDIRECT_URI  = process.env.DISCORD_REDIRECT_URI;
+    // Mesma lógica dinâmica: usa env var se definida, senão detecta pelo host
+    const REDIRECT_URI  = process.env.DISCORD_REDIRECT_URI ||
+      `${req.protocol}://${req.get('host')}/auth/discord/callback`;
 
     const tokenRes  = await fetch('https://discord.com/api/oauth2/token', {
       method:  'POST',

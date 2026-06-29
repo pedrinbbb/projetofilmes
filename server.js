@@ -270,6 +270,34 @@ async function initDatabase() {
     );
   `);
 
+  db.run(`
+    CREATE TABLE IF NOT EXISTS plans (
+      id      INTEGER PRIMARY KEY,
+      name    TEXT NOT NULL,
+      price   REAL NOT NULL,
+      screens INTEGER NOT NULL
+    );
+  `);
+
+  // Migrações de colunas de assinatura se não existirem
+  try { db.run('ALTER TABLE users ADD COLUMN sub_active INTEGER DEFAULT 0'); } catch (e) {}
+  try { db.run('ALTER TABLE users ADD COLUMN sub_plan_id INTEGER DEFAULT NULL'); } catch (e) {}
+  try { db.run('ALTER TABLE users ADD COLUMN sub_expires_at TEXT DEFAULT NULL'); } catch (e) {}
+
+  // Seed de planos
+  try {
+    const plansCount = db.exec('SELECT COUNT(*) as count FROM plans')[0]?.values[0][0] ?? 0;
+    if (plansCount === 0) {
+      console.log('  📦 Semeando planos de assinatura padrão...');
+      db.run("INSERT INTO plans (id, name, price, screens) VALUES (1, 'Bronze', 14.90, 1)");
+      db.run("INSERT INTO plans (id, name, price, screens) VALUES (2, 'Prata', 24.90, 2)");
+      db.run("INSERT INTO plans (id, name, price, screens) VALUES (3, 'Ouro', 44.90, 5)");
+      saveDb();
+    }
+  } catch (err) {
+    console.error('Erro ao semear planos:', err);
+  }
+
   // Seed de filmes se a tabela estiver vazia
   const countRes = db.exec('SELECT COUNT(*) as count FROM movies');
   const count = countRes[0]?.values[0][0] ?? 0;
@@ -1371,7 +1399,7 @@ app.post('/api/admin/login', (req, res) => {
 // Listar Usuários (Admin)
 app.get('/api/admin/users', requireAdminAuth, (req, res) => {
   try {
-    const stmt = db.prepare('SELECT id, name, email, discord_tag, method, created_at FROM users ORDER BY id DESC');
+    const stmt = db.prepare('SELECT id, name, email, discord_tag, method, sub_active, sub_plan_id, sub_expires_at, created_at FROM users ORDER BY id DESC');
     const users = [];
     while (stmt.step()) {
       users.push(stmt.getAsObject());
@@ -1478,6 +1506,109 @@ app.delete('/api/admin/profiles/:id', requireAdminAuth, (req, res) => {
     return res.status(500).json({ error: 'Erro ao remover perfil.' });
   }
 });
+
+// --- ADMIN SUBSCRIPTION & PLANS API ENDPOINTS ---
+
+// Listar Configurações de Planos (Admin)
+app.get('/api/admin/plans', requireAdminAuth, (req, res) => {
+  try {
+    const plans = dbAll('SELECT * FROM plans ORDER BY id ASC');
+    return res.json({ plans });
+  } catch (err) {
+    console.error('[ADMIN GET PLANS ERROR]', err);
+    return res.status(500).json({ error: 'Erro ao buscar planos' });
+  }
+});
+
+// Atualizar Configuração de um Plano (Admin)
+app.put('/api/admin/plans/:id', requireAdminAuth, (req, res) => {
+  try {
+    const { id } = req.params;
+    const { price, screens } = req.body;
+
+    if (price === undefined || screens === undefined)
+      return res.status(400).json({ error: 'Preço e quantidade de telas são obrigatórios' });
+
+    db.run('UPDATE plans SET price = ?, screens = ? WHERE id = ?', [parseFloat(price), parseInt(screens), id]);
+    saveDb();
+
+    const plan = dbGet('SELECT * FROM plans WHERE id = ?', [id]);
+    return res.json({ plan });
+  } catch (err) {
+    console.error('[ADMIN PUT PLAN ERROR]', err);
+    return res.status(500).json({ error: 'Erro ao atualizar plano' });
+  }
+});
+
+// Ativar/Desativar Assinatura Manualmente (Admin)
+app.post('/api/admin/users/:userId/subscribe', requireAdminAuth, (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { active, planId } = req.body;
+
+    const user = dbGet('SELECT id FROM users WHERE id = ?', [userId]);
+    if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
+
+    const subActive = active ? 1 : 0;
+    const subPlanId = active ? parseInt(planId) : null;
+    const subExpiresAt = active ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() : null;
+
+    db.run(
+      'UPDATE users SET sub_active = ?, sub_plan_id = ?, sub_expires_at = ? WHERE id = ?',
+      [subActive, subPlanId, subExpiresAt, userId]
+    );
+    saveDb();
+
+    console.log(`[ADMIN] 💳 Assinatura do usuário ${userId} alterada para: ${active ? 'ATIVA' : 'INATIVA'}`);
+    return res.json({ success: true });
+  } catch (err) {
+    console.error('[ADMIN USER SUBSCRIBE ERROR]', err);
+    return res.status(500).json({ error: 'Erro ao gerenciar assinatura' });
+  }
+});
+
+// --- USER SUBSCRIPTION API ENDPOINTS (requireAuth) ---
+
+// Obter Assinatura do Usuário Logado
+app.get('/api/user/subscription', requireAuth, (req, res) => {
+  try {
+    const user = dbGet('SELECT sub_active, sub_plan_id, sub_expires_at FROM users WHERE id = ?', [req.user.id]);
+    if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
+    
+    // Obter também as configurações de todos os planos para exibir na tela de checkout
+    const plans = dbAll('SELECT * FROM plans ORDER BY id ASC');
+    return res.json({ subscription: user, plans });
+  } catch (err) {
+    console.error('[USER GET SUB ERROR]', err);
+    return res.status(500).json({ error: 'Erro ao buscar dados de assinatura' });
+  }
+});
+
+// Simular PIX e Ativar Assinatura (User)
+app.post('/api/user/simulate-pix', requireAuth, (req, res) => {
+  try {
+    const { planId } = req.body;
+    if (!planId) return res.status(400).json({ error: 'Plano é obrigatório' });
+
+    const plan = dbGet('SELECT * FROM plans WHERE id = ?', [planId]);
+    if (!plan) return res.status(404).json({ error: 'Plano não encontrado' });
+
+    // Ativar assinatura por 30 dias
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    db.run(
+      'UPDATE users SET sub_active = 1, sub_plan_id = ?, sub_expires_at = ? WHERE id = ?',
+      [planId, expiresAt, req.user.id]
+    );
+    saveDb();
+
+    console.log(`[SUBSCRIPTION] 💳 Usuário ${req.user.id} assinou o plano: ${plan.name}`);
+    return res.json({ success: true, message: 'Pagamento confirmado! Assinatura ativada.' });
+  } catch (err) {
+    console.error('[SIMULATE PIX ERROR]', err);
+    return res.status(500).json({ error: 'Erro ao confirmar assinatura' });
+  }
+});
+
 
 
 // =============================================

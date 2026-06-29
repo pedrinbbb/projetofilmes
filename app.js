@@ -594,7 +594,10 @@ function initVideoPlayer() {
   if (!playerOverlay) return;
 
   // Global open function
-  window.openVideoPlayer = function(movie) {
+  window.openVideoPlayer = async function(movie) {
+    const allowed = await checkSubscriptionAndScreens();
+    if (!allowed) return;
+
     $('player-controls-title').textContent = movie.title;
     playerOverlay.classList.add('show');
     playerOverlay.setAttribute('aria-hidden', 'false');
@@ -1027,9 +1030,167 @@ function initUserSession() {
   }
 }
 
+// ---- SUBSCRIPTION FLOW (USER) ----
+let allPlansList = [];
+let selectedPlanIdForSub = null;
+
+async function checkSubscriptionAndScreens() {
+  const token = localStorage.getItem('goatcine_token');
+  if (!token) return false;
+
+  try {
+    const res = await fetch('/api/user/subscription', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error('Erro ao obter assinatura');
+    const data = await res.json();
+    
+    allPlansList = data.plans || [];
+    const sub = data.subscription;
+
+    if (sub && sub.sub_active === 1) {
+      return true; // Subscription active!
+    }
+
+    // Subscription inactive — show plans modal
+    openSubModal();
+    return false;
+  } catch (err) {
+    showToast('⚠️ Erro ao verificar assinatura.');
+    return false;
+  }
+}
+
+function openSubModal() {
+  const overlay = $('sub-modal-overlay');
+  if (!overlay) return;
+
+  overlay.classList.add('open');
+  overlay.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+
+  // Render plan cards
+  const grid = $('sub-plans-grid');
+  grid.innerHTML = '';
+  
+  allPlansList.forEach(plan => {
+    const card = document.createElement('div');
+    card.style.cssText = `
+      background: rgba(255, 255, 255, 0.03);
+      border: 2px solid rgba(255, 215, 0, 0.15);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+    `;
+    card.className = 'plan-card';
+    card.dataset.id = plan.id;
+
+    card.innerHTML = `
+      <div>
+        <h3 style="font-family: 'Outfit', sans-serif; color: var(--gold-primary); font-size: 1.1rem; margin-bottom: 8px;">${plan.name}</h3>
+        <div style="font-size: 1.5rem; font-weight: 700; color: #FFF; margin-bottom: 4px;">R$ ${plan.price.toFixed(2)}</div>
+        <div style="font-size: 0.8rem; color: var(--text-secondary);">por mês</div>
+      </div>
+      <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px; font-size: 0.85rem; color: var(--text-secondary);">
+        📱 <strong>${plan.screens}</strong> ${plan.screens === 1 ? 'Tela' : 'Telas'} Simultâneas
+      </div>
+    `;
+
+    card.onclick = () => selectPlanForSub(plan.id, card);
+    grid.appendChild(card);
+  });
+
+  // Hide checkout area until a plan is selected
+  $('sub-checkout-area').classList.add('hidden');
+}
+
+function closeSubModal() {
+  const overlay = $('sub-modal-overlay');
+  if (overlay) {
+    overlay.classList.remove('open');
+    overlay.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+}
+
+function selectPlanForSub(planId, cardElement) {
+  selectedPlanIdForSub = planId;
+  document.querySelectorAll('.plan-card').forEach(c => {
+    c.style.borderColor = 'rgba(255, 215, 0, 0.15)';
+    c.style.background = 'rgba(255, 255, 255, 0.03)';
+  });
+  cardElement.style.borderColor = 'var(--gold-primary)';
+  cardElement.style.background = 'rgba(255, 215, 0, 0.05)';
+
+  // Show checkout area
+  $('sub-checkout-area').classList.remove('hidden');
+  
+  // Set custom Pix copy paste string with plan price
+  const selectedPlan = allPlansList.find(p => p.id === planId);
+  if (selectedPlan) {
+    const valHex = selectedPlan.price.toFixed(2).replace('.', '');
+    $('pix-copy-paste').value = `00020101021226870014br.gov.bcb.pix2565pix.goatcine.com/sub/checkout/plan${planId}-${valHex}`;
+  }
+}
+
+async function simulatePixPayment() {
+  if (!selectedPlanIdForSub) return;
+  const token = localStorage.getItem('goatcine_token');
+
+  const btn = $('btn-simulate-payment');
+  btn.disabled = true;
+  btn.textContent = 'Processando...';
+
+  try {
+    const res = await fetch('/api/user/simulate-pix', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ planId: selectedPlanIdForSub })
+    });
+
+    if (res.ok) {
+      showToast('🎉 Assinatura ativada com sucesso! Divirta-se.');
+      closeSubModal();
+      setTimeout(() => window.location.reload(), 1500);
+    } else {
+      const data = await res.json();
+      showToast(data.error || 'Erro ao processar assinatura');
+      btn.disabled = false;
+      btn.textContent = 'Simular Confirmação Automática';
+    }
+  } catch {
+    showToast('Erro de conexão ao simular PIX.');
+    btn.disabled = false;
+    btn.textContent = 'Simular Confirmação Automática';
+  }
+}
+
+function initSubscriptionEvents() {
+  $('sub-modal-close')?.addEventListener('click', closeSubModal);
+  $('btn-copy-pix')?.addEventListener('click', () => {
+    const pixInput = $('pix-copy-paste');
+    pixInput.select();
+    pixInput.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(pixInput.value)
+      .then(() => showToast('📋 Código PIX copiado!'))
+      .catch(() => showToast('⚠️ Falha ao copiar.'));
+  });
+  $('btn-simulate-payment')?.addEventListener('click', simulatePixPayment);
+}
+
 // ---- START ----
 document.addEventListener('DOMContentLoaded', () => {
   initUserSession();
+  initSubscriptionEvents();
   simulateLoading();
 });
 

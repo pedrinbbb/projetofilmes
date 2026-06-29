@@ -14,8 +14,10 @@ const passGroup = $('pass-group');
 
 const tabMoviesBtn = $('tab-movies-btn');
 const tabUsersBtn = $('tab-users-btn');
+const tabPlansBtn = $('tab-plans-btn');
 const sectionMovies = $('section-movies');
 const sectionUsers = $('section-users');
+const sectionPlans = $('section-plans');
 
 const moviesTbody = $('movies-list-tbody');
 const usersTbody = $('users-list-tbody');
@@ -133,21 +135,18 @@ $('btn-logout').addEventListener('click', () => {
 //  TAB NAVIGATION
 // =============================================
 function switchTab(target) {
-  if (target === 'movies') {
-    tabMoviesBtn.classList.add('active');
-    tabUsersBtn.classList.remove('active');
-    sectionMovies.classList.add('active');
-    sectionUsers.classList.remove('active');
-  } else {
-    tabMoviesBtn.classList.remove('active');
-    tabUsersBtn.classList.add('active');
-    sectionMovies.classList.remove('active');
-    sectionUsers.classList.add('active');
-  }
+  tabMoviesBtn.classList.toggle('active', target === 'movies');
+  tabUsersBtn.classList.toggle('active', target === 'users');
+  tabPlansBtn.classList.toggle('active', target === 'plans');
+
+  sectionMovies.classList.toggle('active', target === 'movies');
+  sectionUsers.classList.toggle('active', target === 'users');
+  sectionPlans.classList.toggle('active', target === 'plans');
 }
 
 tabMoviesBtn.addEventListener('click', () => switchTab('movies'));
 tabUsersBtn.addEventListener('click', () => switchTab('users'));
+tabPlansBtn.addEventListener('click', () => switchTab('plans'));
 
 // =============================================
 //  DASHBOARD LOAD DATA
@@ -185,6 +184,25 @@ async function loadDashboardData() {
   } catch (err) {
     console.error('Erro ao carregar usuários:', err);
   }
+
+  // 3. Carregar Configurações de Planos (Protegido Admin)
+  try {
+    const res = await fetch(`${API}/api/admin/plans`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const plans = data.plans || [];
+      plans.forEach(plan => {
+        const priceInput = $(`plan-${plan.id}-price`);
+        const screensInput = $(`plan-${plan.id}-screens`);
+        if (priceInput) priceInput.value = plan.price;
+        if (screensInput) screensInput.value = plan.screens;
+      });
+    }
+  } catch (err) {
+    console.error('Erro ao carregar planos:', err);
+  }
 }
 
 // =============================================
@@ -213,6 +231,16 @@ function renderUsersTable() {
     const tr = document.createElement('tr');
     const safeName = (user.name || 'Sem Nome').replace(/'/g, "\\'").replace(/"/g, '\\"');
     const methodStr = (user.method || 'email').toUpperCase();
+
+    let subStatusHTML = '<span style="color: var(--color-error);">❌ Inativa</span>';
+    let subActionBtnHTML = `<button class="btn-icon" title="Ativar Assinatura" style="background: rgba(48, 209, 88, 0.15); border-color: var(--color-success); color: var(--color-success);" onclick="toggleUserSubscription(${user.id}, true)">💳</button>`;
+    
+    if (user.sub_active === 1) {
+      const planNames = { 1: 'Bronze', 2: 'Prata', 3: 'Ouro' };
+      const planName = planNames[user.sub_plan_id] || 'Desconhecido';
+      subStatusHTML = `<span style="color: var(--color-success);">✔️ Ativa (${planName})</span>`;
+      subActionBtnHTML = `<button class="btn-icon delete" title="Cancelar Assinatura" onclick="toggleUserSubscription(${user.id}, false)">✕</button>`;
+    }
     
     tr.innerHTML = `
       <td>${user.id}</td>
@@ -220,9 +248,11 @@ function renderUsersTable() {
       <td>${user.email || '<span style="color: var(--color-text-muted);">Não fornecido</span>'}</td>
       <td><span style="font-weight: 500; color: ${methodStr === 'DISCORD' ? '#5865F2' : '#FFD700'};">${methodStr}</span></td>
       <td>${user.discord_tag || '-'}</td>
+      <td>${subStatusHTML}</td>
       <td>${user.created_at ? new Date(user.created_at).toLocaleDateString('pt-BR') + ' ' + new Date(user.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '-'}</td>
       <td>
         <div class="actions-cell">
+          ${subActionBtnHTML}
           <button class="btn-icon" title="Ver Perfis" onclick="openProfilesModal(${user.id}, '${safeName}')">👥</button>
           <button class="btn-icon delete" title="Excluir Conta" onclick="deleteUser(${user.id}, '${safeName}')">🗑️</button>
         </div>
@@ -688,6 +718,78 @@ $('btn-add-profile-admin')?.addEventListener('click', () => {
 });
 $('btn-cancel-profile-admin')?.addEventListener('click', hideProfileAdminForm);
 $('btn-save-profile-admin')?.addEventListener('click', saveProfileAdmin);
+
+// ---- CONTROLE DE ASSINATURAS E PLANOS (ADMIN) ----
+
+window.toggleUserSubscription = async function(userId, active) {
+  const token = getAdminToken();
+  let planId = null;
+
+  if (active) {
+    const option = prompt("Escolha o Plano:\n1 - Bronze\n2 - Prata\n3 - Ouro", "2");
+    if (!option) return;
+    planId = parseInt(option);
+    if (![1, 2, 3].includes(planId)) {
+      showToast("⚠️ Plano inválido selecionado.");
+      return;
+    }
+  } else {
+    if (!confirm("Tem certeza que deseja cancelar a assinatura desta conta?")) return;
+  }
+
+  try {
+    const res = await fetch(`${API}/api/admin/users/${userId}/subscribe`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ active, planId })
+    });
+
+    if (res.ok) {
+      showToast(active ? "✓ Assinatura ativada!" : "✓ Assinatura cancelada.");
+      loadDashboardData();
+    } else {
+      const data = await res.json();
+      showToast(data.error || "Erro ao gerenciar assinatura.");
+    }
+  } catch {
+    showToast("Erro de rede ao gerenciar assinatura.");
+  }
+};
+
+window.savePlanConfig = async function(planId) {
+  const token = getAdminToken();
+  const price = parseFloat($(`plan-${planId}-price`).value);
+  const screens = parseInt($(`plan-${planId}-screens`).value);
+
+  if (isNaN(price) || isNaN(screens)) {
+    showToast("⚠️ Preço e quantidade de telas devem ser valores válidos.");
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API}/api/admin/plans/${planId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ price, screens })
+    });
+
+    if (res.ok) {
+      showToast("✓ Configurações do plano atualizadas com sucesso!");
+      loadDashboardData();
+    } else {
+      const data = await res.json();
+      showToast(data.error || "Erro ao salvar plano.");
+    }
+  } catch {
+    showToast("Erro de rede ao salvar plano.");
+  }
+};
 
 // ---- INIT ----
 createParticles();

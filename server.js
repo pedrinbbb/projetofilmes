@@ -34,8 +34,8 @@ const ADMIN_JWT_SECRET = JWT_SECRET + '_admin';
 // =============================================
 const transporter = nodemailer.createTransport({
   host:   process.env.EMAIL_HOST || 'smtp.gmail.com',
-  port:   parseInt(process.env.EMAIL_PORT) || 465,
-  secure: parseInt(process.env.EMAIL_PORT || '465') === 465, 
+  port:   parseInt(process.env.EMAIL_PORT) || 587,
+  secure: parseInt(process.env.EMAIL_PORT) === 465, // Apenas true para a porta 465
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,

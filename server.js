@@ -18,7 +18,7 @@ const initSqlJs  = require('sql.js');
 const app        = express();
 const PORT       = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'goatcine_dev_secret';
-const DB_PATH    = path.join(__dirname, 'goatcine.db');
+const DB_PATH    = fs.existsSync('/data') ? '/data/goatcine.db' : path.join(__dirname, 'goatcine.db');
 
 // =============================================
 //  EMAIL TRANSPORTER
@@ -562,6 +562,81 @@ app.post('/api/auth/logout', requireAuth, (req, res) => {
 app.get('/api/auth/verify', requireAuth, (req, res) => {
   const user = dbGet('SELECT * FROM users WHERE id = ?', [req.user.id]);
   return res.json({ valid: true, user: safeUser(user) });
+});
+
+// =============================================
+//  ROUTE — PROXY STREAMING DE VÍDEO (Google Drive)
+// =============================================
+app.get('/api/video/stream', async (req, res) => {
+  const fileId = req.query.id;
+  if (!fileId) return res.status(400).send('ID do arquivo é obrigatório.');
+
+  const driveUrl = `https://docs.google.com/uc?export=download&id=${fileId}`;
+
+  try {
+    // 1. Primeira requisição para capturar cookies e ver se o Google pede confirmação de vírus
+    const firstRes = await fetch(driveUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      }
+    });
+
+    let downloadUrl = driveUrl;
+    const setCookieHeader = firstRes.headers.get('set-cookie');
+    let cookies = '';
+
+    if (setCookieHeader) {
+      cookies = setCookieHeader.split(',').map(c => c.split(';')[0]).join('; ');
+    }
+
+    // Se o Google redirecionar ou pedir confirmação de arquivo grande (virus scan confirmation)
+    const text = await firstRes.text();
+    const confirmMatch = text.match(/confirm=([a-zA-Z0-9_]+)/);
+    if (confirmMatch) {
+      const confirmToken = confirmMatch[1];
+      downloadUrl = `https://docs.google.com/uc?export=download&confirm=${confirmToken}&id=${fileId}`;
+      console.log(`[VIDEO-PROXY] 🛡️ Confirmando antivírus do Google Drive. Token: ${confirmToken}`);
+    }
+
+    // 2. Fazer a requisição do stream real passando os cookies
+    const headers = {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    };
+    if (cookies) {
+      headers['Cookie'] = cookies;
+    }
+
+    // Passar o cabeçalho 'Range' do navegador (caso o player queira pular o tempo do vídeo)
+    if (req.headers.range) {
+      headers['Range'] = req.headers.range;
+    }
+
+    const videoRes = await fetch(downloadUrl, { headers });
+
+    // Copiar os cabeçalhos de resposta essenciais do Google para o navegador do usuário
+    res.status(videoRes.status);
+    
+    const contentRange = videoRes.headers.get('content-range');
+    const contentType = videoRes.headers.get('content-type');
+    const contentLength = videoRes.headers.get('content-length');
+    const acceptRanges = videoRes.headers.get('accept-ranges');
+
+    if (contentRange) res.setHeader('Content-Range', contentRange);
+    if (contentType) res.setHeader('Content-Type', contentType);
+    if (contentLength) res.setHeader('Content-Length', contentLength);
+    if (acceptRanges) res.setHeader('Accept-Ranges', acceptRanges);
+
+    // Envia o fluxo de vídeo (pipe/stream) diretamente para o cliente
+    videoRes.body.pipe(res);
+
+    videoRes.body.on('error', (err) => {
+      console.error('[VIDEO-PROXY ERROR]', err);
+    });
+
+  } catch (err) {
+    console.error('[VIDEO-PROXY CRITICAL ERROR]', err);
+    res.status(500).send('Erro ao processar streaming do vídeo.');
+  }
 });
 
 // =============================================

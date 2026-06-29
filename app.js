@@ -127,6 +127,36 @@ const MOVIES = {
   ],
   new: [
     {
+      id: 26,
+      title: "Creed: Nascido para Lutar",
+      year: 2016,
+      duration: "2h 13min",
+      rating: 7.6,
+      genre: "Ação / Drama",
+      desc: "Adonis Johnson, filho do campeão de boxe Apollo Creed, decide seguir os passos do pai. Ele viaja para Filadélfia e convence Rocky Balboa, o antigo rival e amigo de seu pai, a ser seu treinador.",
+      poster: "creed_poster.png",
+      backdrop: "creed_backdrop.png",
+      director: "Ryan Coogler",
+      cast: "Michael B. Jordan, Sylvester Stallone, Tessa Thompson",
+      category: "new",
+      videoUrl: "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/Creed%20Nascido%20Para%20Lutar%202016%20Bluray%201080p%20Dublado%20-%20WWW.THEPIRATEFILMES.COM.mp4"
+    },
+    {
+      id: 25,
+      title: "Dupla Perigosa",
+      year: 2026,
+      duration: "2h 15min",
+      rating: 8.9,
+      genre: "Ação / Conspiração",
+      desc: "Dois meios-irmãos que não se falavam há muito tempo se reencontram após a morte misteriosa do pai deles. Ao buscarem a verdade, desvendam segredos de uma conspiração que pode destruir a família.",
+      poster: "dupla_perigosa_poster.png",
+      backdrop: "dupla_perigosa_backdrop.png",
+      director: "Ángel Manuel Soto",
+      cast: "Dave Bautista, Jason Momoa, Temuera Morrison",
+      category: "new",
+      videoUrl: "/api/video/stream?id=16O_SsTEQ3xavbjWNbM2MfpeOsQL7lXS2"
+    },
+    {
       id: 9,
       title: "Furiosa",
       year: 2024,
@@ -248,6 +278,36 @@ const MOVIES = {
     },
   ],
   action: [
+    {
+      id: 26,
+      title: "Creed: Nascido para Lutar",
+      year: 2016,
+      duration: "2h 13min",
+      rating: 7.6,
+      genre: "Ação / Drama",
+      desc: "Adonis Johnson, filho do campeão de boxe Apollo Creed, decide seguir os passos do pai. Ele viaja para Filadélfia e convence Rocky Balboa, o antigo rival e amigo de seu pai, a ser seu treinador.",
+      poster: "creed_poster.png",
+      backdrop: "creed_backdrop.png",
+      director: "Ryan Coogler",
+      cast: "Michael B. Jordan, Sylvester Stallone, Tessa Thompson",
+      category: "action",
+      videoUrl: "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/Creed%20Nascido%20Para%20Lutar%202016%20Bluray%201080p%20Dublado%20-%20WWW.THEPIRATEFILMES.COM.mp4"
+    },
+    {
+      id: 25,
+      title: "Dupla Perigosa",
+      year: 2026,
+      duration: "2h 15min",
+      rating: 8.9,
+      genre: "Ação / Conspiração",
+      desc: "Dois meios-irmãos que não se falavam há muito tempo se reencontram após a morte misteriosa do pai deles. Ao buscarem a verdade, desvendam segredos de uma conspiração que pode destruir a família.",
+      poster: "dupla_perigosa_poster.png",
+      backdrop: "dupla_perigosa_backdrop.png",
+      director: "Ángel Manuel Soto",
+      cast: "Dave Bautista, Jason Momoa, Temuera Morrison",
+      category: "action",
+      videoUrl: "/api/video/stream?id=16O_SsTEQ3xavbjWNbM2MfpeOsQL7lXS2"
+    },
     {
       id: 17,
       title: "Mission: Impossible 7",
@@ -373,20 +433,30 @@ const MOVIES = {
 
 // Top 10 compiled from best movies
 const TOP10 = [
+  MOVIES.new[0],      // Dupla Perigosa - 8.9 (Novo Top 1)
   MOVIES.trending[5], // Interstellar 8.6
   MOVIES.trending[0], // Dune 2 - 8.5
   MOVIES.trending[4], // Parasite - 8.5
   MOVIES.trending[1], // Oppenheimer - 8.3
-  MOVIES.action[1],   // Top Gun - 8.2
+  MOVIES.action[2],   // Top Gun: Maverick (agora com id correto 18, index 2 no array action. Note que index 0 é Dupla Perigosa, index 1 é M:I 7, index 2 é Top Gun)
   MOVIES.trending[2], // Poor Things - 8.0
   MOVIES.trending[6], // Past Lives - 7.9
   MOVIES.trending[3], // The Batman - 7.8
-  MOVIES.new[0],      // Furiosa - 7.8
-  MOVIES.action[2],   // John Wick 4 - 7.7
+  MOVIES.new[1],      // Furiosa (index 1 agora) - 7.8
 ];
 
 // Hero slides
 const HERO_SLIDES = [
+  {
+    title: "Dupla Perigosa",
+    year: 2026,
+    duration: "2h 15min",
+    rating: 8.9,
+    genre: "Ação / Conspiração",
+    desc: "Dois meios-irmãos que não se falavam há muito tempo se reencontram após a morte misteriosa do pai deles. Ao buscarem a verdade, desvendam segredos de uma conspiração que pode destruir a família.",
+    backdrop: "dupla_perigosa_backdrop.png",
+    movieId: 25
+  },
   {
     title: "Dune: Part Two",
     year: 2024,
@@ -909,10 +979,10 @@ function initVideoPlayer() {
     playerOverlay.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
 
-    // Determinar se o link é Iframe (YouTube/Vimeo) ou vídeo direto (.mp4, .webm)
+    // Determinar se o link é Iframe (YouTube/Vimeo/Google Drive) ou vídeo direto (.mp4, .webm)
     const url = movie.videoUrl || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
     
-    if (url.includes('youtube.com') || url.includes('youtu.be') || url.includes('vimeo.com')) {
+    if (url.includes('youtube.com') || url.includes('youtu.be') || url.includes('vimeo.com') || url.includes('drive.google.com')) {
       // Configurar modo Iframe
       video.style.display = 'none';
       iframeWrapper.classList.add('active');
@@ -927,6 +997,9 @@ function initVideoPlayer() {
       } else if (url.includes('vimeo.com/')) {
         const id = url.split('vimeo.com/')[1]?.split('?')[0];
         embedUrl = `https://player.vimeo.com/video/${id}?autoplay=1`;
+      } else if (url.includes('drive.google.com')) {
+        // Tratar link do Google Drive (/preview)
+        embedUrl = url.replace('/view', '/preview').replace('?usp=sharing', '');
       }
       
       iframe.src = embedUrl;

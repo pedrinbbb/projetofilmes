@@ -15,6 +15,7 @@ const cors       = require('cors');
 const nodemailer = require('nodemailer');
 const initSqlJs  = require('sql.js');
 const crypto     = require('crypto');
+const https      = require('https');
 
 const app        = express();
 const PORT       = process.env.PORT || 3000;
@@ -283,6 +284,8 @@ async function initDatabase() {
   try { db.run('ALTER TABLE users ADD COLUMN sub_active INTEGER DEFAULT 0'); } catch (e) {}
   try { db.run('ALTER TABLE users ADD COLUMN sub_plan_id INTEGER DEFAULT NULL'); } catch (e) {}
   try { db.run('ALTER TABLE users ADD COLUMN sub_expires_at TEXT DEFAULT NULL'); } catch (e) {}
+  try { db.run('ALTER TABLE users ADD COLUMN pending_txid TEXT DEFAULT NULL'); } catch (e) {}
+  try { db.run('ALTER TABLE users ADD COLUMN pending_plan_id INTEGER DEFAULT NULL'); } catch (e) {}
 
   // Seed de planos
   try {
@@ -1572,7 +1575,7 @@ app.post('/api/admin/users/:userId/subscribe', requireAdminAuth, (req, res) => {
 // Obter Assinatura do Usuário Logado
 app.get('/api/user/subscription', requireAuth, (req, res) => {
   try {
-    const user = dbGet('SELECT sub_active, sub_plan_id, sub_expires_at FROM users WHERE id = ?', [req.user.id]);
+    const user = dbGet('SELECT sub_active, sub_plan_id, sub_expires_at, pending_txid FROM users WHERE id = ?', [req.user.id]);
     if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
     
     // Obter também as configurações de todos os planos para exibir na tela de checkout
@@ -1581,6 +1584,142 @@ app.get('/api/user/subscription', requireAuth, (req, res) => {
   } catch (err) {
     console.error('[USER GET SUB ERROR]', err);
     return res.status(500).json({ error: 'Erro ao buscar dados de assinatura' });
+  }
+});
+
+// Helper para obter Token da API Efí Pix
+async function getEfiToken() {
+  const isSandbox = process.env.EFI_SANDBOX === 'true';
+  const baseUrl = isSandbox ? 'https://api-pix-h.gerencianet.com.br' : 'https://api-pix.gerencianet.com.br';
+  const certPath = path.resolve(__dirname, process.env.EFI_CERTIFICATE_PATH);
+  
+  if (!fs.existsSync(certPath)) {
+    throw new Error(`Certificado Efí não encontrado no caminho: ${certPath}`);
+  }
+
+  const certData = fs.readFileSync(certPath);
+  const agent = new https.Agent({
+    cert: certData,
+    key: certData,
+    rejectUnauthorized: false
+  });
+
+  const auth = Buffer.from(`${process.env.EFI_CLIENT_ID}:${process.env.EFI_CLIENT_SECRET}`).toString('base64');
+
+  const response = await fetch(`${baseUrl}/oauth/token`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Basic ${auth}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ grant_type: 'client_credentials' }),
+    agent
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`Erro de autenticação com a Efí: ${errText}`);
+  }
+
+  const data = await response.json();
+  return data.access_token;
+}
+
+// Iniciar Checkout PIX (Real via Efí ou Simulado)
+app.post('/api/user/subscribe', requireAuth, async (req, res) => {
+  try {
+    const { planId } = req.body;
+    if (!planId) return res.status(400).json({ error: 'Plano é obrigatório' });
+
+    const plan = dbGet('SELECT * FROM plans WHERE id = ?', [planId]);
+    if (!plan) return res.status(404).json({ error: 'Plano não encontrado' });
+
+    const efiActive = !!(process.env.EFI_CLIENT_ID && process.env.EFI_CLIENT_SECRET && process.env.EFI_KEY && process.env.EFI_CERTIFICATE_PATH);
+
+    if (efiActive) {
+      console.log(`[EFI PIX] 💳 Iniciando cobrança real para o usuário ${req.user.id}...`);
+      try {
+        const isSandbox = process.env.EFI_SANDBOX === 'true';
+        const baseUrl = isSandbox ? 'https://api-pix-h.gerencianet.com.br' : 'https://api-pix.gerencianet.com.br';
+        const token = await getEfiToken();
+        
+        const certPath = path.resolve(__dirname, process.env.EFI_CERTIFICATE_PATH);
+        const certData = fs.readFileSync(certPath);
+        const agent = new https.Agent({ cert: certData, key: certData, rejectUnauthorized: false });
+
+        // Criar cobrança imediata (cob)
+        const cobBody = {
+          calendario: { expiracao: 3600 },
+          devedor: {
+            cpf: '12345678909', // CPF fictício para simplificar checkout imediato
+            nome: req.user.name || 'Cliente GOATCINE'
+          },
+          valor: { original: plan.price.toFixed(2) },
+          chave: process.env.EFI_KEY,
+          solicitacaoPagador: `Assinatura GOATCINE - Plano ${plan.name}`
+        };
+
+        const cobRes = await fetch(`${baseUrl}/v2/cob`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(cobBody),
+          agent
+        });
+
+        if (!cobRes.ok) {
+          const errText = await cobRes.text();
+          throw new Error(`Erro ao criar cob Efí: ${errText}`);
+        }
+
+        const cobData = await cobRes.json();
+        const txid = cobData.txid;
+        const locId = cobData.loc.id;
+
+        // Gerar QR Code
+        const qrRes = await fetch(`${baseUrl}/v2/loc/${locId}/qrcode`, {
+          method: 'GET',
+          headers: { Authorization: `Bearer ${token}` },
+          agent
+        });
+
+        if (!qrRes.ok) throw new Error('Erro ao gerar QR Code na Efí');
+        const qrData = await qrRes.json();
+
+        // Salvar txid pendente no usuário
+        db.run('UPDATE users SET pending_txid = ?, pending_plan_id = ? WHERE id = ?', [txid, planId, req.user.id]);
+        saveDb();
+
+        return res.json({
+          realPix: true,
+          txid,
+          qrcodeImage: qrData.imagemQrcode, // base64
+          qrcodeText: qrData.qrcode // Copia e Cola
+        });
+      } catch (efiErr) {
+        console.error('[EFI PIX CRITICAL ERROR] Falha ao usar gateway Efí. Revertendo para Simulado.', efiErr);
+      }
+    }
+
+    // Fallback: Modo Simulado se as credenciais estiverem em branco ou falharem
+    const valHex = plan.price.toFixed(2).replace('.', '');
+    const txidMock = `mock${crypto.randomBytes(8).toString('hex')}`;
+    const qrcodeTextMock = `00020101021226870014br.gov.bcb.pix2565pix.goatcine.com/sub/checkout/plan${planId}-${valHex}-${txidMock}`;
+
+    db.run('UPDATE users SET pending_txid = ?, pending_plan_id = ? WHERE id = ?', [txidMock, planId, req.user.id]);
+    saveDb();
+
+    return res.json({
+      realPix: false,
+      txid: txidMock,
+      qrcodeText: qrcodeTextMock
+    });
+
+  } catch (err) {
+    console.error('[SUBSCRIBE ERROR]', err);
+    return res.status(500).json({ error: 'Erro ao iniciar fluxo de assinatura' });
   }
 });
 
@@ -1596,7 +1735,7 @@ app.post('/api/user/simulate-pix', requireAuth, (req, res) => {
     // Ativar assinatura por 30 dias
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
     db.run(
-      'UPDATE users SET sub_active = 1, sub_plan_id = ?, sub_expires_at = ? WHERE id = ?',
+      'UPDATE users SET sub_active = 1, sub_plan_id = ?, sub_expires_at = ?, pending_txid = NULL, pending_plan_id = NULL WHERE id = ?',
       [planId, expiresAt, req.user.id]
     );
     saveDb();
@@ -1606,6 +1745,38 @@ app.post('/api/user/simulate-pix', requireAuth, (req, res) => {
   } catch (err) {
     console.error('[SIMULATE PIX ERROR]', err);
     return res.status(500).json({ error: 'Erro ao confirmar assinatura' });
+  }
+});
+
+// Webhook do Pix Banco Efí (GET/POST para homologação e recebimento real)
+app.all('/api/webhook/pix', (req, res) => {
+  // GET da Efí para validar configuração do webhook
+  if (req.method === 'GET' || req.method === 'PUT') {
+    return res.status(200).send('OK');
+  }
+
+  try {
+    const pixList = req.body?.pix;
+    if (Array.isArray(pixList)) {
+      pixList.forEach(pix => {
+        const txid = pix.txid;
+        // Buscar se há usuário com esse txid pendente
+        const user = dbGet('SELECT id, pending_plan_id FROM users WHERE pending_txid = ?', [txid]);
+        if (user) {
+          const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+          db.run(
+            'UPDATE users SET sub_active = 1, sub_plan_id = ?, sub_expires_at = ?, pending_txid = NULL, pending_plan_id = NULL WHERE id = ?',
+            [user.pending_plan_id, expiresAt, user.id]
+          );
+          saveDb();
+          console.log(`[EFI WEBHOOK] 💳 Pagamento CONFIRMADO via Pix! Usuário ID ${user.id} ativado no plano ${user.pending_plan_id}.`);
+        }
+      });
+    }
+    return res.status(200).send('OK');
+  } catch (err) {
+    console.error('[EFI WEBHOOK ERROR]', err);
+    return res.status(500).send('Erro interno');
   }
 });
 

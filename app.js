@@ -1110,6 +1110,8 @@ function openSubModal() {
   $('sub-checkout-area').classList.add('hidden');
 }
 
+let subPollInterval = null;
+
 function closeSubModal() {
   const overlay = $('sub-modal-overlay');
   if (overlay) {
@@ -1117,9 +1119,13 @@ function closeSubModal() {
     overlay.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
   }
+  if (subPollInterval) {
+    clearInterval(subPollInterval);
+    subPollInterval = null;
+  }
 }
 
-function selectPlanForSub(planId, cardElement) {
+async function selectPlanForSub(planId, cardElement) {
   selectedPlanIdForSub = planId;
   document.querySelectorAll('.plan-card').forEach(c => {
     c.style.borderColor = 'rgba(255, 215, 0, 0.15)';
@@ -1128,14 +1134,73 @@ function selectPlanForSub(planId, cardElement) {
   cardElement.style.borderColor = 'var(--gold-primary)';
   cardElement.style.background = 'rgba(255, 215, 0, 0.05)';
 
-  // Show checkout area
+  // Show checkout area and set loading
   $('sub-checkout-area').classList.remove('hidden');
+  $('pix-copy-paste').value = 'Gerando cobrança PIX...';
   
-  // Set custom Pix copy paste string with plan price
-  const selectedPlan = allPlansList.find(p => p.id === planId);
-  if (selectedPlan) {
-    const valHex = selectedPlan.price.toFixed(2).replace('.', '');
-    $('pix-copy-paste').value = `00020101021226870014br.gov.bcb.pix2565pix.goatcine.com/sub/checkout/plan${planId}-${valHex}`;
+  const qrWrapper = $('qrcode-container-wrapper');
+  if (qrWrapper) {
+    qrWrapper.innerHTML = '<div style="width:180px; height:180px; display:flex; align-items:center; justify-content:center; color:#000;">Carregando...</div>';
+  }
+
+  // Clear any existing polling
+  if (subPollInterval) clearInterval(subPollInterval);
+
+  const token = localStorage.getItem('goatcine_token');
+
+  try {
+    const res = await fetch('/api/user/subscribe', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ planId })
+    });
+
+    if (!res.ok) throw new Error('Erro ao gerar cobrança');
+    const data = await res.json();
+
+    // Render QR Code
+    if (data.qrcodeImage && qrWrapper) {
+      // Real QR Code image from Efí
+      qrWrapper.innerHTML = `<img src="data:image/png;base64,${data.qrcodeImage}" width="180" height="180" style="display:block; margin:0 auto; border-radius:4px;" alt="QR Code Pix" />`;
+    } else if (qrWrapper) {
+      // Fallback Mock SVG QR Code
+      qrWrapper.innerHTML = `
+        <svg width="180" height="180" viewBox="0 0 29 29" style="display: block; margin: 0 auto;">
+          <path d="M0 0h7v7H0zm1 1v5h5V1zm1 1v3h3V2zM0 22h7v7H0zm1 1v5h5v-5zm1 1v3h3v-3zM22 0h7v7h-7zm1 1v5h5V1zm1 1v3h3V2zM9 0h2v4H9zm4 0h3v2h-3zm5 0h2v3h-2zm-3 3h2v2h-2zm-6 2h2v4H8zm3 0h2v2h-2zm3 2h2v2h-3zm-1 3h2v3h-2zm3 0h3v2h-3zm-9 3h2v2H8zm3 0h3v2h-3zm6 0h2v4h-2zm-3 3h2v2h-2zm-6 2h3v2H8zm5 0h2v2h-2zm3 0h2v2h-2zm-9 3h2v4H7zm5 0h3v2h-3zm4 0h2v2h-2zm-9 3h3v2H7zm5 0h2v2h-2zm4 0h3v2h-3zm-9-19h2v2H9zm3 0h3v2h-3zm4 0h2v2h-2zm-9 3h3v2H7zm5 0h2v2h-2zm4 0h3v2h-3zm-9 3h2v3H9zm4 0h2v2h-2zm3 0h2v3h-2zm-3 4h2v2h-2zm3 0h2v2h-2z" fill="#000"/>
+        </svg>
+      `;
+    }
+
+    $('pix-copy-paste').value = data.qrcodeText || '';
+
+    // Start polling to detect payment success automatically
+    subPollInterval = setInterval(async () => {
+      try {
+        const checkRes = await fetch('/api/user/subscription', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (checkRes.ok) {
+          const checkData = await checkRes.json();
+          if (checkData.subscription && checkData.subscription.sub_active === 1) {
+            clearInterval(subPollInterval);
+            subPollInterval = null;
+            showToast('🎉 Pagamento confirmado via Pix! Assinatura ativada.');
+            closeSubModal();
+            setTimeout(() => window.location.reload(), 1500);
+          }
+        }
+      } catch (err) {
+        console.error('Erro ao verificar status do pagamento:', err);
+      }
+    }, 3000);
+
+  } catch (err) {
+    showToast('⚠️ Erro ao gerar Pix. Tente novamente.');
+    $('pix-copy-paste').value = 'Erro ao gerar PIX.';
+    if (qrWrapper) qrWrapper.innerHTML = '<div style="color:var(--color-error); padding:20px;">Falha ao carregar QR Code.</div>';
   }
 }
 

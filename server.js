@@ -293,7 +293,7 @@ async function runMigrationsAndSeeds() {
       poster      VARCHAR(500) NOT NULL,
       backdrop    VARCHAR(500) NOT NULL,
       director    VARCHAR(255) NOT NULL,
-      cast        TEXT NOT NULL,
+      "cast"      TEXT NOT NULL,
       category    VARCHAR(100) NOT NULL,
       videoUrl    VARCHAR(500) NOT NULL
     )`);
@@ -829,7 +829,7 @@ async function runMigrationsAndSeeds() {
 
         defaultMovies.forEach(m => {
           dbRun(
-            `INSERT INTO movies (title, year, duration, rating, genre, "desc", poster, backdrop, director, cast, category, videoUrl) 
+            `INSERT INTO movies (title, year, duration, rating, genre, "desc", poster, backdrop, director, "cast", category, videoUrl) 
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [m.title, m.year, m.duration, m.rating, m.genre, m.desc, m.poster, m.backdrop, m.director, m.cast, m.category, m.videoUrl]
           );
@@ -849,7 +849,6 @@ const deasync = require('deasync');
 // Tradutor de queries de SQLite (?) para PostgreSQL ($1, $2, $3...)
 function translateQuery(sql) {
   if (!IS_POSTGRES) {
-    // SQLite: substitui "desc" com aspas por desc sem aspas caso precise
     return sql;
   }
   
@@ -863,6 +862,11 @@ function translateQuery(sql) {
   // Tradução de funções e termos específicos
   translatedSql = translatedSql.replace(/datetime\('now'\)/gi, 'CURRENT_TIMESTAMP');
   translatedSql = translatedSql.replace(/like/gi, 'ILIKE'); // LIKE case-insensitive no Postgres é ILIKE
+  
+  // Escapar palavras reservadas do PostgreSQL que podem estar sem aspas em queries do SQLite
+  // Substitui cast e desc por "cast" e "desc" quando usados como colunas isoladas
+  translatedSql = translatedSql.replace(/\bcast\b(?!")/g, '"cast"');
+  translatedSql = translatedSql.replace(/\bdesc\b(?!")(?!(\s+asc|\s+desc|\s*,|\s*$))/gi, '"desc"'); // Não escapa o DESC do ORDER BY DESC
   
   return translatedSql;
 }

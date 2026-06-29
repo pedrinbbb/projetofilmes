@@ -216,7 +216,10 @@ function renderUsersTable() {
       <td>${user.discord_tag || '-'}</td>
       <td>${new Date(user.created_at).toLocaleDateString('pt-BR')} ${new Date(user.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</td>
       <td>
-        <button class="btn-icon delete" title="Excluir Conta" onclick="deleteUser(${user.id}, '${user.name}')">🗑️</button>
+        <div class="actions-cell">
+          <button class="btn-icon" title="Ver Perfis" onclick="openProfilesModal(${user.id}, '${user.name.replace(/'/g, "\\'")}')">👥</button>
+          <button class="btn-icon delete" title="Excluir Conta" onclick="deleteUser(${user.id}, '${user.name.replace(/'/g, "\\'")}')">🗑️</button>
+        </div>
       </td>
     `;
     usersTbody.appendChild(tr);
@@ -448,6 +451,237 @@ function createParticles() {
     container.appendChild(dot);
   }
 }
+
+// ---- GERENCIAMENTO DE PERFIS (ADMIN) ----
+let currentSelectedUserIdForProfiles = null;
+let currentUserProfilesList = [];
+
+window.openProfilesModal = async function(userId, userName) {
+  currentSelectedUserIdForProfiles = userId;
+  $('profiles-modal-title').textContent = `Perfis de: ${userName}`;
+  hideProfileAdminForm();
+  
+  const modal = $('profiles-modal');
+  modal.classList.add('open');
+  modal.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+
+  await loadUserProfiles(userId);
+};
+
+function closeProfilesModal() {
+  const modal = $('profiles-modal');
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+  currentSelectedUserIdForProfiles = null;
+}
+
+async function loadUserProfiles(userId) {
+  const token = getAdminToken();
+  const listContainer = $('profiles-list-admin');
+  listContainer.innerHTML = '<div style="text-align: center; color: var(--color-text-muted);">Carregando perfis...</div>';
+
+  try {
+    const res = await fetch(`${API}/api/admin/users/${userId}/profiles`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await res.json();
+    currentUserProfilesList = data.profiles || [];
+    renderUserProfilesList();
+  } catch (err) {
+    listContainer.innerHTML = '<div style="text-align: center; color: var(--color-error);">Erro ao carregar perfis.</div>';
+  }
+}
+
+function renderUserProfilesList() {
+  const listContainer = $('profiles-list-admin');
+  listContainer.innerHTML = '';
+
+  if (currentUserProfilesList.length === 0) {
+    listContainer.innerHTML = '<div style="text-align: center; color: var(--color-text-muted); padding: 10px;">Esta conta não possui perfis cadastrados.</div>';
+    return;
+  }
+
+  currentUserProfilesList.forEach(profile => {
+    const item = document.createElement('div');
+    item.style.cssText = `
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 12px 16px;
+      border-radius: 10px;
+    `;
+
+    const details = document.createElement('div');
+    details.style.cssText = `
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    `;
+
+    const avatar = document.createElement('div');
+    avatar.textContent = profile.avatar_icon;
+    avatar.style.cssText = `
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      background: ${profile.avatar_color}22;
+      border: 2px solid ${profile.avatar_color}66;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    `;
+
+    const info = document.createElement('div');
+    info.innerHTML = `
+      <div style="font-weight: 600; color: var(--color-text-light);">${profile.name}</div>
+      <div style="font-size: 0.75rem; color: var(--color-text-muted);">${profile.is_kid ? '👶 Perfil Infantil' : '🎬 Acesso Completo'}</div>
+    `;
+
+    details.appendChild(avatar);
+    details.appendChild(info);
+
+    const actions = document.createElement('div');
+    actions.className = 'actions-cell';
+    
+    const btnEdit = document.createElement('button');
+    btnEdit.className = 'btn-icon';
+    btnEdit.title = 'Editar Perfil';
+    btnEdit.innerHTML = '✏️';
+    btnEdit.onclick = () => showEditProfileAdminForm(profile);
+
+    const btnDelete = document.createElement('button');
+    btnDelete.className = 'btn-icon delete';
+    btnDelete.title = 'Excluir Perfil';
+    btnDelete.innerHTML = '🗑️';
+    btnDelete.onclick = () => deleteProfileAdmin(profile.id, profile.name);
+
+    actions.appendChild(btnEdit);
+    actions.appendChild(btnDelete);
+
+    item.appendChild(details);
+    item.appendChild(actions);
+    listContainer.appendChild(item);
+  });
+}
+
+function showCreateProfileAdminForm() {
+  const form = $('add-profile-admin-form');
+  form.classList.remove('hidden');
+  $('profile-form-title').textContent = 'Adicionar Novo Perfil';
+  $('admin-profile-id').value = '';
+  $('ap-name').value = '';
+  $('ap-icon').value = '🎬';
+  $('ap-color').value = '#FFD700';
+  $('ap-kid').checked = false;
+  $('ap-name').focus();
+}
+
+function showEditProfileAdminForm(profile) {
+  const form = $('add-profile-admin-form');
+  form.classList.remove('hidden');
+  $('profile-form-title').textContent = 'Editar Perfil';
+  $('admin-profile-id').value = profile.id;
+  $('ap-name').value = profile.name;
+  $('ap-icon').value = profile.avatar_icon;
+  $('ap-color').value = profile.avatar_color;
+  $('ap-kid').checked = !!profile.is_kid;
+  $('ap-name').focus();
+}
+
+function hideProfileAdminForm() {
+  const form = $('add-profile-admin-form');
+  form.classList.add('hidden');
+  $('admin-profile-id').value = '';
+  $('ap-name').value = '';
+}
+
+async function deleteProfileAdmin(profileId, profileName) {
+  if (!confirm(`Excluir permanentemente o perfil "${profileName}"?`)) return;
+  const token = getAdminToken();
+
+  try {
+    const res = await fetch(`${API}/api/admin/profiles/${profileId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (res.ok) {
+      showToast(`✕ Perfil "${profileName}" excluído.`);
+      await loadUserProfiles(currentSelectedUserIdForProfiles);
+    } else {
+      const data = await res.json();
+      showToast(data.error || 'Erro ao excluir perfil.');
+    }
+  } catch {
+    showToast('Erro de rede ao excluir perfil.');
+  }
+}
+
+async function saveProfileAdmin() {
+  const name = $('ap-name').value.trim();
+  const icon = $('ap-icon').value;
+  const color = $('ap-color').value;
+  const isKid = $('ap-kid').checked;
+  const profileId = $('admin-profile-id').value;
+  const token = getAdminToken();
+
+  if (!name) {
+    showToast('⚠️ Nome do perfil é obrigatório.');
+    return;
+  }
+
+  const isEdit = !!profileId;
+  const url = isEdit 
+    ? `${API}/api/admin/profiles/${profileId}` 
+    : `${API}/api/admin/users/${currentSelectedUserIdForProfiles}/profiles`;
+  
+  const method = isEdit ? 'PUT' : 'POST';
+
+  try {
+    const res = await fetch(url, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        name,
+        avatar_icon: icon,
+        avatar_color: color,
+        is_kid: isKid ? 1 : 0
+      })
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      showToast(isEdit ? '✓ Perfil atualizado com sucesso!' : '✓ Perfil criado com sucesso!');
+      hideProfileAdminForm();
+      await loadUserProfiles(currentSelectedUserIdForProfiles);
+    } else {
+      showToast(data.error || 'Erro ao salvar perfil.');
+    }
+  } catch {
+    showToast('Erro de rede ao salvar perfil.');
+  }
+}
+
+// Bind modal events
+$('profiles-modal-close-btn')?.addEventListener('click', closeProfilesModal);
+$('btn-close-profiles-modal')?.addEventListener('click', closeProfilesModal);
+$('btn-add-profile-admin')?.addEventListener('click', () => {
+  if (currentUserProfilesList.length >= 5) {
+    showToast('⚠️ Limite máximo de 5 perfis atingido.');
+    return;
+  }
+  showCreateProfileAdminForm();
+});
+$('btn-cancel-profile-admin')?.addEventListener('click', hideProfileAdminForm);
+$('btn-save-profile-admin')?.addEventListener('click', saveProfileAdmin);
 
 // ---- INIT ----
 createParticles();

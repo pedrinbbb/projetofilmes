@@ -237,6 +237,94 @@
         </div>
       </form>
     </div>
+  <!-- =============================================
+       MODAL: GERENCIAR PERFIS DO USUÁRIO
+       ============================================= -->
+  <div class="modal-overlay" id="profiles-modal" aria-hidden="true">
+    <div class="modal" role="dialog" style="max-width: 600px;">
+      <button class="modal-close" id="profiles-modal-close-btn" aria-label="Fechar Modal">&times;</button>
+      <h2 id="profiles-modal-title">Perfis do Usuário</h2>
+
+      <div class="profiles-list-admin" id="profiles-list-admin" style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px;">
+        <!-- Inserido dinamicamente -->
+      </div>
+
+      <div id="add-profile-admin-form" class="hidden" style="border-top: 1px solid rgba(255, 215, 0, 0.15); padding-top: 20px;">
+        <h3 id="profile-form-title" style="font-family: var(--font-family-title); color: var(--color-gold-bright); font-size: 1.2rem; margin-bottom: 16px;">Adicionar Novo Perfil</h3>
+        <input type="hidden" id="admin-profile-id">
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <div class="form-group">
+            <label for="ap-name">Nome do Perfil</label>
+            <input type="text" id="ap-name" placeholder="Ex: Pedro, Kids..." maxlength="20">
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="form-group">
+              <label for="ap-icon">Ícone (Emoji)</label>
+              <select id="ap-icon">
+                <option value="🎬">🎬 Cinema</option>
+                <option value="🎭">🎭 Teatro</option>
+                <option value="🏆">🏆 Troféu</option>
+                <option value="🌟">🌟 Estrela</option>
+                <option value="👑">👑 Coroa</option>
+                <option value="🦁">🦁 Leão</option>
+                <option value="🐺">🐺 Lobo</option>
+                <option value="🦊">🦊 Raposa</option>
+                <option value="🐉">🐉 Dragão</option>
+                <option value="🎮">🎮 Game</option>
+                <option value="🎸">🎸 Guitarra</option>
+                <option value="🚀">🚀 Foguete</option>
+                <option value="⚡">⚡ Raio</option>
+                <option value="🔥">🔥 Fogo</option>
+                <option value="🌊">🌊 Onda</option>
+                <option value="🎯">🎯 Alvo</option>
+                <option value="🦅">🦅 Águia</option>
+                <option value="🐯">🐯 Tigre</option>
+                <option value="🎲">🎲 Dado</option>
+                <option value="🌙">🌙 Lua</option>
+                <option value="🍕">🍕 Pizza</option>
+                <option value="🎻">🎻 Violino</option>
+                <option value="🛸">🛸 OVNI</option>
+                <option value="🦋">🦋 Borboleta</option>
+                <option value="🎨">🎨 Paleta</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="ap-color">Cor de Fundo</label>
+              <select id="ap-color">
+                <option value="#FFD700">Dourado</option>
+                <option value="#FF6B6B">Vermelho</option>
+                <option value="#4ECDC4">Ciano</option>
+                <option value="#45B7D1">Azul Claro</option>
+                <option value="#96CEB4">Verde Menta</option>
+                <option value="#FFEAA7">Amarelo Pastel</option>
+                <option value="#DDA0DD">Lilás</option>
+                <option value="#98D8C8">Turquesa</option>
+                <option value="#F7DC6F">Amarelo Escuro</option>
+                <option value="#BB8FCE">Roxo</option>
+                <option value="#85C1E9">Azul</option>
+                <option value="#F1948A">Rosa</option>
+                <option value="#82E0AA">Verde</option>
+                <option value="#F8C471">Laranja</option>
+                <option value="#AEB6BF">Cinza</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group" style="flex-direction: row; align-items: center; gap: 8px;">
+            <input type="checkbox" id="ap-kid" style="width: auto;">
+            <label for="ap-kid" style="margin-bottom: 0; cursor: pointer;">Perfil Infantil (Oculta conteúdo adulto)</label>
+          </div>
+          <div style="display: flex; justify-content: flex-end; gap: 12px;">
+            <button type="button" id="btn-cancel-profile-admin" class="btn-secondary">Cancelar</button>
+            <button type="button" id="btn-save-profile-admin" class="btn-primary">Salvar</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255, 215, 0, 0.15); padding-top: 20px; margin-top: 20px;">
+        <button type="button" id="btn-add-profile-admin" class="btn-primary">+ Adicionar Perfil</button>
+        <button type="button" id="btn-close-profiles-modal" class="btn-secondary">Fechar</button>
+      </div>
+    </div>
   </div>
 
   <script src="admin.js"></script>

@@ -1388,8 +1388,9 @@ app.get('/api/admin/users', requireAdminAuth, (req, res) => {
 app.delete('/api/admin/users/:id', requireAdminAuth, (req, res) => {
   const { id } = req.params;
   try {
-    // Apagar também sessões ativas do usuário deletado
+    // Apagar também sessões ativas do usuário deletado e os seus perfis
     db.run('DELETE FROM sessions WHERE user_id = ?', [id]);
+    db.run('DELETE FROM profiles WHERE user_id = ?', [id]);
     db.run('DELETE FROM users WHERE id = ?', [id]);
     saveDb();
     console.log(`[ADMIN] ❌ Usuário deletado. ID: ${id}`);
@@ -1399,6 +1400,85 @@ app.delete('/api/admin/users/:id', requireAdminAuth, (req, res) => {
     return res.status(500).json({ error: 'Erro ao deletar usuário' });
   }
 });
+
+// --- ADMIN API ENDPOINTS FOR PROFILES ---
+
+// Listar Perfis de um Usuário Específico
+app.get('/api/admin/users/:userId/profiles', requireAdminAuth, (req, res) => {
+  try {
+    const { userId } = req.params;
+    const profiles = dbAll('SELECT * FROM profiles WHERE user_id = ? ORDER BY created_at ASC', [userId]);
+    return res.json({ profiles });
+  } catch (err) {
+    console.error('[ADMIN GET USER PROFILES ERROR]', err);
+    return res.status(500).json({ error: 'Erro ao buscar perfis do usuário.' });
+  }
+});
+
+// Criar Perfil para um Usuário Específico
+app.post('/api/admin/users/:userId/profiles', requireAdminAuth, (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { name, avatar_color = '#FFD700', avatar_icon = '🎬', is_kid = 0 } = req.body;
+
+    if (!name || name.trim().length < 1)
+      return res.status(400).json({ error: 'Nome do perfil é obrigatório.' });
+    if (name.trim().length > 20)
+      return res.status(400).json({ error: 'Nome do perfil deve ter no máximo 20 caracteres.' });
+
+    const count = dbGet('SELECT COUNT(*) as c FROM profiles WHERE user_id = ?', [userId]);
+    if (count && count.c >= 5)
+      return res.status(400).json({ error: 'Limite máximo de 5 perfis por conta atingido.' });
+
+    const id = dbRun(
+      'INSERT INTO profiles (user_id, name, avatar_color, avatar_icon, is_kid) VALUES (?, ?, ?, ?, ?)',
+      [userId, name.trim(), avatar_color, avatar_icon, is_kid ? 1 : 0]
+    );
+
+    const profile = dbGet('SELECT * FROM profiles WHERE id = ?', [id]);
+    return res.status(201).json({ profile });
+  } catch (err) {
+    console.error('[ADMIN CREATE USER PROFILE ERROR]', err);
+    return res.status(500).json({ error: 'Erro ao criar perfil para o usuário.' });
+  }
+});
+
+// Atualizar Perfil
+app.put('/api/admin/profiles/:id', requireAdminAuth, (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, avatar_color, avatar_icon, is_kid } = req.body;
+
+    if (!name || name.trim().length < 1)
+      return res.status(400).json({ error: 'Nome do perfil é obrigatório.' });
+
+    db.run(
+      'UPDATE profiles SET name = ?, avatar_color = ?, avatar_icon = ?, is_kid = ? WHERE id = ?',
+      [name.trim(), avatar_color, avatar_icon, is_kid ? 1 : 0, id]
+    );
+    saveDb();
+
+    const profile = dbGet('SELECT * FROM profiles WHERE id = ?', [id]);
+    return res.json({ profile });
+  } catch (err) {
+    console.error('[ADMIN UPDATE PROFILE ERROR]', err);
+    return res.status(500).json({ error: 'Erro ao atualizar perfil.' });
+  }
+});
+
+// Excluir Perfil
+app.delete('/api/admin/profiles/:id', requireAdminAuth, (req, res) => {
+  try {
+    const { id } = req.params;
+    db.run('DELETE FROM profiles WHERE id = ?', [id]);
+    saveDb();
+    return res.json({ success: true });
+  } catch (err) {
+    console.error('[ADMIN DELETE PROFILE ERROR]', err);
+    return res.status(500).json({ error: 'Erro ao remover perfil.' });
+  }
+});
+
 
 // =============================================
 //  MOVIES API ENDPOINTS (Public & Admin CRUD)

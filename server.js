@@ -729,116 +729,14 @@ async function runMigrationsAndSeeds() {
       }
     ];
 
-    defaultMovies.forEach(m => {
-      db.run(
-        `INSERT INTO movies (title, year, duration, rating, genre, desc, poster, backdrop, director, cast, category, videoUrl) 
+    for (const m of defaultMovies) {
+      await dbRunAsync(
+        `INSERT INTO movies (title, year, duration, rating, genre, "desc", poster, backdrop, director, "cast", category, videoUrl) 
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [m.title, m.year, m.duration, m.rating, m.genre, m.desc, m.poster, m.backdrop, m.director, m.cast, m.category, m.videoUrl]
       );
-    });
-    // Seed de planos
-    try {
-      const plansCount = dbAll('SELECT COUNT(*) as count FROM plans')[0]?.count ?? 0;
-      if (parseInt(plansCount) === 0) {
-        console.log('  📦 Semeando planos de assinatura padrão...');
-        dbRun("INSERT INTO plans (id, name, price, screens, duration_days) VALUES (1, 'Bronze', 14.90, 1, 30)");
-        dbRun("INSERT INTO plans (id, name, price, screens, duration_days) VALUES (2, 'Prata', 24.90, 2, 30)");
-        dbRun("INSERT INTO plans (id, name, price, screens, duration_days) VALUES (3, 'Ouro', 44.90, 5, 30)");
-      }
-    } catch (err) {
-      console.error('Erro ao semear planos:', err);
     }
-
-    // Seed de filmes se a tabela estiver vazia
-    try {
-      const count = dbAll('SELECT COUNT(*) as count FROM movies')[0]?.count ?? 0;
-      if (parseInt(count) === 0) {
-        console.log('  📦 Populando tabela de filmes (Seeding)...');
-        const defaultMovies = [
-          {
-            title: "O Poderoso Chefão",
-            year: 1972,
-            duration: "2h 55min",
-            rating: 9.2,
-            genre: "Drama / Crime",
-            desc: "O patriarca envelhecido de uma dinastia do crime organizado transfere o controle de seu império clandestino para seu filho relutante.",
-            poster: "https://image.tmdb.org/t/p/w500/3bhkrj6UgS6Ol4i4dFIUpLWZA6C.jpg",
-            backdrop: "https://image.tmdb.org/t/p/w1280/tmU7K3bnjWmq52dStandardChefao.jpg",
-            director: "Francis Ford Coppola",
-            cast: "Marlon Brando, Al Pacino, James Caan",
-            category: "drama",
-            videoUrl: "https://www.youtube.com/watch?v=sY1S34973zA"
-          },
-          {
-            title: "Interestelar",
-            year: 2014,
-            duration: "2h 49min",
-            rating: 8.6,
-            genre: "Ficção Científica / Drama",
-            desc: "Uma equipe de exploradores viaja através de um buraco de minhoca no espaço na tentativa de garantir a sobrevivência da humanidade.",
-            poster: "https://image.tmdb.org/t/p/w500/gEU2Qjdcd2wGZ2qA2vK2jHOJu4R.jpg",
-            backdrop: "https://image.tmdb.org/t/p/w1280/xJHokMbljv35158CO8ls16ZBrOI.jpg",
-            director: "Christopher Nolan",
-            cast: "Matthew McConaughey, Anne Hathaway, Jessica Chastain",
-            category: "scifi",
-            videoUrl: "https://www.youtube.com/watch?v=zSWdZAibgEg"
-          },
-          {
-            title: "Batman: O Cavaleiro das Trevas",
-            year: 2008,
-            duration: "2h 32min",
-            rating: 9.0,
-            genre: "Ação / Policial",
-            desc: "Quando o perigoso Coringa surge espalhando o caos por Gotham, Batman precisa usar todas as suas habilidades para detê-lo.",
-            poster: "https://image.tmdb.org/t/p/w500/qJ2tWGBYiZpqC1tQ84j1v7huUHG.jpg",
-            backdrop: "https://image.tmdb.org/t/p/w1280/nMKdUUepw0i7IOCOERw5u68FYRq.jpg",
-            director: "Christopher Nolan",
-            cast: "Christian Bale, Heath Ledger, Aaron Eckhart",
-            category: "trending",
-            videoUrl: "https://www.youtube.com/watch?v=LDG9bisJEaI"
-          },
-          {
-            title: "Ilha do Medo",
-            year: 2010,
-            duration: "2h 18min",
-            rating: 8.2,
-            genre: "Mistério / Thriller",
-            desc: "Nos anos 1950, um xará de marechal dos EUA investiga o desaparecimento de um assassino que escapou de um hospital psiquiátrico.",
-            poster: "https://image.tmdb.org/t/p/w500/4of9205j6v6X4oD4c5D2D5d5a.jpg",
-            backdrop: "https://image.tmdb.org/t/p/w1280/vGv9v8mGjZq7B5Wc8mFzK2jHOJu.jpg",
-            director: "Martin Scorsese",
-            cast: "Leonardo DiCaprio, Mark Ruffalo, Ben Kingsley",
-            category: "thriller",
-            videoUrl: "https://www.youtube.com/watch?v=5oGyGQZoBYg"
-          },
-          {
-            title: "Thor: Amor e Trovão",
-            year: 2022,
-            duration: "1h 59min",
-            rating: 6.3,
-            genre: "Ação / Fantasia",
-            desc: "Thor embarca em uma jornada diferente de tudo que já enfrentou — uma busca pela paz interior. Mas seu retiro é interrompido por um assassino galáctico chamado Gorr.",
-            poster: "https://image.tmdb.org/t/p/w500/pIkRyD18kl4FhoCNQuWxWu5cBLM.jpg",
-            backdrop: "https://image.tmdb.org/t/p/w1280/57lGJCPuMjCDfRGCsJkEwN9XBKJ.jpg",
-            director: "Taika Waititi",
-            cast: "Chris Hemsworth, Natalie Portman, Christian Bale",
-            category: "action",
-            videoUrl: "https://www.youtube.com/watch?v=Go8nTmfrQd8"
-          }
-        ];
-
-        for (const m of defaultMovies) {
-          await dbRunAsync(
-            `INSERT INTO movies (title, year, duration, rating, genre, "desc", poster, backdrop, director, "cast", category, videoUrl) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [m.title, m.year, m.duration, m.rating, m.genre, m.desc, m.poster, m.backdrop, m.director, m.cast, m.category, m.videoUrl]
-          );
-        }
-        console.log(`  ✅ ${defaultMovies.length} filmes semeados com sucesso!`);
-      }
-    } catch (err) {
-      console.error('Erro ao semear filmes:', err);
-    }
+    console.log(`  ✅ ${defaultMovies.length} filmes semeados com sucesso!`);
   }
 
   console.log('  ✅ Banco de dados pronto e iniciado');

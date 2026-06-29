@@ -603,10 +603,17 @@ function initVideoPlayer() {
     playerOverlay.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
 
-    // Determinar se o link é Iframe (YouTube/Vimeo/Google Drive) ou vídeo direto (.mp4, .webm)
-    const url = movie.videoUrl || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+    // Determinar se o link é Iframe (YouTube/Vimeo/Google Drive/Axplay) ou vídeo direto (.mp4, .webm)
+    const url = movie.videoUrl || movie.videourl || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
     
-    if (url.includes('youtube.com') || url.includes('youtu.be') || url.includes('vimeo.com') || url.includes('drive.google.com')) {
+    const cleanUrl = url.toLowerCase().split('?')[0];
+    const isDirectVideo = cleanUrl.endsWith('.mp4') || 
+                          cleanUrl.endsWith('.webm') || 
+                          cleanUrl.endsWith('.m4v') || 
+                          cleanUrl.endsWith('.ogv') || 
+                          url.includes('/api/video/stream');
+
+    if (!isDirectVideo || url.includes('youtube.com') || url.includes('youtu.be') || url.includes('vimeo.com') || url.includes('drive.google.com')) {
       // Configurar modo Iframe
       video.style.display = 'none';
       iframeWrapper.classList.add('active');

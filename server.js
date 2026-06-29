@@ -2175,7 +2175,13 @@ app.all('/api/webhook/pix', (req, res) => {
 // Listar todos os Filmes (Público)
 app.get('/api/movies', (req, res) => {
   try {
-    const movies = dbAll('SELECT * FROM movies ORDER BY id DESC');
+    let movies = dbAll('SELECT * FROM movies ORDER BY id DESC');
+    movies = movies.map(m => {
+      if (m.videourl !== undefined && m.videoUrl === undefined) {
+        m.videoUrl = m.videourl;
+      }
+      return m;
+    });
     return res.json({ movies });
   } catch (err) {
     console.error('[GET MOVIES ERROR]', err);

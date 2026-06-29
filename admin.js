@@ -476,7 +476,7 @@ window.openEditModal = function(id) {
   $('m-backdrop').value = movie.backdrop;
   $('m-director').value = movie.director;
   $('m-cast').value = movie.cast;
-  $('m-videoUrl').value = movie.videoUrl;
+  $('m-videoUrl').value = movie.videoUrl || movie.videourl || '';
   $('m-desc').value = movie.desc;
 
   openMovieModal(true);

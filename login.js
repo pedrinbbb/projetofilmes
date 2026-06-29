@@ -425,8 +425,13 @@ document.getElementById('register-email-form')?.addEventListener('submit', async
       return;
     }
 
-    // Sucesso no Cadastro Direto!
-    saveAuthAndRedirect(data.token, data.user);
+    // Sucesso no Cadastro Direto com Mensagem
+    btn.classList.remove('loading');
+    showApiSuccessMessage('Sua conta foi criada com sucesso! Redirecionando...');
+    
+    setTimeout(() => {
+      saveAuthAndRedirect(data.token, data.user);
+    }, 2200);
 
   } catch (err) {
     showApiError('Servidor offline. Verifique se o servidor está rodando (npm start).');

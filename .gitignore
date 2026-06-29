@@ -1,4 +1,3 @@
-
-# Database
-*.db
-goatcine.db
+node_modules/
+.env
+certificado.p12

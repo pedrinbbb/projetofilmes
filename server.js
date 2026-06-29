@@ -715,8 +715,48 @@ async function initDatabase() {
   console.log('  ✅ Banco SQLite iniciado');
 }
 
+const { exec } = require('child_process');
+
+// Controlar concorrência de push para evitar múltiplos processos de Git rodando ao mesmo tempo
+let isPushingDb = false;
+let pendingPush = false;
+
 function saveDb() {
   fs.writeFileSync(DB_PATH, Buffer.from(db.export()));
+
+  // Se o token do GitHub estiver configurado nas variáveis de ambiente do Render
+  const token = process.env.GITHUB_TOKEN;
+  const repo = process.env.GITHUB_REPO || 'pedrinbbb/projetofilmes';
+  
+  if (token) {
+    if (isPushingDb) {
+      pendingPush = true;
+      return;
+    }
+
+    isPushingDb = true;
+    
+    // Configura a URL de autenticação com o Token
+    const remoteUrl = `https://x-access-token:${token}@github.com/${repo}.git`;
+    
+    // Configura o Git e faz o commit/push apenas do arquivo do banco de dados
+    const cmd = `git config user.email "bot@goatcine.com" && git config user.name "Goatcine DB Bot" && git add goatcine.db && git commit -m "db: atualizacao automatica do banco de dados [skip ci]" && git push ${remoteUrl} main`;
+
+    exec(cmd, (error, stdout, stderr) => {
+      isPushingDb = false;
+      if (error) {
+        console.error('[DB SYNC] Erro ao sincronizar com GitHub:', error.message);
+      } else {
+        console.log('[DB SYNC] Banco de dados sincronizado com sucesso no GitHub!');
+      }
+
+      // Se havia alguma gravação pendente enquanto este push rodava, executa novamente
+      if (pendingPush) {
+        pendingPush = false;
+        saveDb();
+      }
+    });
+  }
 }
 
 // ---- DB Helpers ----

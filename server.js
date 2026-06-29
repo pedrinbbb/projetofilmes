@@ -284,8 +284,22 @@ async function initDatabase() {
   try { db.run('ALTER TABLE users ADD COLUMN sub_active INTEGER DEFAULT 0'); } catch (e) {}
   try { db.run('ALTER TABLE users ADD COLUMN sub_plan_id INTEGER DEFAULT NULL'); } catch (e) {}
   try { db.run('ALTER TABLE users ADD COLUMN sub_expires_at TEXT DEFAULT NULL'); } catch (e) {}
+  try { db.run('ALTER TABLE users ADD COLUMN sub_activated_at TEXT DEFAULT NULL'); } catch (e) {}
   try { db.run('ALTER TABLE users ADD COLUMN pending_txid TEXT DEFAULT NULL'); } catch (e) {}
   try { db.run('ALTER TABLE users ADD COLUMN pending_plan_id INTEGER DEFAULT NULL'); } catch (e) {}
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS payment_logs (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id    INTEGER,
+      plan_id    INTEGER,
+      txid       TEXT UNIQUE,
+      amount     REAL,
+      status     TEXT DEFAULT 'pending',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      paid_at    TEXT
+    );
+  `);
 
   // Seed de planos
   try {
@@ -1434,7 +1448,7 @@ app.post('/api/admin/login', (req, res) => {
 // Listar Usuários (Admin)
 app.get('/api/admin/users', requireAdminAuth, (req, res) => {
   try {
-    const stmt = db.prepare('SELECT id, name, email, discord_tag, method, sub_active, sub_plan_id, sub_expires_at, created_at FROM users ORDER BY id DESC');
+    const stmt = db.prepare('SELECT id, name, email, discord_tag, method, sub_active, sub_plan_id, sub_expires_at, sub_activated_at, created_at FROM users ORDER BY id DESC');
     const users = [];
     while (stmt.step()) {
       users.push(stmt.getAsObject());
@@ -1575,23 +1589,32 @@ app.put('/api/admin/plans/:id', requireAdminAuth, (req, res) => {
   }
 });
 
-// Ativar/Desativar Assinatura Manualmente (Admin)
+// Ativar/Desativar Assinatura Manualmente (Admin - com datas customizadas)
 app.post('/api/admin/users/:userId/subscribe', requireAdminAuth, (req, res) => {
   try {
     const { userId } = req.params;
-    const { active, planId } = req.body;
+    const { active, planId, activatedAt, expiresAt } = req.body;
 
     const user = dbGet('SELECT id FROM users WHERE id = ?', [userId]);
     if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
 
     const subActive = active ? 1 : 0;
     const subPlanId = active ? parseInt(planId) : null;
-    const subExpiresAt = active ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() : null;
+    const subActivatedAt = active ? (activatedAt || new Date().toISOString()) : null;
+    const subExpiresAt = active ? (expiresAt || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()) : null;
 
     db.run(
-      'UPDATE users SET sub_active = ?, sub_plan_id = ?, sub_expires_at = ? WHERE id = ?',
-      [subActive, subPlanId, subExpiresAt, userId]
+      'UPDATE users SET sub_active = ?, sub_plan_id = ?, sub_activated_at = ?, sub_expires_at = ?, pending_txid = NULL, pending_plan_id = NULL WHERE id = ?',
+      [subActive, subPlanId, subActivatedAt, subExpiresAt, userId]
     );
+
+    // Salvar log de ativação manual
+    if (active) {
+      db.run(
+        "INSERT OR REPLACE INTO payment_logs (user_id, plan_id, txid, amount, status, created_at, paid_at) VALUES (?, ?, ?, ?, 'paid', ?, ?)",
+        [userId, subPlanId, `manual_${Date.now()}`, 0.0, subActivatedAt, subActivatedAt]
+      );
+    }
     saveDb();
 
     console.log(`[ADMIN] 💳 Assinatura do usuário ${userId} alterada para: ${active ? 'ATIVA' : 'INATIVA'}`);
@@ -1599,6 +1622,31 @@ app.post('/api/admin/users/:userId/subscribe', requireAdminAuth, (req, res) => {
   } catch (err) {
     console.error('[ADMIN USER SUBSCRIBE ERROR]', err);
     return res.status(500).json({ error: 'Erro ao gerenciar assinatura' });
+  }
+});
+
+// Listar Logs de Pagamento (Admin)
+app.get('/api/admin/payments', requireAdminAuth, (req, res) => {
+  try {
+    const stmt = db.prepare(`
+      SELECT 
+        l.id, l.user_id, l.plan_id, l.txid, l.amount, l.status, l.created_at, l.paid_at,
+        u.name as user_name, u.email as user_email,
+        p.name as plan_name
+      FROM payment_logs l
+      LEFT JOIN users u ON l.user_id = u.id
+      LEFT JOIN plans p ON l.plan_id = p.id
+      ORDER BY l.id DESC
+    `);
+    const logs = [];
+    while (stmt.step()) {
+      logs.push(stmt.getAsObject());
+    }
+    stmt.free();
+    return res.json({ logs });
+  } catch (err) {
+    console.error('[ADMIN GET PAYMENTS ERROR]', err);
+    return res.status(500).json({ error: 'Erro ao buscar pagamentos' });
   }
 });
 
@@ -1726,6 +1774,12 @@ app.post('/api/user/subscribe', requireAuth, async (req, res) => {
 
         // Salvar txid pendente no usuário
         db.run('UPDATE users SET pending_txid = ?, pending_plan_id = ? WHERE id = ?', [txid, planId, req.user.id]);
+        
+        // Registrar log inicial pendente
+        db.run(
+          "INSERT OR REPLACE INTO payment_logs (user_id, plan_id, txid, amount, status) VALUES (?, ?, ?, ?, 'pending')",
+          [req.user.id, planId, txid, plan.price]
+        );
         saveDb();
 
         return res.json({
@@ -1745,6 +1799,12 @@ app.post('/api/user/subscribe', requireAuth, async (req, res) => {
     const qrcodeTextMock = `00020101021226870014br.gov.bcb.pix2565pix.goatcine.com/sub/checkout/plan${planId}-${valHex}-${txidMock}`;
 
     db.run('UPDATE users SET pending_txid = ?, pending_plan_id = ? WHERE id = ?', [txidMock, planId, req.user.id]);
+    
+    // Registrar log mock pendente
+    db.run(
+      "INSERT OR REPLACE INTO payment_logs (user_id, plan_id, txid, amount, status) VALUES (?, ?, ?, ?, 'pending')",
+      [req.user.id, planId, txidMock, plan.price]
+    );
     saveDb();
 
     return res.json({
@@ -1756,31 +1816,6 @@ app.post('/api/user/subscribe', requireAuth, async (req, res) => {
   } catch (err) {
     console.error('[SUBSCRIBE ERROR]', err);
     return res.status(500).json({ error: 'Erro ao iniciar fluxo de assinatura' });
-  }
-});
-
-// Simular PIX e Ativar Assinatura (User)
-app.post('/api/user/simulate-pix', requireAuth, (req, res) => {
-  try {
-    const { planId } = req.body;
-    if (!planId) return res.status(400).json({ error: 'Plano é obrigatório' });
-
-    const plan = dbGet('SELECT * FROM plans WHERE id = ?', [planId]);
-    if (!plan) return res.status(404).json({ error: 'Plano não encontrado' });
-
-    // Ativar assinatura por 30 dias
-    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-    db.run(
-      'UPDATE users SET sub_active = 1, sub_plan_id = ?, sub_expires_at = ?, pending_txid = NULL, pending_plan_id = NULL WHERE id = ?',
-      [planId, expiresAt, req.user.id]
-    );
-    saveDb();
-
-    console.log(`[SUBSCRIPTION] 💳 Usuário ${req.user.id} assinou o plano: ${plan.name}`);
-    return res.json({ success: true, message: 'Pagamento confirmado! Assinatura ativada.' });
-  } catch (err) {
-    console.error('[SIMULATE PIX ERROR]', err);
-    return res.status(500).json({ error: 'Erro ao confirmar assinatura' });
   }
 });
 
@@ -1799,11 +1834,20 @@ app.all('/api/webhook/pix', (req, res) => {
         // Buscar se há usuário com esse txid pendente
         const user = dbGet('SELECT id, pending_plan_id FROM users WHERE pending_txid = ?', [txid]);
         if (user) {
+          const nowStr = new Date().toISOString();
           const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+          
           db.run(
-            'UPDATE users SET sub_active = 1, sub_plan_id = ?, sub_expires_at = ?, pending_txid = NULL, pending_plan_id = NULL WHERE id = ?',
-            [user.pending_plan_id, expiresAt, user.id]
+            'UPDATE users SET sub_active = 1, sub_plan_id = ?, sub_activated_at = ?, sub_expires_at = ?, pending_txid = NULL, pending_plan_id = NULL WHERE id = ?',
+            [user.pending_plan_id, nowStr, expiresAt, user.id]
           );
+
+          // Atualizar o log de pagamento
+          db.run(
+            "UPDATE payment_logs SET status = 'paid', paid_at = ? WHERE txid = ?",
+            [nowStr, txid]
+          );
+
           saveDb();
           console.log(`[EFI WEBHOOK] 💳 Pagamento CONFIRMADO via Pix! Usuário ID ${user.id} ativado no plano ${user.pending_plan_id}.`);
         }

@@ -96,6 +96,7 @@
         <button class="tab-btn active" id="tab-movies-btn">Gerenciar Filmes</button>
         <button class="tab-btn" id="tab-users-btn">Visualizar Contas</button>
         <button class="tab-btn" id="tab-plans-btn">Gerenciar Planos</button>
+        <button class="tab-btn" id="tab-payments-btn">Cobranças & Logs</button>
       </nav>
 
       <!-- ABA 1: GERENCIAR FILMES -->
@@ -206,7 +207,85 @@
           </div>
         </div>
       </section>
+
+      <!-- ABA 4: COBRANÇAS E LOGS -->
+      <section class="panel-tab-content" id="section-payments">
+        <div class="section-header">
+          <h2>Histórico de Cobranças e Logs de Pagamentos</h2>
+          <div class="header-actions">
+            <input type="text" id="search-payments" class="search-input-admin" placeholder="Pesquisar por email, ID ou txid...">
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Usuário</th>
+                <th>E-mail</th>
+                <th>Plano</th>
+                <th>Valor</th>
+                <th>ID Transação (txid)</th>
+                <th>Status</th>
+                <th>Criado em</th>
+                <th>Confirmado em</th>
+              </tr>
+            </thead>
+            <tbody id="payments-list-tbody">
+              <!-- Inserido dinamicamente via JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
     </main>
+  </div>
+
+  <!-- =============================================
+       MODAL: ATIVAÇÃO DE PLANO MANUAL AVANÇADO
+       ============================================= -->
+  <div class="modal-overlay" id="sub-advanced-modal" aria-hidden="true">
+    <div class="modal" role="dialog" style="max-width: 460px;">
+      <button class="modal-close" id="sub-advanced-close-btn" aria-label="Fechar Modal">&times;</button>
+      <h2>Gerenciar Assinatura Manual</h2>
+      <p style="color: var(--text-secondary); font-size: 0.82rem; margin-top: 4px; margin-bottom: 20px;">
+        Altere o status, plano e as datas de vigência do usuário.
+      </p>
+
+      <form id="sub-advanced-form" style="display: flex; flex-direction: column; gap: 16px;">
+        <input type="hidden" id="sub-adv-user-id">
+
+        <div class="form-group" style="flex-direction: row; align-items: center; gap: 8px;">
+          <input type="checkbox" id="sub-adv-active" style="width: auto;">
+          <label for="sub-adv-active" style="margin-bottom: 0; cursor: pointer; font-weight: 600;">Assinatura Ativa</label>
+        </div>
+
+        <div class="form-group" id="sub-adv-plan-group">
+          <label for="sub-adv-plan-id">Plano de Assinatura</label>
+          <select id="sub-adv-plan-id">
+            <option value="1">Bronze (1 tela)</option>
+            <option value="2">Prata (2 telas)</option>
+            <option value="3">Ouro (5 telas)</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="sub-adv-dates-group" style="display: flex; flex-direction: column; gap: 16px;">
+          <div>
+            <label for="sub-adv-start">Data de Início (Vigência)</label>
+            <input type="datetime-local" id="sub-adv-start">
+          </div>
+          <div>
+            <label for="sub-adv-end">Data de Fim (Expiração)</label>
+            <input type="datetime-local" id="sub-adv-end">
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid rgba(255, 215, 0, 0.1); padding-top: 16px; margin-top: 8px;">
+          <button type="button" id="btn-cancel-sub-adv" class="btn-secondary">Cancelar</button>
+          <button type="submit" class="btn-primary">Salvar Assinatura</button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <!-- =============================================

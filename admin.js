@@ -15,23 +15,37 @@ const passGroup = $('pass-group');
 const tabMoviesBtn = $('tab-movies-btn');
 const tabUsersBtn = $('tab-users-btn');
 const tabPlansBtn = $('tab-plans-btn');
+const tabPaymentsBtn = $('tab-payments-btn');
 const sectionMovies = $('section-movies');
 const sectionUsers = $('section-users');
 const sectionPlans = $('section-plans');
+const sectionPayments = $('section-payments');
 
 const moviesTbody = $('movies-list-tbody');
 const usersTbody = $('users-list-tbody');
+const paymentsTbody = $('payments-list-tbody');
 
+// Modal Assinatura Avançada
+const subAdvancedModal = $('sub-advanced-modal');
+const subAdvancedForm = $('sub-advanced-form');
+const subAdvUserId = $('sub-adv-user-id');
+const subAdvActive = $('sub-adv-active');
+const subAdvPlanId = $('sub-adv-plan-id');
+const subAdvStart = $('sub-adv-start');
+const subAdvEnd = $('sub-adv-end');
+const btnCancelSubAdv = $('btn-cancel-sub-adv');
+const subAdvCloseBtn = $('sub-advanced-close-btn');
+
+// ---- STATE ----
+let movies = [];
+let users = [];
+let paymentLogs = [];
 const movieModal = $('movie-modal');
 const movieForm = $('movie-form');
 const modalTitle = $('modal-title');
 const btnAddMovie = $('btn-add-movie');
 const btnCancelMovie = $('btn-cancel-movie');
 const modalCloseBtn = $('modal-close-btn');
-
-// ---- STATE ----
-let movies = [];
-let users = [];
 
 // ---- AUTH UTILS ----
 function getAdminToken() {
@@ -138,15 +152,18 @@ function switchTab(target) {
   tabMoviesBtn.classList.toggle('active', target === 'movies');
   tabUsersBtn.classList.toggle('active', target === 'users');
   tabPlansBtn.classList.toggle('active', target === 'plans');
+  tabPaymentsBtn.classList.toggle('active', target === 'payments');
 
   sectionMovies.classList.toggle('active', target === 'movies');
   sectionUsers.classList.toggle('active', target === 'users');
   sectionPlans.classList.toggle('active', target === 'plans');
+  sectionPayments.classList.toggle('active', target === 'payments');
 }
 
 tabMoviesBtn.addEventListener('click', () => switchTab('movies'));
 tabUsersBtn.addEventListener('click', () => switchTab('users'));
 tabPlansBtn.addEventListener('click', () => switchTab('plans'));
+tabPaymentsBtn.addEventListener('click', () => switchTab('payments'));
 
 // =============================================
 //  DASHBOARD LOAD DATA
@@ -203,6 +220,20 @@ async function loadDashboardData() {
   } catch (err) {
     console.error('Erro ao carregar planos:', err);
   }
+
+  // 4. Carregar Logs de Pagamentos (Protegido Admin)
+  try {
+    const res = await fetch(`${API}/api/admin/payments`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      paymentLogs = data.logs || [];
+      renderPaymentsTable();
+    }
+  } catch (err) {
+    console.error('Erro ao carregar pagamentos:', err);
+  }
 }
 
 // =============================================
@@ -223,7 +254,7 @@ function renderUsersTable() {
   });
 
   if (filteredUsers.length === 0) {
-    usersTbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--color-text-muted);">Nenhum usuário correspondente encontrado.</td></tr>`;
+    usersTbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--color-text-muted);">Nenhum usuário correspondente encontrado.</td></tr>`;
     return;
   }
 
@@ -232,15 +263,43 @@ function renderUsersTable() {
     const safeName = (user.name || 'Sem Nome').replace(/'/g, "\\'").replace(/"/g, '\\"');
     const methodStr = (user.method || 'email').toUpperCase();
 
-    let subStatusHTML = '<span style="color: var(--color-error);">❌ Inativa</span>';
-    let subActionBtnHTML = `<button class="btn-icon" title="Ativar Assinatura" style="background: rgba(48, 209, 88, 0.15); border-color: var(--color-success); color: var(--color-success);" onclick="toggleUserSubscription(${user.id}, true)">💳</button>`;
+    let subStatusHTML = '<span class="badge-status inactive">Inativa</span>';
     
     if (user.sub_active === 1) {
       const planNames = { 1: 'Bronze', 2: 'Prata', 3: 'Ouro' };
-      const planName = planNames[user.sub_plan_id] || 'Desconhecido';
-      subStatusHTML = `<span style="color: var(--color-success);">✔️ Ativa (${planName})</span>`;
-      subActionBtnHTML = `<button class="btn-icon delete" title="Cancelar Assinatura" onclick="toggleUserSubscription(${user.id}, false)">✕</button>`;
+      const planName = planNames[user.sub_plan_id] || 'Plano';
+      
+      let detailsHTML = '';
+      if (user.sub_expires_at) {
+        const expires = new Date(user.sub_expires_at);
+        const now = new Date();
+        const diffMs = expires - now;
+
+        if (diffMs > 0) {
+          const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+          const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          
+          let timeLeft = '';
+          if (diffDays > 0) {
+            timeLeft = `${diffDays}d ${diffHours}h restantes`;
+          } else {
+            timeLeft = `${diffHours}h restantes`;
+          }
+          
+          subStatusHTML = `<span class="badge-status active">Ativa (${planName})</span><div class="sub-info-detail">⏳ ${timeLeft}</div>`;
+        } else {
+          subStatusHTML = `<span class="badge-status expired">Expirada (${planName})</span><div class="sub-info-detail">Expirado em ${expires.toLocaleDateString('pt-BR')}</div>`;
+        }
+      } else {
+        subStatusHTML = `<span class="badge-status active">Ativa (${planName})</span><div class="sub-info-detail">♾️ Vitalício</div>`;
+      }
+
+      if (user.sub_activated_at) {
+        subStatusHTML += `<div class="sub-info-detail" style="font-size:0.7rem;">Ativo em: ${new Date(user.sub_activated_at).toLocaleDateString('pt-BR')}</div>`;
+      }
     }
+
+    const subActionBtnHTML = `<button class="btn-icon" title="Gerenciar Assinatura Manual" style="background: rgba(255, 215, 0, 0.15); border-color: var(--color-gold-bright); color: var(--color-gold-bright);" onclick="openSubAdvancedModal(${user.id})">💳</button>`;
     
     tr.innerHTML = `
       <td>${user.id}</td>
@@ -719,23 +778,64 @@ $('btn-add-profile-admin')?.addEventListener('click', () => {
 $('btn-cancel-profile-admin')?.addEventListener('click', hideProfileAdminForm);
 $('btn-save-profile-admin')?.addEventListener('click', saveProfileAdmin);
 
-// ---- CONTROLE DE ASSINATURAS E PLANOS (ADMIN) ----
+// ---- CONTROLE DE ASSINATURAS E PLANOS AVANÇADO (ADMIN) ----
 
-window.toggleUserSubscription = async function(userId, active) {
-  const token = getAdminToken();
-  let planId = null;
+window.openSubAdvancedModal = function(userId) {
+  const user = users.find(u => u.id === userId);
+  if (!user) return;
 
-  if (active) {
-    const option = prompt("Escolha o Plano:\n1 - Bronze\n2 - Prata\n3 - Ouro", "2");
-    if (!option) return;
-    planId = parseInt(option);
-    if (![1, 2, 3].includes(planId)) {
-      showToast("⚠️ Plano inválido selecionado.");
-      return;
-    }
+  subAdvUserId.value = userId;
+  subAdvActive.checked = user.sub_active === 1;
+  subAdvPlanId.value = user.sub_plan_id || "1";
+
+  // Formatar datas para datetime-local (yyyy-MM-ddThh:mm)
+  const formatForInput = (isoString) => {
+    if (!isoString) return "";
+    const d = new Date(isoString);
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+
+  // Se tem plano, preencher as datas existentes, senão sugerir datas padrão
+  if (user.sub_active === 1) {
+    subAdvStart.value = formatForInput(user.sub_activated_at);
+    subAdvEnd.value = formatForInput(user.sub_expires_at);
   } else {
-    if (!confirm("Tem certeza que deseja cancelar a assinatura desta conta?")) return;
+    const now = new Date();
+    const oneMonthLater = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    subAdvStart.value = formatForInput(now.toISOString());
+    subAdvEnd.value = formatForInput(oneMonthLater.toISOString());
   }
+
+  // Monitorar checkbox para ocultar/mostrar datas
+  const toggleDateFields = () => {
+    const show = subAdvActive.checked;
+    $('sub-adv-plan-group').style.display = show ? 'block' : 'none';
+    $('sub-adv-dates-group').style.display = show ? 'block' : 'none';
+  };
+  subAdvActive.onchange = toggleDateFields;
+  toggleDateFields();
+
+  subAdvancedModal.classList.add('open');
+  subAdvancedModal.setAttribute('aria-hidden', 'false');
+};
+
+window.closeSubAdvancedModal = function() {
+  subAdvancedModal.classList.remove('open');
+  subAdvancedModal.setAttribute('aria-hidden', 'true');
+};
+
+subAdvancedForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const userId = subAdvUserId.value;
+  const active = subAdvActive.checked;
+  const planId = subAdvPlanId.value;
+  
+  // Converter as datas do input de volta para ISOString
+  const activatedAt = subAdvStart.value ? new Date(subAdvStart.value).toISOString() : null;
+  const expiresAt = subAdvEnd.value ? new Date(subAdvEnd.value).toISOString() : null;
+
+  const token = getAdminToken();
 
   try {
     const res = await fetch(`${API}/api/admin/users/${userId}/subscribe`, {
@@ -744,20 +844,24 @@ window.toggleUserSubscription = async function(userId, active) {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`
       },
-      body: JSON.stringify({ active, planId })
+      body: JSON.stringify({ active, planId, activatedAt, expiresAt })
     });
 
     if (res.ok) {
-      showToast(active ? "✓ Assinatura ativada!" : "✓ Assinatura cancelada.");
+      showToast(active ? "✓ Plano ativado com sucesso!" : "✓ Assinatura removida.");
+      closeSubAdvancedModal();
       loadDashboardData();
     } else {
       const data = await res.json();
-      showToast(data.error || "Erro ao gerenciar assinatura.");
+      showToast(data.error || "Erro ao atualizar plano.");
     }
   } catch {
-    showToast("Erro de rede ao gerenciar assinatura.");
+    showToast("Erro de rede ao salvar plano.");
   }
-};
+});
+
+btnCancelSubAdv.addEventListener('click', closeSubAdvancedModal);
+subAdvCloseBtn.addEventListener('click', closeSubAdvancedModal);
 
 window.savePlanConfig = async function(planId) {
   const token = getAdminToken();
@@ -791,6 +895,63 @@ window.savePlanConfig = async function(planId) {
   }
 };
 
+// ---- TABELA DE COBRANÇAS E LOGS ----
+function renderPaymentsTable() {
+  paymentsTbody.innerHTML = '';
+
+  const query = ($('search-payments')?.value || '').toLowerCase().trim();
+  const filteredLogs = paymentLogs.filter(log => {
+    const userName = (log.user_name || '').toLowerCase();
+    const userEmail = (log.user_email || '').toLowerCase();
+    const planName = (log.plan_name || '').toLowerCase();
+    const txid = (log.txid || '').toLowerCase();
+    const status = (log.status || '').toLowerCase();
+    
+    return userName.includes(query) || 
+           userEmail.includes(query) ||
+           planName.includes(query) ||
+           txid.includes(query) ||
+           status.includes(query);
+  });
+
+  if (filteredLogs.length === 0) {
+    paymentsTbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--color-text-muted);">Nenhuma transação correspondente encontrada.</td></tr>`;
+    return;
+  }
+
+  filteredLogs.forEach(log => {
+    const tr = document.createElement('tr');
+    
+    const formatDateTime = (isoString) => {
+      if (!isoString) return '-';
+      const d = new Date(isoString);
+      return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    };
+
+    let statusBadge = '';
+    if (log.status === 'paid') {
+      statusBadge = '<span class="badge-status paid">Confirmado</span>';
+    } else if (log.status === 'pending') {
+      statusBadge = '<span class="badge-status pending">Pendente</span>';
+    } else {
+      statusBadge = `<span class="badge-status expired">${log.status}</span>`;
+    }
+
+    tr.innerHTML = `
+      <td>${log.id}</td>
+      <td><strong>${log.user_name || 'Desconhecido'}</strong></td>
+      <td>${log.user_email || '-'}</td>
+      <td>${log.plan_name || `Plano ${log.plan_id}`}</td>
+      <td>R$ ${parseFloat(log.amount).toFixed(2)}</td>
+      <td><span style="font-family: monospace; font-size: 0.8rem; background:rgba(255,255,255,0.03); padding:4px 8px; border-radius:4px;">${log.txid || '-'}</span></td>
+      <td>${statusBadge}</td>
+      <td>${formatDateTime(log.created_at)}</td>
+      <td>${formatDateTime(log.paid_at)}</td>
+    `;
+    paymentsTbody.appendChild(tr);
+  });
+}
+
 // ---- INIT ----
 createParticles();
 checkAdminAuth();
@@ -799,3 +960,5 @@ window.addEventListener('storage', checkAdminAuth);
 // SEARCH LISTENERS (Real-time Filtering)
 $('search-movies')?.addEventListener('input', renderMoviesTable);
 $('search-users')?.addEventListener('input', renderUsersTable);
+$('search-payments')?.addEventListener('input', renderPaymentsTable);
+

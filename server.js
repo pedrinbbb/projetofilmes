@@ -196,11 +196,18 @@ async function sendResetPasswordEmail(to, name, code) {
 let db;
 
 async function initDatabase() {
+  console.log(`[DB INIT] Tentando inicializar banco de dados...`);
+  console.log(`[DB INIT] PERSISTENT_DIR detectado: ${PERSISTENT_DIR}`);
+  console.log(`[DB INIT] DB_PATH escolhido: ${DB_PATH}`);
+  console.log(`[DB INIT] /data existe? ${fs.existsSync('/data')}, /var/data existe? ${fs.existsSync('/var/data')}`);
+
   const SQL = await initSqlJs();
 
   if (fs.existsSync(DB_PATH)) {
+    console.log(`[DB INIT] Carregando banco de dados existente do disco.`);
     db = new SQL.Database(fs.readFileSync(DB_PATH));
   } else {
+    console.log(`[DB INIT] Banco de dados não encontrado no caminho. Criando um novo.`);
     db = new SQL.Database();
   }
 

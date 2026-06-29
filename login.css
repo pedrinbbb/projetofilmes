@@ -42,7 +42,7 @@
   --radius-lg: 16px;
   --radius-xl: 24px;
 
-  --transition: 0.25s ease;
+  --transition: 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* ---------- Reset ---------- */
@@ -890,7 +890,7 @@ input { font-family: var(--font); }
   max-width: 440px;
   text-align: center;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), inset 0 0 20px rgba(255, 215, 0, 0.03);
-  animation: fade-slide-up 0.4s ease both;
+  animation: fade-slide-up 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .otp-icon {

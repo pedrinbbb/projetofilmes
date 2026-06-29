@@ -258,6 +258,18 @@ async function initDatabase() {
     );
   `);
 
+  db.run(`
+    CREATE TABLE IF NOT EXISTS profiles (
+      id           INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id      INTEGER NOT NULL,
+      name         TEXT    NOT NULL,
+      avatar_color TEXT    NOT NULL DEFAULT '#FFD700',
+      avatar_icon  TEXT    NOT NULL DEFAULT '🎬',
+      is_kid       INTEGER NOT NULL DEFAULT 0,
+      created_at   TEXT    NOT NULL DEFAULT (datetime('now'))
+    );
+  `);
+
   // Seed de filmes se a tabela estiver vazia
   const countRes = db.exec('SELECT COUNT(*) as count FROM movies');
   const count = countRes[0]?.values[0][0] ?? 0;
@@ -665,6 +677,17 @@ function dbRun(sql, params = []) {
   saveDb();
   const res = db.exec('SELECT last_insert_rowid() as id');
   return res[0]?.values[0][0] ?? null;
+}
+
+function dbAll(sql, params = []) {
+  try {
+    const stmt = db.prepare(sql);
+    stmt.bind(params);
+    const rows = [];
+    while (stmt.step()) rows.push(stmt.getAsObject());
+    stmt.free();
+    return rows;
+  } catch { return []; }
 }
 
 // Generate a 6-digit OTP
@@ -1172,6 +1195,83 @@ app.get('/api/auth/verify', requireAuth, (req, res) => {
   const user = dbGet('SELECT * FROM users WHERE id = ?', [req.user.id]);
   return res.json({ valid: true, user: safeUser(user) });
 });
+
+// =============================================
+//  ROUTES — PROFILES
+// =============================================
+
+/**
+ * GET /api/profiles
+ * Retorna todos os perfis do usuário autenticado.
+ */
+app.get('/api/profiles', requireAuth, (req, res) => {
+  try {
+    const profiles = dbAll('SELECT * FROM profiles WHERE user_id = ? ORDER BY created_at ASC', [req.user.id]);
+    return res.json({ profiles });
+  } catch (err) {
+    console.error('[PROFILES GET ERROR]', err);
+    return res.status(500).json({ error: 'Erro ao buscar perfis.' });
+  }
+});
+
+/**
+ * POST /api/profiles
+ * Cria um novo perfil para o usuário autenticado.
+ * Body: { name, avatar_color, avatar_icon, is_kid }
+ */
+app.post('/api/profiles', requireAuth, (req, res) => {
+  try {
+    const { name, avatar_color = '#FFD700', avatar_icon = '🎬', is_kid = 0 } = req.body;
+
+    if (!name || name.trim().length < 1)
+      return res.status(400).json({ error: 'Nome do perfil é obrigatório.' });
+    if (name.trim().length > 20)
+      return res.status(400).json({ error: 'Nome do perfil deve ter no máximo 20 caracteres.' });
+
+    // Max 5 perfis por conta
+    const count = dbGet('SELECT COUNT(*) as c FROM profiles WHERE user_id = ?', [req.user.id]);
+    if (count && count.c >= 5)
+      return res.status(400).json({ error: 'Limite máximo de 5 perfis por conta atingido.' });
+
+    const id = dbRun(
+      'INSERT INTO profiles (user_id, name, avatar_color, avatar_icon, is_kid) VALUES (?, ?, ?, ?, ?)',
+      [req.user.id, name.trim(), avatar_color, avatar_icon, is_kid ? 1 : 0]
+    );
+
+    const profile = dbGet('SELECT * FROM profiles WHERE id = ?', [id]);
+    console.log(`[PROFILES] ✅ Perfil criado: "${name}" para user_id=${req.user.id}`);
+    return res.status(201).json({ profile });
+
+  } catch (err) {
+    console.error('[PROFILES POST ERROR]', err);
+    return res.status(500).json({ error: 'Erro ao criar perfil.' });
+  }
+});
+
+/**
+ * DELETE /api/profiles/:id
+ * Remove um perfil (somente se pertencer ao usuário autenticado).
+ */
+app.delete('/api/profiles/:id', requireAuth, (req, res) => {
+  try {
+    const profileId = parseInt(req.params.id);
+    const profile = dbGet('SELECT * FROM profiles WHERE id = ? AND user_id = ?', [profileId, req.user.id]);
+
+    if (!profile)
+      return res.status(404).json({ error: 'Perfil não encontrado.' });
+
+    db.run('DELETE FROM profiles WHERE id = ?', [profileId]);
+    saveDb();
+
+    console.log(`[PROFILES] 🗑️ Perfil removido: id=${profileId} de user_id=${req.user.id}`);
+    return res.json({ success: true });
+
+  } catch (err) {
+    console.error('[PROFILES DELETE ERROR]', err);
+    return res.status(500).json({ error: 'Erro ao remover perfil.' });
+  }
+});
+
 
 // =============================================
 //  ROUTE — PROXY STREAMING DE VÍDEO (Google Drive)

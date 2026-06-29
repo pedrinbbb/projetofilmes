@@ -345,49 +345,90 @@ function initNavbar() {
 }
 
 // ---- SEARCH ----
-function initSearch() {
-  searchBtn.addEventListener('click', () => {
-    isSearchOpen = !isSearchOpen;
-    searchBar.classList.toggle('open', isSearchOpen);
-    if (isSearchOpen) {
-      setTimeout(() => searchInput.focus(), 100);
-    }
-  });
+function performSearch(q) {
+  const standardContent = $('standard-content');
+  const searchResultsSection = $('search-results-section');
+  const searchResultsGrid = $('search-results-grid');
+  const heroSection = $('hero');
+  const clearBtn = $('search-pill-clear');
 
-  searchClose.addEventListener('click', () => {
-    isSearchOpen = false;
-    searchBar.classList.remove('open');
-    searchInput.value = '';
-  });
+  if (!q) {
+    if (standardContent) standardContent.classList.remove('hidden');
+    if (searchResultsSection) searchResultsSection.classList.add('hidden');
+    if (heroSection) heroSection.style.display = 'block';
+    if (clearBtn) clearBtn.classList.add('hidden');
+    if (searchResultsGrid) searchResultsGrid.innerHTML = '';
+    return;
+  }
+
+  if (clearBtn) clearBtn.classList.remove('hidden');
+  if (standardContent) standardContent.classList.add('hidden');
+  if (heroSection) heroSection.style.display = 'none';
+  if (searchResultsSection) {
+    searchResultsSection.classList.remove('hidden');
+    const resultsTitle = $('search-results-title');
+    if (resultsTitle) {
+      resultsTitle.innerHTML = `Resultados para: <strong style="color: var(--text-primary); font-weight: 700;">"${q}"</strong>`;
+    }
+  }
+
+  // Filtrar todos os filmes
+  const allMovies = [...MOVIES.trending, ...MOVIES.new, ...MOVIES.action];
+  
+  // Remover duplicados
+  const uniqueMovies = Array.from(new Map(allMovies.map(m => [m.id, m])).values());
+
+  const found = uniqueMovies.filter(m =>
+    m.title.toLowerCase().includes(q.toLowerCase()) ||
+    m.genre.toLowerCase().includes(q.toLowerCase()) ||
+    (m.director && m.director.toLowerCase().includes(q.toLowerCase())) ||
+    (m.cast && m.cast.toLowerCase().includes(q.toLowerCase()))
+  );
+
+  if (searchResultsGrid) {
+    searchResultsGrid.innerHTML = '';
+    if (found.length === 0) {
+      searchResultsGrid.innerHTML = `
+        <div class="search-empty-state" style="grid-column: 1 / -1; text-align: center; padding: 80px 20px; color: var(--text-secondary);">
+          <span style="display: block; font-size: 48px; margin-bottom: 16px;">🍿</span>
+          Nenhum resultado encontrado para "${q}". Tente buscar por outros termos!
+        </div>
+      `;
+    } else {
+      found.forEach(movie => {
+        searchResultsGrid.appendChild(createMovieCard(movie));
+      });
+    }
+  }
+}
+
+function initSearch() {
+  const searchInput = $('search-input');
+  const clearBtn = $('search-pill-clear');
+
+  if (!searchInput) return;
+
+  searchInput.addEventListener('input', debounce((e) => {
+    const q = e.target.value.trim();
+    performSearch(q);
+  }, 300));
+
+  // Limpar busca
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      performSearch('');
+      searchInput.focus();
+    });
+  }
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-      if (isSearchOpen) {
-        isSearchOpen = false;
-        searchBar.classList.remove('open');
-        searchInput.value = '';
-      }
-      if (modalOverlay.classList.contains('open')) {
-        closeModal();
-      }
+      searchInput.value = '';
+      performSearch('');
+      searchInput.blur();
     }
   });
-
-  searchInput.addEventListener('input', debounce((e) => {
-    const q = e.target.value.toLowerCase().trim();
-    if (!q) return;
-
-    const allMovies = [...MOVIES.trending, ...MOVIES.new, ...MOVIES.action];
-    const found = allMovies.filter(m =>
-      m.title.toLowerCase().includes(q) ||
-      m.genre.toLowerCase().includes(q) ||
-      m.director.toLowerCase().includes(q)
-    );
-
-    if (found.length > 0) {
-      showToast(`🔍 ${found.length} resultado(s) para "${e.target.value}"`);
-    }
-  }, 500));
 }
 
 // ---- CATEGORY TABS ----
@@ -861,49 +902,111 @@ function initUserSession() {
   try {
     const token = localStorage.getItem('goatcine_token');
     const user  = JSON.parse(localStorage.getItem('goatcine_user') || 'null');
+    const profile = JSON.parse(localStorage.getItem('goatcine_profile') || 'null');
     if (!user) return;
 
-    // Avatar: use first letter of name (or Discord avatar placeholder)
-    const avatarLetter = $('nav-avatar-letter');
-    if (avatarLetter) {
-      const letter = (user.name?.[0] || 'G').toUpperCase();
-      avatarLetter.textContent = letter;
+    const navAvatar = $('nav-avatar');
+    const menuAvatarCircle = $('menu-avatar-circle');
+    const menuUserName = $('menu-user-name');
+    const menuUserEmail = $('menu-user-email');
+    const dropdown = $('user-menu-dropdown');
+
+    // Populate user info
+    if (menuUserName) menuUserName.textContent = profile ? profile.name : (user.name || 'Usuário');
+    if (menuUserEmail) menuUserEmail.textContent = user.email || 'Conectado via Discord';
+
+    // Avatar: show active profile emoji if available, else photo/letter
+    if (profile && profile.avatar_icon) {
+      const emojiStyle = `
+        width: 100%; height: 100%; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 22px; background: ${profile.avatar_color}22;
+      `;
+      if (navAvatar) {
+        navAvatar.innerHTML = `<span style="${emojiStyle}">${profile.avatar_icon}</span>`;
+        navAvatar.style.background = profile.avatar_color + '22';
+        navAvatar.style.borderColor = profile.avatar_color + '88';
+      }
+      if (menuAvatarCircle) {
+        menuAvatarCircle.innerHTML = `<span style="${emojiStyle}; font-size:26px;">${profile.avatar_icon}</span>`;
+        menuAvatarCircle.style.background = profile.avatar_color + '22';
+        menuAvatarCircle.style.borderColor = profile.avatar_color + '88';
+      }
+    } else if (user.avatar) {
+      if (navAvatar) {
+        navAvatar.innerHTML = `<img src="${user.avatar}" alt="${user.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" />`;
+      }
+      if (menuAvatarCircle) {
+        menuAvatarCircle.innerHTML = `<img src="${user.avatar}" alt="${user.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" />`;
+      }
+    } else {
+      const letter = (profile ? profile.name[0] : user.name?.[0] || 'G').toUpperCase();
+      if (navAvatar) navAvatar.innerHTML = `<span id="nav-avatar-letter">${letter}</span>`;
+      if (menuAvatarCircle) menuAvatarCircle.innerHTML = `<span id="menu-avatar-letter">${letter}</span>`;
     }
 
-    // Tooltip
-    const avatar = $('nav-avatar');
-    if (avatar) {
-      avatar.title = `${user.name}\n${user.email || 'Discord'}\n\nClique para sair`;
-
-      avatar.addEventListener('click', async () => {
-        const confirmed = confirm(`👋 Sair da conta?\n\n👤 ${user.name}\n📧 ${user.email || 'Login via Discord'}`);
-        if (!confirmed) return;
-
-        showToast('👋 Saindo...');
-
-        // Call logout API to invalidate token on server
-        try {
-          if (token) {
-            await fetch('/api/auth/logout', {
-              method: 'POST',
-              headers: { Authorization: `Bearer ${token}` },
-            });
-          }
-        } catch { /* server may be offline */ }
-
-        // Clear local storage
-        localStorage.removeItem('goatcine_token');
-        localStorage.removeItem('goatcine_user');
-
-        setTimeout(() => {
-          window.location.href = '/login.html';
-        }, 900);
+    // Toggle dropdown
+    if (navAvatar && dropdown) {
+      navAvatar.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdown.classList.toggle('show');
+      });
+      document.addEventListener('click', (e) => {
+        if (!dropdown.contains(e.target) && e.target !== navAvatar) {
+          dropdown.classList.remove('show');
+        }
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') dropdown.classList.remove('show');
       });
     }
+
+    // Trocar Perfil — now functional!
+    $('menu-btn-switch')?.addEventListener('click', () => {
+      dropdown.classList.remove('show');
+      window.location.href = '/profiles.html';
+    });
+
+    $('menu-btn-profile')?.addEventListener('click', () => {
+      dropdown.classList.remove('show');
+      showToast(`👤 Perfil de ${(profile ? profile.name : user.name).split(' ')[0]}!`);
+    });
+
+    $('menu-btn-settings')?.addEventListener('click', () => {
+      dropdown.classList.remove('show');
+      showToast('⚙️ Abrindo configurações da conta...');
+    });
+
+    // Logout
+    $('menu-btn-logout')?.addEventListener('click', async () => {
+      dropdown.classList.remove('show');
+      const confirmed = confirm(`👋 Sair da conta?\n\n👤 ${user.name}`);
+      if (!confirmed) return;
+
+      showToast('👋 Saindo...');
+
+      try {
+        if (token) {
+          await fetch('/api/auth/logout', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
+          });
+        }
+      } catch { /* servidor pode estar offline */ }
+
+      localStorage.removeItem('goatcine_token');
+      localStorage.removeItem('goatcine_user');
+      localStorage.removeItem('goatcine_profile');
+
+      setTimeout(() => {
+        window.location.href = '/login.html';
+      }, 900);
+    });
 
   } catch (e) {
     localStorage.removeItem('goatcine_token');
     localStorage.removeItem('goatcine_user');
+    localStorage.removeItem('goatcine_profile');
     window.location.href = '/login.html';
   }
 }

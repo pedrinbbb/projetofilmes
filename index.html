@@ -64,14 +64,72 @@
       </ul>
 
       <!-- Right Actions -->
-      <div class="nav-actions">
-        <button class="nav-search-btn" id="nav-search-btn" aria-label="Buscar filmes">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-          </svg>
-        </button>
-        <div class="nav-avatar" id="nav-avatar" aria-label="Perfil do usuário" title="Sair da conta">
+      <div class="nav-actions" style="position: relative; gap: 16px;">
+        <!-- Container de Busca Inline (Estilo Netflix) -->
+        <div class="nav-search-container" id="nav-search-container">
+          <div class="search-pill">
+            <svg class="search-pill-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+            <input type="text" id="search-input" class="search-pill-input" placeholder="Títulos, gente, gêneros..." autocomplete="off" />
+            <button class="search-pill-clear hidden" id="search-pill-clear" aria-label="Limpar busca">✕</button>
+          </div>
+        </div>
+
+        <div class="nav-avatar" id="nav-avatar" aria-label="Perfil do usuário">
           <span id="nav-avatar-letter">G</span>
+        </div>
+
+        <!-- Menu de Conta Dropdown -->
+        <div class="user-menu-dropdown" id="user-menu-dropdown" aria-hidden="true">
+          <div class="user-menu-header">
+            <div class="user-menu-avatar" id="menu-avatar-circle">
+              <span id="menu-menu-avatar-letter">G</span>
+            </div>
+            <div class="user-menu-info">
+              <span class="user-menu-name" id="menu-user-name">Usuário</span>
+              <span class="user-menu-email" id="menu-user-email">usuario@goatcine.com</span>
+            </div>
+          </div>
+          
+          <div class="user-menu-divider"></div>
+          
+          <ul class="user-menu-list">
+            <li class="user-menu-item" id="menu-btn-switch">
+              <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+              </svg>
+              <span>Trocar perfil</span>
+            </li>
+            <li class="user-menu-item" id="menu-btn-profile">
+              <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              <span>Meu perfil</span>
+            </li>
+            <li class="user-menu-item" id="menu-btn-settings">
+              <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+              </svg>
+              <span>Configurações</span>
+            </li>
+          </ul>
+          
+          <div class="user-menu-divider"></div>
+          
+          <div class="user-menu-logout" id="menu-btn-logout">
+            <svg class="menu-icon logout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+            <span>Sair da conta</span>
+          </div>
         </div>
       </div>
 
@@ -79,17 +137,6 @@
       <button class="nav-hamburger" id="nav-hamburger" aria-label="Abrir menu" aria-expanded="false">
         <span></span><span></span><span></span>
       </button>
-    </div>
-
-    <!-- Search Bar -->
-    <div class="search-bar" id="search-bar" role="search">
-      <div class="search-inner">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-        </svg>
-        <input type="search" id="search-input" placeholder="Buscar filmes, séries, atores..." aria-label="Campo de busca" autocomplete="off" />
-        <button class="search-close" id="search-close" aria-label="Fechar busca">✕</button>
-      </div>
     </div>
   </nav>
 
@@ -154,116 +201,128 @@
   <!-- ========== MAIN CONTENT ========== -->
   <main class="main-content" id="main-content">
 
-    <!-- Category Tabs -->
-    <section class="categories-section" id="categories-section" aria-label="Categorias">
-      <div class="categories-tabs" id="categories-tabs" role="tablist">
-        <button class="cat-tab active" id="tab-trending" data-filter="trending" role="tab" aria-selected="true">🔥 Em Alta</button>
-        <button class="cat-tab" id="tab-new" data-filter="new" role="tab" aria-selected="false">✨ Novidades</button>
-        <button class="cat-tab" id="tab-action" data-filter="action" role="tab" aria-selected="false">⚡ Ação</button>
-        <button class="cat-tab" id="tab-drama" data-filter="drama" role="tab" aria-selected="false">🎭 Drama</button>
-        <button class="cat-tab" id="tab-scifi" data-filter="scifi" role="tab" aria-selected="false">🚀 Ficção</button>
-        <button class="cat-tab" id="tab-thriller" data-filter="thriller" role="tab" aria-selected="false">😱 Thriller</button>
+    <!-- Seção de Resultados de Busca Estilo Netflix -->
+    <section class="row-section hidden" id="search-results-section" style="padding: 40px 48px; min-height: 50vh; margin-top: 100px;">
+      <div class="row-header" style="margin-bottom: 24px;">
+        <h2 class="row-title" id="search-results-title" style="font-size: 20px; font-weight: 500; color: var(--text-secondary);"></h2>
+      </div>
+      <div class="netflix-search-grid" id="search-results-grid">
+        <!-- Preenchido dinamicamente pelo JS -->
       </div>
     </section>
 
-    <!-- ---- ROW: Em Alta ---- -->
-    <section class="row-section" id="filmes" aria-label="Filmes em alta">
-      <div class="row-header">
-        <h2 class="row-title">🔥 Em Alta esta Semana</h2>
-        <button class="row-see-all" id="see-all-trending" aria-label="Ver todos os filmes em alta">Ver Todos</button>
-      </div>
-      <div class="carousel-wrapper">
-        <button class="carousel-arrow left" id="arrow-left-0" aria-label="Anterior">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <polyline points="15,18 9,12 15,6"/>
-          </svg>
-        </button>
-        <div class="carousel" id="carousel-trending" role="list">
+    <div id="standard-content">
+      <!-- Category Tabs -->
+      <section class="categories-section" id="categories-section" aria-label="Categorias">
+        <div class="categories-tabs" id="categories-tabs" role="tablist">
+          <button class="cat-tab active" id="tab-trending" data-filter="trending" role="tab" aria-selected="true">🔥 Em Alta</button>
+          <button class="cat-tab" id="tab-new" data-filter="new" role="tab" aria-selected="false">✨ Novidades</button>
+          <button class="cat-tab" id="tab-action" data-filter="action" role="tab" aria-selected="false">⚡ Ação</button>
+          <button class="cat-tab" id="tab-drama" data-filter="drama" role="tab" aria-selected="false">🎭 Drama</button>
+          <button class="cat-tab" id="tab-scifi" data-filter="scifi" role="tab" aria-selected="false">🚀 Ficção</button>
+          <button class="cat-tab" id="tab-thriller" data-filter="thriller" role="tab" aria-selected="false">😱 Thriller</button>
+        </div>
+      </section>
+
+      <!-- ---- ROW: Em Alta ---- -->
+      <section class="row-section" id="filmes" aria-label="Filmes em alta">
+        <div class="row-header">
+          <h2 class="row-title">🔥 Em Alta esta Semana</h2>
+          <button class="row-see-all" id="see-all-trending" aria-label="Ver todos os filmes em alta">Ver Todos</button>
+        </div>
+        <div class="carousel-wrapper">
+          <button class="carousel-arrow left" id="arrow-left-0" aria-label="Anterior">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="15,18 9,12 15,6"/>
+            </svg>
+          </button>
+          <div class="carousel" id="carousel-trending" role="list">
+            <!-- Preenchido pelo JS -->
+          </div>
+          <button class="carousel-arrow right" id="arrow-right-0" aria-label="Próximo">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="9,18 15,12 9,6"/>
+            </svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- ---- GOATCINE ORIGINAIS BANNER ---- -->
+      <section class="originals-banner" id="originais" aria-label="GOATCINE Originais">
+        <div class="originals-content">
+          <div class="originals-badge">
+            <span>🏆</span> GOATCINE ORIGINAIS
+          </div>
+          <h2 class="originals-title">Conteúdo Exclusivo</h2>
+          <p class="originals-desc">Produções únicas disponíveis apenas na GOATCINE. Arte cinematográfica no seu melhor.</p>
+          <button class="btn-primary" id="originals-explore-btn">Explorar Originais</button>
+        </div>
+        <div class="originals-visual" aria-hidden="true">
+          <div class="originals-cards-stack">
+            <div class="stack-card c1"></div>
+            <div class="stack-card c2"></div>
+            <div class="stack-card c3"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---- ROW: Novidades ---- -->
+      <section class="row-section" aria-label="Novidades">
+        <div class="row-header">
+          <h2 class="row-title">✨ Novidades</h2>
+          <button class="row-see-all" id="see-all-new" aria-label="Ver todas as novidades">Ver Todos</button>
+        </div>
+        <div class="carousel-wrapper">
+          <button class="carousel-arrow left" id="arrow-left-1" aria-label="Anterior">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="15,18 9,12 15,6"/>
+            </svg>
+          </button>
+          <div class="carousel" id="carousel-new" role="list">
+            <!-- Preenchido pelo JS -->
+          </div>
+          <button class="carousel-arrow right" id="arrow-right-1" aria-label="Próximo">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="9,18 15,12 9,6"/>
+            </svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- ---- TOP 10 ---- -->
+      <section class="top10-section" id="series" aria-label="Top 10 da semana">
+        <div class="row-header">
+          <h2 class="row-title">🏆 Top 10 da Semana</h2>
+          <button class="row-see-all" id="see-all-top10" aria-label="Ver todo o Top 10">Ver Todos</button>
+        </div>
+        <div class="top10-grid" id="top10-grid" role="list">
           <!-- Preenchido pelo JS -->
         </div>
-        <button class="carousel-arrow right" id="arrow-right-0" aria-label="Próximo">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <polyline points="9,18 15,12 9,6"/>
-          </svg>
-        </button>
-      </div>
-    </section>
+      </section>
 
-    <!-- ---- GOATCINE ORIGINAIS BANNER ---- -->
-    <section class="originals-banner" id="originais" aria-label="GOATCINE Originais">
-      <div class="originals-content">
-        <div class="originals-badge">
-          <span>🏆</span> GOATCINE ORIGINAIS
+      <!-- ---- ROW: Ação ---- -->
+      <section class="row-section" aria-label="Filmes de ação">
+        <div class="row-header">
+          <h2 class="row-title">⚡ Ação & Aventura</h2>
+          <button class="row-see-all" id="see-all-action" aria-label="Ver todos os filmes de ação">Ver Todos</button>
         </div>
-        <h2 class="originals-title">Conteúdo Exclusivo</h2>
-        <p class="originals-desc">Produções únicas disponíveis apenas na GOATCINE. Arte cinematográfica no seu melhor.</p>
-        <button class="btn-primary" id="originals-explore-btn">Explorar Originais</button>
-      </div>
-      <div class="originals-visual" aria-hidden="true">
-        <div class="originals-cards-stack">
-          <div class="stack-card c1"></div>
-          <div class="stack-card c2"></div>
-          <div class="stack-card c3"></div>
+        <div class="carousel-wrapper">
+          <button class="carousel-arrow left" id="arrow-left-2" aria-label="Anterior">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="15,18 9,12 15,6"/>
+            </svg>
+          </button>
+          <div class="carousel" id="carousel-action" role="list">
+            <!-- Preenchido pelo JS -->
+          </div>
+          <button class="carousel-arrow right" id="arrow-right-2" aria-label="Próximo">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="9,18 15,12 9,6"/>
+            </svg>
+          </button>
         </div>
-      </div>
-    </section>
-
-    <!-- ---- ROW: Novidades ---- -->
-    <section class="row-section" aria-label="Novidades">
-      <div class="row-header">
-        <h2 class="row-title">✨ Novidades</h2>
-        <button class="row-see-all" id="see-all-new" aria-label="Ver todas as novidades">Ver Todos</button>
-      </div>
-      <div class="carousel-wrapper">
-        <button class="carousel-arrow left" id="arrow-left-1" aria-label="Anterior">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <polyline points="15,18 9,12 15,6"/>
-          </svg>
-        </button>
-        <div class="carousel" id="carousel-new" role="list">
-          <!-- Preenchido pelo JS -->
-        </div>
-        <button class="carousel-arrow right" id="arrow-right-1" aria-label="Próximo">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <polyline points="9,18 15,12 9,6"/>
-          </svg>
-        </button>
-      </div>
-    </section>
-
-    <!-- ---- TOP 10 ---- -->
-    <section class="top10-section" id="series" aria-label="Top 10 da semana">
-      <div class="row-header">
-        <h2 class="row-title">🏆 Top 10 da Semana</h2>
-        <button class="row-see-all" id="see-all-top10" aria-label="Ver todo o Top 10">Ver Todos</button>
-      </div>
-      <div class="top10-grid" id="top10-grid" role="list">
-        <!-- Preenchido pelo JS -->
-      </div>
-    </section>
-
-    <!-- ---- ROW: Ação ---- -->
-    <section class="row-section" aria-label="Filmes de ação">
-      <div class="row-header">
-        <h2 class="row-title">⚡ Ação & Aventura</h2>
-        <button class="row-see-all" id="see-all-action" aria-label="Ver todos os filmes de ação">Ver Todos</button>
-      </div>
-      <div class="carousel-wrapper">
-        <button class="carousel-arrow left" id="arrow-left-2" aria-label="Anterior">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <polyline points="15,18 9,12 15,6"/>
-          </svg>
-        </button>
-        <div class="carousel" id="carousel-action" role="list">
-          <!-- Preenchido pelo JS -->
-        </div>
-        <button class="carousel-arrow right" id="arrow-right-2" aria-label="Próximo">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <polyline points="9,18 15,12 9,6"/>
-          </svg>
-        </button>
-      </div>
-    </section>
+      </section>
+    </div>
 
   </main>
 

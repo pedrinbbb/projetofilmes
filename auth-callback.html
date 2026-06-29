@@ -142,7 +142,7 @@
             headers: { Authorization: 'Bearer ' + token }
           })
           .then(r => r.json())
-          .then(data => {
+          .then(async data => {
             if (data.valid && data.user) {
               // Save to localStorage for frontend use
               localStorage.setItem('goatcine_token', token);
@@ -155,7 +155,19 @@
               }));
               status.textContent = 'Bem-vindo(a), ' + (data.user.name || name) + '! 🎉';
               logo.textContent = '🏆';
-              setTimeout(() => { window.location.href = '/index.html'; }, 800);
+              // Check profiles
+              try {
+                const profRes = await fetch('/api/profiles', {
+                  headers: { Authorization: 'Bearer ' + token }
+                });
+                const profData = await profRes.json();
+                const hasProfiles = Array.isArray(profData.profiles) && profData.profiles.length > 0;
+                setTimeout(() => {
+                  window.location.href = hasProfiles ? '/profiles.html' : '/profiles.html?new=true';
+                }, 800);
+              } catch {
+                setTimeout(() => { window.location.href = '/profiles.html?new=true'; }, 800);
+              }
             } else {
               showError('Token inválido recebido do servidor');
             }

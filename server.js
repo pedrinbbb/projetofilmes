@@ -239,10 +239,12 @@ async function initDatabase() {
 }
 
 async function runMigrationsAndSeeds() {
+  const AUTO_ID = IS_POSTGRES ? 'SERIAL PRIMARY KEY' : 'INTEGER PRIMARY KEY AUTOINCREMENT';
+
   // Criar tabelas usando dbRunSync que é compatível com ambos
   await dbRunSync(`
     CREATE TABLE IF NOT EXISTS users (
-      id            SERIAL PRIMARY KEY,
+      id            ${AUTO_ID},
       name          VARCHAR(255) NOT NULL,
       email         VARCHAR(255) UNIQUE,
       password_hash VARCHAR(255),
@@ -262,7 +264,7 @@ async function runMigrationsAndSeeds() {
     )`);
   await dbRunSync(`
     CREATE TABLE IF NOT EXISTS sessions (
-      id         SERIAL PRIMARY KEY,
+      id         ${AUTO_ID},
       user_id    INTEGER NOT NULL,
       token      VARCHAR(255) NOT NULL UNIQUE,
       created_at VARCHAR(100) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -271,7 +273,7 @@ async function runMigrationsAndSeeds() {
 
   await dbRunSync(`
     CREATE TABLE IF NOT EXISTS verification_codes (
-      id          SERIAL PRIMARY KEY,
+      id          ${AUTO_ID},
       email       VARCHAR(255) NOT NULL,
       name        VARCHAR(255) NOT NULL,
       pass_hash   VARCHAR(255) NOT NULL,
@@ -283,7 +285,7 @@ async function runMigrationsAndSeeds() {
 
   await dbRunSync(`
     CREATE TABLE IF NOT EXISTS movies (
-      id          SERIAL PRIMARY KEY,
+      id          ${AUTO_ID},
       title       VARCHAR(255) NOT NULL,
       year        INTEGER NOT NULL,
       duration    VARCHAR(100) NOT NULL,
@@ -300,7 +302,7 @@ async function runMigrationsAndSeeds() {
 
   await dbRunSync(`
     CREATE TABLE IF NOT EXISTS profiles (
-      id           SERIAL PRIMARY KEY,
+      id           ${AUTO_ID},
       user_id      INTEGER NOT NULL,
       name         VARCHAR(255) NOT NULL,
       avatar_color VARCHAR(50) NOT NULL DEFAULT '#FFD700',
@@ -311,7 +313,7 @@ async function runMigrationsAndSeeds() {
 
   await dbRunSync(`
     CREATE TABLE IF NOT EXISTS plans (
-      id            SERIAL PRIMARY KEY,
+      id            ${AUTO_ID},
       name          VARCHAR(255) NOT NULL,
       price         DOUBLE PRECISION NOT NULL,
       screens       INTEGER NOT NULL,
@@ -320,7 +322,7 @@ async function runMigrationsAndSeeds() {
 
   await dbRunSync(`
     CREATE TABLE IF NOT EXISTS payment_logs (
-      id         SERIAL PRIMARY KEY,
+      id         ${AUTO_ID},
       user_id    INTEGER,
       plan_id    INTEGER,
       txid       VARCHAR(255) UNIQUE,
@@ -1102,22 +1104,19 @@ app.post('/api/auth/verify-email', async (req, res) => {
 
     // Código expirado?
     if (new Date() > new Date(record.expires_at)) {
-      db.run('DELETE FROM verification_codes WHERE email = ?', [cleanEmail]);
-      saveDb();
+      dbRun('DELETE FROM verification_codes WHERE email = ?', [cleanEmail]);
       return res.status(400).json({ error: 'Código expirado. Faça o cadastro novamente.', expired: true });
     }
 
     // Muitas tentativas?
     if (record.attempts >= 5) {
-      db.run('DELETE FROM verification_codes WHERE email = ?', [cleanEmail]);
-      saveDb();
+      dbRun('DELETE FROM verification_codes WHERE email = ?', [cleanEmail]);
       return res.status(400).json({ error: 'Muitas tentativas. Faça o cadastro novamente.', expired: true });
     }
 
     // Código errado?
     if (record.code !== String(code).trim()) {
-      db.run('UPDATE verification_codes SET attempts = attempts + 1 WHERE email = ?', [cleanEmail]);
-      saveDb();
+      dbRun('UPDATE verification_codes SET attempts = attempts + 1 WHERE email = ?', [cleanEmail]);
       const remaining = 4 - record.attempts;
       return res.status(400).json({
         error: `Código incorreto. ${remaining} tentativa(s) restante(s).`,
@@ -1126,8 +1125,7 @@ app.post('/api/auth/verify-email', async (req, res) => {
     }
 
     // ✅ Código correto — criar usuário!
-    db.run('DELETE FROM verification_codes WHERE email = ?', [cleanEmail]);
-    saveDb();
+    dbRun('DELETE FROM verification_codes WHERE email = ?', [cleanEmail]);
 
     // Verificar se email não foi cadastrado enquanto aguardava
     const alreadyExists = dbGet('SELECT id FROM users WHERE email = ?', [cleanEmail]);
@@ -1183,11 +1181,10 @@ app.post('/api/auth/resend-code', async (req, res) => {
     const newCode   = generateOTP();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
-    db.run(
+    dbRun(
       'UPDATE verification_codes SET code = ?, attempts = 0, expires_at = ?, created_at = datetime(\'now\') WHERE email = ?',
       [newCode, expiresAt, cleanEmail]
     );
-    saveDb();
 
     if (isEmailConfigured()) {
       try {
@@ -1232,7 +1229,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // 15 min
 
     // Salvar código de redefinição na tabela verification_codes com pass_hash vazio para satisfazer a restrição NOT NULL
-    db.run('DELETE FROM verification_codes WHERE email = ?', [cleanEmail]);
+    dbRun('DELETE FROM verification_codes WHERE email = ?', [cleanEmail]);
     dbRun(
       'INSERT INTO verification_codes (email, name, pass_hash, code, expires_at, attempts) VALUES (?, ?, ?, ?, ?, 0)',
       [cleanEmail, user.name, '', code, expiresAt]
@@ -1296,8 +1293,7 @@ app.post('/api/auth/reset-password', async (req, res) => {
 
     // Expirado?
     if (new Date() > new Date(record.expires_at)) {
-      db.run('DELETE FROM verification_codes WHERE email = ?', [cleanEmail]);
-      saveDb();
+      dbRun('DELETE FROM verification_codes WHERE email = ?', [cleanEmail]);
       return res.status(400).json({ error: 'Código expirado. Solicite a redefinição novamente.' });
     }
 
@@ -1308,11 +1304,10 @@ app.post('/api/auth/reset-password', async (req, res) => {
 
     // Gerar nova hash de senha e atualizar o usuário
     const pass_hash = await bcrypt.hash(password, 12);
-    db.run('UPDATE users SET password_hash = ? WHERE email = ?', [pass_hash, cleanEmail]);
+    dbRun('UPDATE users SET password_hash = ? WHERE email = ?', [pass_hash, cleanEmail]);
     
     // Apagar código usado
-    db.run('DELETE FROM verification_codes WHERE email = ?', [cleanEmail]);
-    saveDb();
+    dbRun('DELETE FROM verification_codes WHERE email = ?', [cleanEmail]);
 
     console.log(`[AUTH] 🔑 Senha alterada com sucesso via redefinição: ${cleanEmail}`);
     return res.json({ success: true, message: 'Senha atualizada com sucesso!' });
@@ -1434,21 +1429,19 @@ app.get('/auth/discord/callback', async (req, res) => {
 
     if (dbUser) {
       // Caso 1: já tem conta Discord — atualiza dados
-      db.run(
+      dbRun(
         `UPDATE users SET name=?, discord_tag=?, avatar=?, updated_at=datetime('now') WHERE discord_id=?`,
         [discordName, discordTag, avatarUrl, discordUser.id]
       );
-      saveDb();
       dbUser = dbGet('SELECT * FROM users WHERE discord_id = ?', [discordUser.id]);
 
     } else if (discordEmail && (dbUser = dbGet('SELECT * FROM users WHERE email = ?', [discordEmail]))) {
       // Caso 2: já existe conta com esse email (cadastro normal) — vincula Discord à conta existente
       console.log(`[DISCORD CB] Email ${discordEmail} já existe — vinculando Discord à conta existente.`);
-      db.run(
+      dbRun(
         `UPDATE users SET discord_id=?, discord_tag=?, avatar=?, updated_at=datetime('now') WHERE email=?`,
         [discordUser.id, discordTag, avatarUrl || dbUser.avatar, discordEmail]
       );
-      saveDb();
       dbUser = dbGet('SELECT * FROM users WHERE email = ?', [discordEmail]);
 
     } else {
@@ -1557,8 +1550,7 @@ app.delete('/api/profiles/:id', requireAuth, (req, res) => {
     if (!profile)
       return res.status(404).json({ error: 'Perfil não encontrado.' });
 
-    db.run('DELETE FROM profiles WHERE id = ?', [profileId]);
-    saveDb();
+    dbRun('DELETE FROM profiles WHERE id = ?', [profileId]);
 
     console.log(`[PROFILES] 🗑️ Perfil removido: id=${profileId} de user_id=${req.user.id}`);
     return res.json({ success: true });
@@ -1668,12 +1660,7 @@ app.post('/api/admin/login', (req, res) => {
 // Listar Usuários (Admin)
 app.get('/api/admin/users', requireAdminAuth, (req, res) => {
   try {
-    const stmt = db.prepare('SELECT id, name, email, discord_tag, method, sub_active, sub_plan_id, sub_expires_at, sub_activated_at, created_at FROM users ORDER BY id DESC');
-    const users = [];
-    while (stmt.step()) {
-      users.push(stmt.getAsObject());
-    }
-    stmt.free();
+    const users = dbAll('SELECT id, name, email, discord_tag, method, sub_active, sub_plan_id, sub_expires_at, sub_activated_at, created_at FROM users ORDER BY id DESC');
     return res.json({ users });
   } catch (err) {
     console.error('[ADMIN GET USERS ERROR]', err);
@@ -1686,10 +1673,9 @@ app.delete('/api/admin/users/:id', requireAdminAuth, (req, res) => {
   const { id } = req.params;
   try {
     // Apagar também sessões ativas do usuário deletado e os seus perfis
-    db.run('DELETE FROM sessions WHERE user_id = ?', [id]);
-    db.run('DELETE FROM profiles WHERE user_id = ?', [id]);
-    db.run('DELETE FROM users WHERE id = ?', [id]);
-    saveDb();
+    dbRun('DELETE FROM sessions WHERE user_id = ?', [id]);
+    dbRun('DELETE FROM profiles WHERE user_id = ?', [id]);
+    dbRun('DELETE FROM users WHERE id = ?', [id]);
     console.log(`[ADMIN] ❌ Usuário deletado. ID: ${id}`);
     return res.json({ success: true, message: 'Usuário excluído com sucesso.' });
   } catch (err) {
@@ -1749,11 +1735,10 @@ app.put('/api/admin/profiles/:id', requireAdminAuth, (req, res) => {
     if (!name || name.trim().length < 1)
       return res.status(400).json({ error: 'Nome do perfil é obrigatório.' });
 
-    db.run(
+    dbRun(
       'UPDATE profiles SET name = ?, avatar_color = ?, avatar_icon = ?, is_kid = ? WHERE id = ?',
       [name.trim(), avatar_color, avatar_icon, is_kid ? 1 : 0, id]
     );
-    saveDb();
 
     const profile = dbGet('SELECT * FROM profiles WHERE id = ?', [id]);
     return res.json({ profile });
@@ -1767,8 +1752,7 @@ app.put('/api/admin/profiles/:id', requireAdminAuth, (req, res) => {
 app.delete('/api/admin/profiles/:id', requireAdminAuth, (req, res) => {
   try {
     const { id } = req.params;
-    db.run('DELETE FROM profiles WHERE id = ?', [id]);
-    saveDb();
+    dbRun('DELETE FROM profiles WHERE id = ?', [id]);
     return res.json({ success: true });
   } catch (err) {
     console.error('[ADMIN DELETE PROFILE ERROR]', err);
@@ -1821,11 +1805,10 @@ app.put('/api/admin/plans/:id', requireAdminAuth, (req, res) => {
     if (!name || price === undefined || screens === undefined || duration_days === undefined)
       return res.status(400).json({ error: 'Nome, preço, telas e duração são obrigatórios' });
 
-    db.run(
+    dbRun(
       'UPDATE plans SET name = ?, price = ?, screens = ?, duration_days = ? WHERE id = ?',
       [name, parseFloat(price), parseInt(screens), parseInt(duration_days), id]
     );
-    saveDb();
 
     const plan = dbGet('SELECT * FROM plans WHERE id = ?', [id]);
     return res.json({ plan });
@@ -1845,8 +1828,7 @@ app.delete('/api/admin/plans/:id', requireAdminAuth, (req, res) => {
       return res.status(400).json({ error: 'Os planos padrão (Bronze, Prata, Ouro) não podem ser excluídos, apenas editados.' });
     }
 
-    db.run('DELETE FROM plans WHERE id = ?', [id]);
-    saveDb();
+    dbRun('DELETE FROM plans WHERE id = ?', [id]);
 
     return res.json({ success: true, message: 'Plano excluído com sucesso.' });
   } catch (err) {
@@ -1869,19 +1851,18 @@ app.post('/api/admin/users/:userId/subscribe', requireAdminAuth, (req, res) => {
     const subActivatedAt = active ? (activatedAt || new Date().toISOString()) : null;
     const subExpiresAt = active ? (expiresAt || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()) : null;
 
-    db.run(
+    dbRun(
       'UPDATE users SET sub_active = ?, sub_plan_id = ?, sub_activated_at = ?, sub_expires_at = ?, pending_txid = NULL, pending_plan_id = NULL WHERE id = ?',
       [subActive, subPlanId, subActivatedAt, subExpiresAt, userId]
     );
 
     // Salvar log de ativação manual
     if (active) {
-      db.run(
+      dbRun(
         "INSERT OR REPLACE INTO payment_logs (user_id, plan_id, txid, amount, status, created_at, paid_at) VALUES (?, ?, ?, ?, 'paid', ?, ?)",
         [userId, subPlanId, `manual_${Date.now()}`, 0.0, subActivatedAt, subActivatedAt]
       );
     }
-    saveDb();
 
     console.log(`[ADMIN] 💳 Assinatura do usuário ${userId} alterada para: ${active ? 'ATIVA' : 'INATIVA'}`);
     return res.json({ success: true });
@@ -1894,7 +1875,7 @@ app.post('/api/admin/users/:userId/subscribe', requireAdminAuth, (req, res) => {
 // Listar Logs de Pagamento (Admin)
 app.get('/api/admin/payments', requireAdminAuth, (req, res) => {
   try {
-    const stmt = db.prepare(`
+    const logs = dbAll(`
       SELECT 
         l.id, l.user_id, l.plan_id, l.txid, l.amount, l.status, l.created_at, l.paid_at,
         u.name as user_name, u.email as user_email,
@@ -1904,11 +1885,6 @@ app.get('/api/admin/payments', requireAdminAuth, (req, res) => {
       LEFT JOIN plans p ON l.plan_id = p.id
       ORDER BY l.id DESC
     `);
-    const logs = [];
-    while (stmt.step()) {
-      logs.push(stmt.getAsObject());
-    }
-    stmt.free();
     return res.json({ logs });
   } catch (err) {
     console.error('[ADMIN GET PAYMENTS ERROR]', err);
@@ -1980,18 +1956,16 @@ app.post('/api/user/trial', requireAuth, (req, res) => {
     // Adicionar 2 horas de vigência (2 * 60 * 60 * 1000 = 7.200.000 ms)
     const expiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
 
-    db.run(
+    dbRun(
       'UPDATE users SET sub_active = 1, sub_plan_id = NULL, sub_activated_at = ?, sub_expires_at = ?, has_used_trial = 1 WHERE id = ?',
       [nowStr, expiresAt, req.user.id]
     );
 
     // Salvar log de ativação de teste gratuito
-    db.run(
+    dbRun(
       "INSERT OR REPLACE INTO payment_logs (user_id, plan_id, txid, amount, status, created_at, paid_at) VALUES (?, NULL, ?, 0.0, 'paid', ?, ?)",
       [req.user.id, `trial_${Date.now()}`, nowStr, nowStr]
     );
-
-    saveDb();
 
     console.log(`[TRIAL] 🎁 Período de teste grátis (2h) ativado para usuário ID ${req.user.id}.`);
     return res.json({ success: true, message: 'Teste gratuito de 2 horas ativado com sucesso!' });
@@ -2107,14 +2081,13 @@ app.post('/api/user/subscribe', requireAuth, async (req, res) => {
         const qrData = await qrRes.json();
 
         // Salvar txid pendente no usuário
-        db.run('UPDATE users SET pending_txid = ?, pending_plan_id = ? WHERE id = ?', [txid, planId, req.user.id]);
+        dbRun('UPDATE users SET pending_txid = ?, pending_plan_id = ? WHERE id = ?', [txid, planId, req.user.id]);
         
         // Registrar log inicial pendente
-        db.run(
+        dbRun(
           "INSERT OR REPLACE INTO payment_logs (user_id, plan_id, txid, amount, status) VALUES (?, ?, ?, ?, 'pending')",
           [req.user.id, planId, txid, plan.price]
         );
-        saveDb();
 
         return res.json({
           realPix: true,
@@ -2132,14 +2105,13 @@ app.post('/api/user/subscribe', requireAuth, async (req, res) => {
     const txidMock = `mock${crypto.randomBytes(8).toString('hex')}`;
     const qrcodeTextMock = `00020101021226870014br.gov.bcb.pix2565pix.goatcine.com/sub/checkout/plan${planId}-${valHex}-${txidMock}`;
 
-    db.run('UPDATE users SET pending_txid = ?, pending_plan_id = ? WHERE id = ?', [txidMock, planId, req.user.id]);
+    dbRun('UPDATE users SET pending_txid = ?, pending_plan_id = ? WHERE id = ?', [txidMock, planId, req.user.id]);
     
     // Registrar log mock pendente
-    db.run(
+    dbRun(
       "INSERT OR REPLACE INTO payment_logs (user_id, plan_id, txid, amount, status) VALUES (?, ?, ?, ?, 'pending')",
       [req.user.id, planId, txidMock, plan.price]
     );
-    saveDb();
 
     return res.json({
       realPix: false,
@@ -2173,18 +2145,16 @@ app.all('/api/webhook/pix', (req, res) => {
           const days = targetPlan ? targetPlan.duration_days : 30;
           const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
           
-          db.run(
+          dbRun(
             'UPDATE users SET sub_active = 1, sub_plan_id = ?, sub_activated_at = ?, sub_expires_at = ?, pending_txid = NULL, pending_plan_id = NULL WHERE id = ?',
             [user.pending_plan_id, nowStr, expiresAt, user.id]
           );
 
           // Atualizar o log de pagamento
-          db.run(
+          dbRun(
             "UPDATE payment_logs SET status = 'paid', paid_at = ? WHERE txid = ?",
             [nowStr, txid]
           );
-
-          saveDb();
           console.log(`[EFI WEBHOOK] 💳 Pagamento CONFIRMADO via Pix! Usuário ID ${user.id} ativado no plano ${user.pending_plan_id}.`);
         }
       });
@@ -2205,12 +2175,7 @@ app.all('/api/webhook/pix', (req, res) => {
 // Listar todos os Filmes (Público)
 app.get('/api/movies', (req, res) => {
   try {
-    const stmt = db.prepare('SELECT * FROM movies ORDER BY id DESC');
-    const movies = [];
-    while (stmt.step()) {
-      movies.push(stmt.getAsObject());
-    }
-    stmt.free();
+    const movies = dbAll('SELECT * FROM movies ORDER BY id DESC');
     return res.json({ movies });
   } catch (err) {
     console.error('[GET MOVIES ERROR]', err);
@@ -2249,12 +2214,11 @@ app.put('/api/movies/:id', requireAdminAuth, (req, res) => {
       return res.status(400).json({ error: 'Todos os campos do filme são obrigatórios' });
     }
 
-    db.run(
+    dbRun(
       `UPDATE movies SET title=?, year=?, duration=?, rating=?, genre=?, desc=?, poster=?, backdrop=?, director=?, cast=?, category=?, videoUrl=?
        WHERE id=?`,
       [title, parseInt(year), duration, parseFloat(rating), genre, desc, poster, backdrop, director, cast, category, videoUrl, id]
     );
-    saveDb();
 
     console.log(`[ADMIN] 🎬 Filme atualizado: "${title}" (ID: ${id})`);
     return res.json({ success: true, message: 'Filme atualizado com sucesso!' });
@@ -2268,8 +2232,7 @@ app.put('/api/movies/:id', requireAdminAuth, (req, res) => {
 app.delete('/api/movies/:id', requireAdminAuth, (req, res) => {
   const { id } = req.params;
   try {
-    db.run('DELETE FROM movies WHERE id = ?', [id]);
-    saveDb();
+    dbRun('DELETE FROM movies WHERE id = ?', [id]);
     console.log(`[ADMIN] ❌ Filme excluído. ID: ${id}`);
     return res.json({ success: true, message: 'Filme removido do catálogo com sucesso.' });
   } catch (err) {

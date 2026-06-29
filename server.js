@@ -909,7 +909,7 @@ app.get('/auth/discord', (req, res) => {
     redirect_uri:  REDIRECT_URI,
     response_type: 'code',
     scope:         'identify email',
-    prompt:        'none',
+    prompt:        'consent', // Exige que o usuário leia e clique em Autorizar
   });
   res.redirect(`https://discord.com/api/oauth2/authorize?${params}`);
 });

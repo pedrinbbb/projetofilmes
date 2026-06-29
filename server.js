@@ -20,7 +20,8 @@ const https      = require('https');
 const app        = express();
 const PORT       = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'goatcine_dev_secret';
-const DB_PATH    = fs.existsSync('/data') ? '/data/goatcine.db' : path.join(__dirname, 'goatcine.db');
+const PERSISTENT_DIR = fs.existsSync('/data') ? '/data' : (fs.existsSync('/var/data') ? '/var/data' : null);
+const DB_PATH    = PERSISTENT_DIR ? path.join(PERSISTENT_DIR, 'goatcine.db') : path.join(__dirname, 'goatcine.db');
 
 // Autenticação única de Admin
 let ADMIN_PASSWORD = process.env.ADMIN_PASS;
@@ -755,13 +756,17 @@ app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: '15mb' })); // Aumentar limite para aceitar imagens em base64
 app.use(express.urlencoded({ extended: false, limit: '15mb' }));
 
-// Criar pasta de uploads se não existir
-const uploadsDir = path.join(__dirname, 'uploads');
+// Criar pasta de uploads no diretório persistente se disponível, ou no local
+const uploadsDir = PERSISTENT_DIR ? path.join(PERSISTENT_DIR, 'uploads') : path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir);
 }
 
+// Servir a pasta raiz do projeto e a pasta de uploads persistente
 app.use(express.static(path.join(__dirname)));
+if (PERSISTENT_DIR) {
+  app.use('/uploads', express.static(uploadsDir));
+}
 
 // =============================================
 //  JWT HELPERS
@@ -1726,7 +1731,7 @@ app.post('/api/admin/settings/upload', requireAdminAuth, (req, res) => {
     const buffer = Buffer.from(base64Data, 'base64');
 
     const fileName = type === 'logo' ? 'logo.png' : 'favicon.png';
-    const filePath = path.join(__dirname, 'uploads', fileName);
+    const filePath = path.join(uploadsDir, fileName);
 
     fs.writeFileSync(filePath, buffer);
     console.log(`[SETTINGS] ⚙️ Upload de ${type} salvo com sucesso em: ${filePath}`);

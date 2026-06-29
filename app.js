@@ -332,46 +332,30 @@ function initNavbar() {
     navbar.classList.toggle('scrolled', window.scrollY > 60);
   });
 
-  // Sincronizar estados ativos dos links do topo e da barra lateral
-  const sidebarItems = document.querySelectorAll('.sidebar-item');
-  const navLinks = document.querySelectorAll('.nav-link');
-
-  function setActive(targetId) {
-    // Limpar ativos
-    sidebarItems.forEach(item => item.classList.remove('active'));
-    navLinks.forEach(link => link.classList.remove('active'));
-
-    // Mapear IDs correspondentes
-    const map = {
-      'side-home': ['side-home', 'nav-home'],
-      'nav-home': ['side-home', 'nav-home'],
-      'side-movies': ['side-movies', 'nav-movies'],
-      'nav-movies': ['side-movies', 'nav-movies'],
-      'side-series': ['side-series', 'nav-series'],
-      'nav-series': ['side-series', 'nav-series'],
-      'side-list': ['side-list', 'nav-originals'], // Lista / Originais
-      'nav-originals': ['side-list', 'nav-originals']
-    };
-
-    const ids = map[targetId] || [targetId];
-    ids.forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.classList.add('active');
+  // Mobile hamburger
+  const hamburger = $('nav-hamburger');
+  const navLinks = $('nav-links');
+  if (hamburger && navLinks) {
+    hamburger.addEventListener('click', () => {
+      const isOpen = navLinks.style.display === 'flex';
+      navLinks.style.display = isOpen ? 'none' : 'flex';
+      navLinks.style.flexDirection = 'column';
+      navLinks.style.position = 'absolute';
+      navLinks.style.top = '100%';
+      navLinks.style.left = '0';
+      navLinks.style.right = '0';
+      navLinks.style.background = 'rgba(8,8,8,0.97)';
+      navLinks.style.padding = '16px 24px';
+      navLinks.style.borderTop = '1px solid rgba(255,215,0,0.2)';
+      hamburger.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
     });
   }
 
-  // Eventos Sidebar
-  sidebarItems.forEach(item => {
-    item.addEventListener('click', function(e) {
-      if (this.id === 'side-admin') return; // Admin abre link normal
-      setActive(this.id);
-    });
-  });
-
-  // Eventos Navbar
-  navLinks.forEach(link => {
+  // Nav link active state
+  document.querySelectorAll('.nav-link').forEach(link => {
     link.addEventListener('click', function(e) {
-      setActive(this.id);
+      document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+      this.classList.add('active');
     });
   });
 }
@@ -759,7 +743,7 @@ function initVideoPlayer() {
   }
 
   let isDragging = false;
-  
+
   // Eventos de Mouse
   progressContainer.addEventListener('mousedown', (e) => {
     isDragging = true;
@@ -970,28 +954,11 @@ function initUserSession() {
     const profile = JSON.parse(localStorage.getItem('goatcine_profile') || 'null');
     if (!user) return;
 
-    const sideAvatar = $('side-avatar');
+    const navAvatar = $('nav-avatar');
     const menuAvatarCircle = $('menu-avatar-circle');
     const menuUserName = $('menu-user-name');
     const menuUserEmail = $('menu-user-email');
     const dropdown = $('user-menu-dropdown');
-    const sideAdmin = $('side-admin');
-
-    // Mostra/Oculta botão admin na sidebar com base no cargo
-    if (sideAdmin) {
-      if (user.role === 'admin') {
-        sideAdmin.style.display = 'flex';
-      } else {
-        sideAdmin.style.display = 'none';
-      }
-    }
-
-    // Clique no avatar da sidebar direciona para perfis
-    if (sideAvatar) {
-      sideAvatar.addEventListener('click', () => {
-        window.location.href = '/profiles.html';
-      });
-    }
 
     // Populate user info
     if (menuUserName) menuUserName.textContent = profile ? profile.name : (user.name || 'Usuário');
@@ -1002,12 +969,12 @@ function initUserSession() {
       const emojiStyle = `
         width: 100%; height: 100%; border-radius: 50%;
         display: flex; align-items: center; justify-content: center;
-        font-size: 20px; background: ${profile.avatar_color}22;
+        font-size: 22px; background: ${profile.avatar_color}22;
       `;
-      if (sideAvatar) {
-        sideAvatar.innerHTML = `<span style="${emojiStyle}">${profile.avatar_icon}</span>`;
-        sideAvatar.style.background = profile.avatar_color + '22';
-        sideAvatar.style.borderColor = profile.avatar_color + '88';
+      if (navAvatar) {
+        navAvatar.innerHTML = `<span style="${emojiStyle}">${profile.avatar_icon}</span>`;
+        navAvatar.style.background = profile.avatar_color + '22';
+        navAvatar.style.borderColor = profile.avatar_color + '88';
       }
       if (menuAvatarCircle) {
         menuAvatarCircle.innerHTML = `<span style="${emojiStyle}; font-size:26px;">${profile.avatar_icon}</span>`;
@@ -1015,36 +982,53 @@ function initUserSession() {
         menuAvatarCircle.style.borderColor = profile.avatar_color + '88';
       }
     } else if (user.avatar) {
-      if (sideAvatar) {
-        sideAvatar.innerHTML = `<img src="${user.avatar}" alt="${user.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" />`;
+      if (navAvatar) {
+        navAvatar.innerHTML = `<img src="${user.avatar}" alt="${user.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" />`;
       }
       if (menuAvatarCircle) {
         menuAvatarCircle.innerHTML = `<img src="${user.avatar}" alt="${user.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" />`;
       }
     } else {
       const letter = (profile ? profile.name[0] : user.name?.[0] || 'G').toUpperCase();
-      if (sideAvatar) sideAvatar.innerHTML = `<span id="side-avatar-letter">${letter}</span>`;
+      if (navAvatar) navAvatar.innerHTML = `<span id="nav-avatar-letter">${letter}</span>`;
       if (menuAvatarCircle) menuAvatarCircle.innerHTML = `<span id="menu-avatar-letter">${letter}</span>`;
     }
 
-    // Trocar Perfil
+    // Toggle dropdown
+    if (navAvatar && dropdown) {
+      navAvatar.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdown.classList.toggle('show');
+      });
+      document.addEventListener('click', (e) => {
+        if (!dropdown.contains(e.target) && e.target !== navAvatar) {
+          dropdown.classList.remove('show');
+        }
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') dropdown.classList.remove('show');
+      });
+    }
+
+    // Trocar Perfil — now functional!
     $('menu-btn-switch')?.addEventListener('click', () => {
-      dropdown?.classList.remove('show');
+      dropdown.classList.remove('show');
       window.location.href = '/profiles.html';
     });
 
     $('menu-btn-profile')?.addEventListener('click', () => {
-      dropdown?.classList.remove('show');
+      dropdown.classList.remove('show');
       showToast(`👤 Perfil de ${(profile ? profile.name : user.name).split(' ')[0]}!`);
     });
 
     $('menu-btn-settings')?.addEventListener('click', () => {
-      dropdown?.classList.remove('show');
+      dropdown.classList.remove('show');
       showToast('⚙️ Abrindo configurações da conta...');
     });
 
-    // Função de Logout centralizada
-    const executeLogout = async () => {
+    // Logout
+    $('menu-btn-logout')?.addEventListener('click', async () => {
+      dropdown.classList.remove('show');
       const confirmed = confirm(`👋 Sair da conta?\n\n👤 ${user.name}`);
       if (!confirmed) return;
 
@@ -1057,7 +1041,7 @@ function initUserSession() {
             headers: { Authorization: `Bearer ${token}` },
           });
         }
-      } catch { /* silencioso */ }
+      } catch { /* servidor pode estar offline */ }
 
       localStorage.removeItem('goatcine_token');
       localStorage.removeItem('goatcine_user');
@@ -1066,10 +1050,7 @@ function initUserSession() {
       setTimeout(() => {
         window.location.href = '/login.html';
       }, 900);
-    };
-
-    $('menu-btn-logout')?.addEventListener('click', executeLogout);
-    $('header-logout-btn')?.addEventListener('click', executeLogout);
+    });
 
   } catch (e) {
     localStorage.removeItem('goatcine_token');
@@ -1078,6 +1059,7 @@ function initUserSession() {
     window.location.href = '/login.html';
   }
 }
+
 // ---- SUBSCRIPTION FLOW (USER) ----
 let allPlansList = [];
 let selectedPlanIdForSub = null;

@@ -78,7 +78,6 @@ body {
   overflow-x: hidden;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
-  padding-left: 80px; /* Recuo para a sidebar lateral */
 }
 
 img {
@@ -170,145 +169,93 @@ ul {
 }
 
 /* =============================================
-   SIDEBAR: MENU LATERAL ESQUERDO MINIMALISTA
-   ============================================= */
-.sidebar-navigation {
-  position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: 80px;
-  background: #060606;
-  border-right: 1px solid rgba(255, 215, 0, 0.05);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  padding: 30px 0;
-  z-index: 1010;
-  transition: width var(--transition-normal);
-}
-
-.sidebar-logo {
-  flex-shrink: 0;
-  margin-bottom: 20px;
-}
-
-.logo-icon-compact {
-  font-size: 24px;
-  filter: drop-shadow(0 0 10px var(--gold-glow));
-}
-
-.sidebar-menu {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 24px;
-  flex: 1;
-  justify-content: center;
-}
-
-.sidebar-item {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-secondary);
-  transition: all var(--transition-fast);
-  background: transparent;
-}
-
-.sidebar-item svg {
-  width: 20px;
-  height: 20px;
-  transition: transform var(--transition-fast);
-}
-
-.sidebar-item:hover {
-  color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.sidebar-item:hover svg {
-  transform: scale(1.08);
-}
-
-.sidebar-item.active {
-  color: #000;
-  background: var(--gold-primary);
-  box-shadow: 0 0 20px var(--gold-glow);
-}
-
-.sidebar-profile {
-  flex-shrink: 0;
-}
-
-/* =============================================
-   NAVBAR: CÁPSULA FLUTUANTE DE TOPO
+   NAVBAR
    ============================================= */
 .navbar {
   position: fixed;
   top: 0;
-  left: 80px; /* Alinhado após a sidebar */
+  left: 0;
   right: 0;
   z-index: 1000;
-  height: 80px;
-  display: flex;
-  align-items: center;
-  transition: all var(--transition-normal);
-  background: linear-gradient(to bottom, rgba(10,10,10,0.8) 0%, rgba(10,10,10,0) 100%);
-  padding: 0 48px;
+  height: var(--nav-height);
+  transition: background var(--transition-normal), backdrop-filter var(--transition-normal), box-shadow var(--transition-normal);
 }
 
 .navbar.scrolled {
-  background: transparent;
+  background: rgba(8, 8, 8, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 1px 0 var(--border-gold), 0 4px 20px rgba(0,0,0,0.4);
 }
 
 .nav-container {
   width: 100%;
+  padding: 0 48px;
   height: 100%;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 20px;
+  gap: 40px;
 }
 
-/* Cápsula de Navegação do Topo */
-.nav-capsule {
-  background: rgba(18, 18, 18, 0.6);
-  border: 1px solid rgba(255, 215, 0, 0.08);
-  border-radius: 30px;
-  padding: 4px 8px;
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+/* Logo */
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
+.logo-icon {
+  font-size: 22px;
+  filter: drop-shadow(0 0 8px var(--gold-glow));
+  transition: filter var(--transition-fast);
+}
+
+.logo-text {
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  color: var(--text-primary);
+}
+
+.logo-accent {
+  color: var(--gold-primary);
+  text-shadow: 0 0 20px var(--gold-glow);
+}
+
+.nav-logo:hover .logo-icon {
+  filter: drop-shadow(0 0 16px var(--gold-glow-strong));
+}
+
+/* Nav Links */
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
+  flex: 1;
 }
 
 .nav-link {
-  padding: 8px 20px;
-  border-radius: 20px;
-  font-size: 13.5px;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
   font-weight: 500;
   color: var(--text-secondary);
-  transition: all var(--transition-fast);
+  transition: color var(--transition-fast), background var(--transition-fast);
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.nav-link:hover {
+.nav-link:hover,
+.nav-link.active {
   color: var(--text-primary);
+  background: rgba(255,255,255,0.06);
 }
 
 .nav-link.active {
-  color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.08);
+  color: var(--gold-primary);
 }
 
 .nav-badge {
@@ -638,27 +585,30 @@ ul {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Buttons minimalistas */
+/* Buttons */
 .btn-primary {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 13px 30px;
-  background: #ffffff;
-  color: #080808;
+  gap: 8px;
+  padding: 14px 28px;
+  background: linear-gradient(135deg, var(--gold-accent), var(--gold-primary), var(--gold-bright));
+  background-size: 200% 200%;
+  color: #000;
   font-family: var(--font-primary);
   font-size: 15px;
   font-weight: 700;
-  border-radius: 30px;
+  border-radius: var(--radius-md);
   transition: all var(--transition-normal);
+  box-shadow: 0 4px 20px rgba(255,215,0,0.3);
+  letter-spacing: 0.2px;
   cursor: pointer;
   white-space: nowrap;
 }
 
 .btn-primary:hover {
   transform: translateY(-2px) scale(1.02);
-  background: #f0f0f0;
-  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(255,215,0,0.5);
+  background-position: right center;
 }
 
 .btn-primary:active {
@@ -668,25 +618,24 @@ ul {
 .btn-secondary {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 13px 26px;
-  background: rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  gap: 8px;
+  padding: 14px 24px;
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(10px);
   color: var(--text-primary);
   font-family: var(--font-primary);
   font-size: 15px;
   font-weight: 600;
-  border-radius: 30px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255,255,255,0.15);
   transition: all var(--transition-normal);
   cursor: pointer;
   white-space: nowrap;
 }
 
 .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255,255,255,0.18);
+  border-color: rgba(255,255,255,0.3);
   transform: translateY(-2px);
 }
 
@@ -697,20 +646,18 @@ ul {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: var(--text-primary);
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: var(--text-secondary);
   transition: all var(--transition-normal);
   cursor: pointer;
   flex-shrink: 0;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
 }
 
 .btn-info:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.2);
-  transform: translateY(-2px);
+  background: var(--gold-muted);
+  border-color: var(--border-gold);
+  color: var(--gold-primary);
 }
 
 /* Hero Indicators */
@@ -924,35 +871,35 @@ ul {
   width: 180px;
   cursor: pointer;
   position: relative;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   overflow: hidden;
   transition: transform var(--transition-normal);
 }
 
 .movie-card:hover {
-  transform: scale(1.04) translateY(-3px);
+  transform: scale(1.06) translateY(-4px);
   z-index: 10;
 }
 
 .movie-card:hover .card-poster {
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.7), var(--shadow-gold);
 }
 
 .card-poster {
   width: 100%;
   aspect-ratio: 2/3;
   object-fit: cover;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   background: var(--bg-card);
-  transition: all var(--transition-normal);
-  border: 1px solid rgba(255, 255, 255, 0.03);
+  transition: box-shadow var(--transition-normal);
+  border: 1px solid var(--border-subtle);
 }
 
 .card-overlay {
   position: absolute;
   inset: 0;
-  border-radius: 14px;
-  background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.3) 50%, transparent 80%);
+  border-radius: var(--radius-md);
+  background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 40%, transparent 70%);
   opacity: 0;
   transition: opacity var(--transition-normal);
   display: flex;
@@ -969,13 +916,13 @@ ul {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: #ffffff;
+  background: linear-gradient(135deg, var(--gold-accent), var(--gold-primary));
   display: flex;
   align-items: center;
   justify-content: center;
   align-self: center;
   margin-bottom: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 4px 16px rgba(255,215,0,0.4);
   transform: scale(0.8);
   transition: transform var(--transition-normal);
 }
@@ -2633,64 +2580,5 @@ ul {
   0%, 100% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.6); }
   50% { transform: scale(1.2); opacity: 0.5; box-shadow: 0 0 0 8px rgba(255, 215, 0, 0); }
 }
-/* =============================================
-   RESPONSIVIDADE: SIDEBAR E NAVBAR MOBILE (<= 768px)
-   ============================================= */
-@media (max-width: 768px) {
-  body {
-    padding-left: 0;
-    padding-bottom: 70px; /* Espaço para a bottom bar */
-  }
 
-  .sidebar-navigation {
-    top: auto;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    height: 65px;
-    border-right: none;
-    border-top: 1px solid rgba(255, 215, 0, 0.05);
-    flex-direction: row;
-    justify-content: space-around;
-    padding: 0 10px;
-    background: rgba(6, 6, 6, 0.96);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-radius: 20px 20px 0 0;
-  }
 
-  .sidebar-logo, .sidebar-profile {
-    display: none; /* Oculta a logo e o avatar na bottom bar para focar nos ícones */
-  }
-
-  .sidebar-menu {
-    flex-direction: row;
-    justify-content: space-around;
-    width: 100%;
-    gap: 0;
-    margin: 0;
-    padding: 0;
-  }
-
-  .sidebar-item {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-  }
-
-  .navbar {
-    left: 0;
-    padding: 0 16px;
-    height: 70px;
-    background: linear-gradient(to bottom, rgba(8,8,8,0.95) 0%, rgba(8,8,8,0) 100%);
-  }
-
-  .nav-capsule {
-    display: none; /* Esconde a cápsula de texto para deixar o topo limpo na busca mobile */
-  }
-
-  .nav-search-container {
-    flex: 1;
-  }
-}

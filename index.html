@@ -43,71 +43,45 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- ========== SIDEBAR: MENU LATERAL ESQUERDO MINIMALISTA ========== -->
-  <aside class="sidebar-navigation" aria-label="Menu principal">
-    <div class="sidebar-logo">
-      <a href="#" class="sidebar-logo-link" aria-label="GOATCINE">
-        <img src="/uploads/logo.png?v=1" style="max-height: 24px; width: auto; object-fit: contain; display: none;" onerror="this.style.display='none'; document.getElementById('sidebar-logo-fallback').style.display='inline-block';" onload="this.style.display='inline-block'; document.getElementById('sidebar-logo-fallback').style.display='none';" />
-        <span id="sidebar-logo-fallback" class="logo-icon-compact">🏆</span>
-      </a>
-    </div>
-    
-    <nav class="sidebar-menu">
-      <a href="#" class="sidebar-item active" id="side-home" title="Início">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-      </a>
-      <a href="#filmes" class="sidebar-item" id="side-movies" title="Filmes">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>
-      </a>
-      <a href="#series" class="sidebar-item" id="side-series" title="Séries">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>
-      </a>
-      <a href="#" class="sidebar-item" id="side-list" title="Minha Lista">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z"/><path d="M9 12l2 2 4-4"/></svg>
-      </a>
-      <a href="/admin" class="sidebar-item" id="side-admin" title="Painel Admin" style="display: none;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      </a>
-    </nav>
-    
-    <div class="sidebar-profile">
-      <div class="nav-avatar" id="side-avatar" aria-label="Perfil do usuário" style="cursor: pointer; width: 34px; height: 34px; font-size: 0.9rem;">
-        <span id="side-avatar-letter">G</span>
-      </div>
-    </div>
-  </aside>
 
-  <!-- ========== NAVBAR: CÁPSULA FLUTUANTE DE TOPO ========== -->
+  <!-- ========== NAVBAR ========== -->
   <nav class="navbar" id="navbar" role="navigation" aria-label="Navegação principal">
     <div class="nav-container">
-      
-      <!-- Nav Links: Cápsula centralizada -->
-      <div class="nav-capsule">
-        <ul class="nav-links" id="nav-links" role="list" style="margin: 0; padding: 0;">
-          <li><a href="#" class="nav-link active" id="nav-home">Início</a></li>
-          <li><a href="#filmes" class="nav-link" id="nav-movies">Filmes</a></li>
-          <li><a href="#series" class="nav-link" id="nav-series">Séries</a></li>
-          <li><a href="#originais" class="nav-link" id="nav-originals">Originais</a></li>
-        </ul>
-      </div>
 
-      <!-- Right Actions: Busca e Menu de Logout -->
+      <!-- Logo -->
+      <a href="#" class="nav-logo" id="nav-logo-link" aria-label="GOATCINE - Página inicial">
+        <img src="/uploads/logo.png?v=1" style="max-height: 38px; display: none;" onerror="this.style.display='none'; document.getElementById('nav-logo-fallback').style.display='inline-flex';" onload="this.style.display='block'; document.getElementById('nav-logo-fallback').style.display='none';" />
+        <span id="nav-logo-fallback" style="display: inline-flex; align-items: center; gap: 8px;">
+          <span class="logo-icon">🏆</span>
+          <span class="logo-text">GOAT<span class="logo-accent">CINE</span></span>
+        </span>
+      </a>
+
+      <!-- Nav Links -->
+      <ul class="nav-links" id="nav-links" role="list">
+        <li><a href="#" class="nav-link active" id="nav-home">Início</a></li>
+        <li><a href="#filmes" class="nav-link" id="nav-movies">Filmes</a></li>
+        <li><a href="#series" class="nav-link" id="nav-series">Séries</a></li>
+        <li><a href="#originais" class="nav-link" id="nav-originals">
+          <span class="nav-badge">GOAT</span> Originais
+        </a></li>
+      </ul>
+
+      <!-- Right Actions -->
       <div class="nav-actions" style="position: relative; gap: 16px;">
+        <!-- Container de Busca Inline (Estilo Netflix) -->
         <div class="nav-search-container" id="nav-search-container">
           <div class="search-pill">
             <svg class="search-pill-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
             </svg>
-            <input type="text" id="search-input" class="search-pill-input" placeholder="Títulos, gêneros..." autocomplete="off" />
+            <input type="text" id="search-input" class="search-pill-input" placeholder="Títulos, gente, gêneros..." autocomplete="off" />
             <button class="search-pill-clear hidden" id="search-pill-clear" aria-label="Limpar busca">✕</button>
           </div>
         </div>
 
-        <div class="user-menu-btn" id="user-menu-btn" style="position: relative; display: flex; align-items: center;">
-          <svg class="menu-icon logout-icon" id="header-logout-btn" style="width: 22px; height: 22px; cursor: pointer; color: var(--text-secondary); transition: color 0.2s;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" title="Sair">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
-          </svg>
-        </div>
+        <div class="nav-avatar" id="nav-avatar" aria-label="Perfil do usuário">
+          <span id="nav-avatar-letter">G</span>
         </div>
 
         <!-- Menu de Conta Dropdown -->

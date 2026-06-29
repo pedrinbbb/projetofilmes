@@ -13,6 +13,7 @@ const jwt        = require('jsonwebtoken');
 const fetch      = require('node-fetch');
 const cors       = require('cors');
 const nodemailer = require('nodemailer');
+const { Pool }  = require('pg');
 const initSqlJs  = require('sql.js');
 const crypto     = require('crypto');
 const https      = require('https');
@@ -20,6 +21,11 @@ const https      = require('https');
 const app        = express();
 const PORT       = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'goatcine_dev_secret';
+
+// URL de conexão do PostgreSQL
+const DATABASE_URL = process.env.DATABASE_URL;
+
+// Fallback para SQLite em desenvolvimento se DATABASE_URL não existir
 const PERSISTENT_DIR = fs.existsSync('/data') ? '/data' : (fs.existsSync('/var/data') ? '/var/data' : null);
 const DB_PATH    = PERSISTENT_DIR ? path.join(PERSISTENT_DIR, 'goatcine.db') : path.join(__dirname, 'goatcine.db');
 
@@ -195,124 +201,152 @@ async function sendResetPasswordEmail(to, name, code) {
 // =============================================
 let db;
 
+// =============================================
+//  DATABASE SETUP (PostgreSQL / SQLite fallback)
+// =============================================
+let db;      // Armazena a base SQLite se usado fallback
+let pgPool;  // Armazena o Pool do PostgreSQL
+const IS_POSTGRES = !!DATABASE_URL;
+
 async function initDatabase() {
   console.log(`[DB INIT] Tentando inicializar banco de dados...`);
-  console.log(`[DB INIT] PERSISTENT_DIR detectado: ${PERSISTENT_DIR}`);
-  console.log(`[DB INIT] DB_PATH escolhido: ${DB_PATH}`);
-  console.log(`[DB INIT] /data existe? ${fs.existsSync('/data')}, /var/data existe? ${fs.existsSync('/var/data')}`);
+  
+  if (IS_POSTGRES) {
+    console.log(`[DB INIT] Modo de produção PostgreSQL ativado.`);
+    pgPool = new Pool({
+      connectionString: DATABASE_URL,
+      ssl: { rejectUnauthorized: false } // Requerido para conexão segura no Render
+    });
 
-  const SQL = await initSqlJs();
-
-  if (fs.existsSync(DB_PATH)) {
-    console.log(`[DB INIT] Carregando banco de dados existente do disco.`);
-    db = new SQL.Database(fs.readFileSync(DB_PATH));
+    // Testar conexão
+    try {
+      const client = await pgPool.connect();
+      console.log(`[DB INIT] Conexão com o banco PostgreSQL efetuada com sucesso!`);
+      client.release();
+    } catch (err) {
+      console.error(`[DB INIT] FALHA ao conectar no PostgreSQL:`, err.message);
+      process.exit(1);
+    }
   } else {
-    console.log(`[DB INIT] Banco de dados não encontrado no caminho. Criando um novo.`);
-    db = new SQL.Database();
+    console.log(`[DB INIT] Modo de desenvolvimento local SQLite ativado.`);
+    const SQL = await initSqlJs();
+    if (fs.existsSync(DB_PATH)) {
+      console.log(`[DB INIT] Carregando banco de dados SQLite existente do disco.`);
+      db = new SQL.Database(fs.readFileSync(DB_PATH));
+    } else {
+      console.log(`[DB INIT] Banco SQLite não encontrado no caminho. Criando um novo.`);
+      db = new SQL.Database();
+    }
   }
 
-  db.run(`
+  // Executar criação de tabelas e seeds dinamicamente
+  await runMigrationsAndSeeds();
+}
+
+async function runMigrationsAndSeeds() {
+  // Criar tabelas usando dbRunSync que é compatível com ambos
+  await dbRunSync(`
     CREATE TABLE IF NOT EXISTS users (
-      id            INTEGER PRIMARY KEY AUTOINCREMENT,
-      name          TEXT    NOT NULL,
-      email         TEXT    UNIQUE,
-      password_hash TEXT,
-      discord_id    TEXT    UNIQUE,
-      discord_tag   TEXT,
-      avatar        TEXT,
-      method        TEXT    NOT NULL DEFAULT 'email',
-      created_at    TEXT    NOT NULL DEFAULT (datetime('now')),
-      updated_at    TEXT    NOT NULL DEFAULT (datetime('now'))
-    );
-  `);
-
-  db.run(`
+      id            SERIAL PRIMARY KEY,
+      name          VARCHAR(255) NOT NULL,
+      email         VARCHAR(255) UNIQUE,
+      password_hash VARCHAR(255),
+      discord_id    VARCHAR(255) UNIQUE,
+      discord_tag   VARCHAR(255),
+      avatar        VARCHAR(255),
+      method        VARCHAR(50) NOT NULL DEFAULT 'email',
+      created_at    VARCHAR(100) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at    VARCHAR(100) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      sub_active        INTEGER DEFAULT 0,
+      sub_plan_id       INTEGER DEFAULT NULL,
+      sub_expires_at    VARCHAR(100) DEFAULT NULL,
+      sub_activated_at  VARCHAR(100) DEFAULT NULL,
+      pending_txid      VARCHAR(255) DEFAULT NULL,
+      pending_plan_id   INTEGER DEFAULT NULL,
+      has_used_trial    INTEGER DEFAULT 0
+    )`);
+  await dbRunSync(`
     CREATE TABLE IF NOT EXISTS sessions (
-      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      id         SERIAL PRIMARY KEY,
       user_id    INTEGER NOT NULL,
-      token      TEXT    NOT NULL UNIQUE,
-      created_at TEXT    NOT NULL DEFAULT (datetime('now')),
-      expires_at TEXT    NOT NULL
-    );
-  `);
+      token      VARCHAR(255) NOT NULL UNIQUE,
+      created_at VARCHAR(100) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      expires_at VARCHAR(100) NOT NULL
+    )`);
 
-  db.run(`
+  await dbRunSync(`
     CREATE TABLE IF NOT EXISTS verification_codes (
-      id          INTEGER PRIMARY KEY AUTOINCREMENT,
-      email       TEXT    NOT NULL,
-      name        TEXT    NOT NULL,
-      pass_hash   TEXT    NOT NULL,
-      code        TEXT    NOT NULL,
+      id          SERIAL PRIMARY KEY,
+      email       VARCHAR(255) NOT NULL,
+      name        VARCHAR(255) NOT NULL,
+      pass_hash   VARCHAR(255) NOT NULL,
+      code        VARCHAR(50) NOT NULL,
       attempts    INTEGER NOT NULL DEFAULT 0,
-      expires_at  TEXT    NOT NULL,
-      created_at  TEXT    NOT NULL DEFAULT (datetime('now'))
-    );
-  `);
+      expires_at  VARCHAR(100) NOT NULL,
+      created_at  VARCHAR(100) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )`);
 
-  db.run(`
+  await dbRunSync(`
     CREATE TABLE IF NOT EXISTS movies (
-      id          INTEGER PRIMARY KEY AUTOINCREMENT,
-      title       TEXT    NOT NULL,
+      id          SERIAL PRIMARY KEY,
+      title       VARCHAR(255) NOT NULL,
       year        INTEGER NOT NULL,
-      duration    TEXT    NOT NULL,
-      rating      REAL    NOT NULL,
-      genre       TEXT    NOT NULL,
-      desc        TEXT    NOT NULL,
-      poster      TEXT    NOT NULL,
-      backdrop    TEXT    NOT NULL,
-      director    TEXT    NOT NULL,
-      cast        TEXT    NOT NULL,
-      category    TEXT    NOT NULL,
-      videoUrl    TEXT    NOT NULL
-    );
-  `);
+      duration    VARCHAR(100) NOT NULL,
+      rating      DOUBLE PRECISION NOT NULL,
+      genre       VARCHAR(255) NOT NULL,
+      "desc"      TEXT NOT NULL,
+      poster      VARCHAR(500) NOT NULL,
+      backdrop    VARCHAR(500) NOT NULL,
+      director    VARCHAR(255) NOT NULL,
+      cast        TEXT NOT NULL,
+      category    VARCHAR(100) NOT NULL,
+      videoUrl    VARCHAR(500) NOT NULL
+    )`);
 
-  db.run(`
+  await dbRunSync(`
     CREATE TABLE IF NOT EXISTS profiles (
-      id           INTEGER PRIMARY KEY AUTOINCREMENT,
+      id           SERIAL PRIMARY KEY,
       user_id      INTEGER NOT NULL,
-      name         TEXT    NOT NULL,
-      avatar_color TEXT    NOT NULL DEFAULT '#FFD700',
-      avatar_icon  TEXT    NOT NULL DEFAULT '🎬',
+      name         VARCHAR(255) NOT NULL,
+      avatar_color VARCHAR(50) NOT NULL DEFAULT '#FFD700',
+      avatar_icon  VARCHAR(50) NOT NULL DEFAULT '🎬',
       is_kid       INTEGER NOT NULL DEFAULT 0,
-      created_at   TEXT    NOT NULL DEFAULT (datetime('now'))
-    );
-  `);
+      created_at   VARCHAR(100) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )`);
 
-  db.run(`
+  await dbRunSync(`
     CREATE TABLE IF NOT EXISTS plans (
-      id            INTEGER PRIMARY KEY AUTOINCREMENT,
-      name          TEXT NOT NULL,
-      price         REAL NOT NULL,
+      id            SERIAL PRIMARY KEY,
+      name          VARCHAR(255) NOT NULL,
+      price         DOUBLE PRECISION NOT NULL,
       screens       INTEGER NOT NULL,
       duration_days INTEGER NOT NULL DEFAULT 30
-    );
-  `);
+    )`);
 
-  // Migração de coluna duration_days se não existir
-  try { db.run('ALTER TABLE plans ADD COLUMN duration_days INTEGER DEFAULT 30'); } catch (e) {}
-
-  // Migrações de colunas de assinatura se não existirem
-  try { db.run('ALTER TABLE users ADD COLUMN sub_active INTEGER DEFAULT 0'); } catch (e) {}
-  try { db.run('ALTER TABLE users ADD COLUMN sub_plan_id INTEGER DEFAULT NULL'); } catch (e) {}
-  try { db.run('ALTER TABLE users ADD COLUMN sub_expires_at TEXT DEFAULT NULL'); } catch (e) {}
-  try { db.run('ALTER TABLE users ADD COLUMN sub_activated_at TEXT DEFAULT NULL'); } catch (e) {}
-  try { db.run('ALTER TABLE users ADD COLUMN pending_txid TEXT DEFAULT NULL'); } catch (e) {}
-  try { db.run('ALTER TABLE users ADD COLUMN pending_plan_id INTEGER DEFAULT NULL'); } catch (e) {}
-  try { db.run('ALTER TABLE users ADD COLUMN has_used_trial INTEGER DEFAULT 0'); } catch (e) {}
-
-  db.run(`
+  await dbRunSync(`
     CREATE TABLE IF NOT EXISTS payment_logs (
-      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      id         SERIAL PRIMARY KEY,
       user_id    INTEGER,
       plan_id    INTEGER,
-      txid       TEXT UNIQUE,
-      amount     REAL,
-      status     TEXT DEFAULT 'pending',
-      created_at TEXT NOT NULL DEFAULT (datetime('now')),
-      paid_at    TEXT
-    );
-  `);
+      txid       VARCHAR(255) UNIQUE,
+      amount     DOUBLE PRECISION,
+      status     VARCHAR(50) DEFAULT 'pending',
+      created_at VARCHAR(100) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      paid_at    VARCHAR(100)
+    )`);
+
+  // Em PostgreSQL as colunas de migração já foram declaradas no CREATE TABLE IF NOT EXISTS users. 
+  // Caso estejamos em SQLite, garantimos rodando:
+  if (!IS_POSTGRES) {
+    try { db.run('ALTER TABLE plans ADD COLUMN duration_days INTEGER DEFAULT 30'); } catch (e) {}
+    try { db.run('ALTER TABLE users ADD COLUMN sub_active INTEGER DEFAULT 0'); } catch (e) {}
+    try { db.run('ALTER TABLE users ADD COLUMN sub_plan_id INTEGER DEFAULT NULL'); } catch (e) {}
+    try { db.run('ALTER TABLE users ADD COLUMN sub_expires_at TEXT DEFAULT NULL'); } catch (e) {}
+    try { db.run('ALTER TABLE users ADD COLUMN sub_activated_at TEXT DEFAULT NULL'); } catch (e) {}
+    try { db.run('ALTER TABLE users ADD COLUMN pending_txid TEXT DEFAULT NULL'); } catch (e) {}
+    try { db.run('ALTER TABLE users ADD COLUMN pending_plan_id INTEGER DEFAULT NULL'); } catch (e) {}
+    try { db.run('ALTER TABLE users ADD COLUMN has_used_trial INTEGER DEFAULT 0'); } catch (e) {}
+  }
 
   // Seed de planos
   try {
@@ -707,85 +741,272 @@ async function initDatabase() {
         [m.title, m.year, m.duration, m.rating, m.genre, m.desc, m.poster, m.backdrop, m.director, m.cast, m.category, m.videoUrl]
       );
     });
-    saveDb();
-    console.log(`  ✅ ${defaultMovies.length} filmes semeados com sucesso!`);
-  }
-
-  saveDb();
-  console.log('  ✅ Banco SQLite iniciado');
-}
-
-const { exec } = require('child_process');
-
-// Controlar concorrência de push para evitar múltiplos processos de Git rodando ao mesmo tempo
-let isPushingDb = false;
-let pendingPush = false;
-
-function saveDb() {
-  fs.writeFileSync(DB_PATH, Buffer.from(db.export()));
-
-  // Se o token do GitHub estiver configurado nas variáveis de ambiente do Render
-  const token = process.env.GITHUB_TOKEN;
-  const repo = process.env.GITHUB_REPO || 'pedrinbbb/projetofilmes';
-  
-  if (token) {
-    if (isPushingDb) {
-      pendingPush = true;
-      return;
+    // Seed de planos
+    try {
+      const plansCount = dbAll('SELECT COUNT(*) as count FROM plans')[0]?.count ?? 0;
+      if (parseInt(plansCount) === 0) {
+        console.log('  📦 Semeando planos de assinatura padrão...');
+        dbRun("INSERT INTO plans (id, name, price, screens, duration_days) VALUES (1, 'Bronze', 14.90, 1, 30)");
+        dbRun("INSERT INTO plans (id, name, price, screens, duration_days) VALUES (2, 'Prata', 24.90, 2, 30)");
+        dbRun("INSERT INTO plans (id, name, price, screens, duration_days) VALUES (3, 'Ouro', 44.90, 5, 30)");
+      }
+    } catch (err) {
+      console.error('Erro ao semear planos:', err);
     }
 
-    isPushingDb = true;
-    
-    // Configura a URL de autenticação com o Token
-    const remoteUrl = `https://x-access-token:${token}@github.com/${repo}.git`;
-    
-    // Configura o Git e faz o commit/push apenas do arquivo do banco de dados
-    const cmd = `git config user.email "bot@goatcine.com" && git config user.name "Goatcine DB Bot" && git add goatcine.db && git commit -m "db: atualizacao automatica do banco de dados [skip ci]" && git push ${remoteUrl} main`;
+    // Seed de filmes se a tabela estiver vazia
+    try {
+      const count = dbAll('SELECT COUNT(*) as count FROM movies')[0]?.count ?? 0;
+      if (parseInt(count) === 0) {
+        console.log('  📦 Populando tabela de filmes (Seeding)...');
+        const defaultMovies = [
+          {
+            title: "O Poderoso Chefão",
+            year: 1972,
+            duration: "2h 55min",
+            rating: 9.2,
+            genre: "Drama / Crime",
+            desc: "O patriarca envelhecido de uma dinastia do crime organizado transfere o controle de seu império clandestino para seu filho relutante.",
+            poster: "https://image.tmdb.org/t/p/w500/3bhkrj6UgS6Ol4i4dFIUpLWZA6C.jpg",
+            backdrop: "https://image.tmdb.org/t/p/w1280/tmU7K3bnjWmq52dStandardChefao.jpg",
+            director: "Francis Ford Coppola",
+            cast: "Marlon Brando, Al Pacino, James Caan",
+            category: "drama",
+            videoUrl: "https://www.youtube.com/watch?v=sY1S34973zA"
+          },
+          {
+            title: "Interestelar",
+            year: 2014,
+            duration: "2h 49min",
+            rating: 8.6,
+            genre: "Ficção Científica / Drama",
+            desc: "Uma equipe de exploradores viaja através de um buraco de minhoca no espaço na tentativa de garantir a sobrevivência da humanidade.",
+            poster: "https://image.tmdb.org/t/p/w500/gEU2Qjdcd2wGZ2qA2vK2jHOJu4R.jpg",
+            backdrop: "https://image.tmdb.org/t/p/w1280/xJHokMbljv35158CO8ls16ZBrOI.jpg",
+            director: "Christopher Nolan",
+            cast: "Matthew McConaughey, Anne Hathaway, Jessica Chastain",
+            category: "scifi",
+            videoUrl: "https://www.youtube.com/watch?v=zSWdZAibgEg"
+          },
+          {
+            title: "Batman: O Cavaleiro das Trevas",
+            year: 2008,
+            duration: "2h 32min",
+            rating: 9.0,
+            genre: "Ação / Policial",
+            desc: "Quando o perigoso Coringa surge espalhando o caos por Gotham, Batman precisa usar todas as suas habilidades para detê-lo.",
+            poster: "https://image.tmdb.org/t/p/w500/qJ2tWGBYiZpqC1tQ84j1v7huUHG.jpg",
+            backdrop: "https://image.tmdb.org/t/p/w1280/nMKdUUepw0i7IOCOERw5u68FYRq.jpg",
+            director: "Christopher Nolan",
+            cast: "Christian Bale, Heath Ledger, Aaron Eckhart",
+            category: "trending",
+            videoUrl: "https://www.youtube.com/watch?v=LDG9bisJEaI"
+          },
+          {
+            title: "Ilha do Medo",
+            year: 2010,
+            duration: "2h 18min",
+            rating: 8.2,
+            genre: "Mistério / Thriller",
+            desc: "Nos anos 1950, um xará de marechal dos EUA investiga o desaparecimento de um assassino que escapou de um hospital psiquiátrico.",
+            poster: "https://image.tmdb.org/t/p/w500/4of9205j6v6X4oD4c5D2D5d5a.jpg",
+            backdrop: "https://image.tmdb.org/t/p/w1280/vGv9v8mGjZq7B5Wc8mFzK2jHOJu.jpg",
+            director: "Martin Scorsese",
+            cast: "Leonardo DiCaprio, Mark Ruffalo, Ben Kingsley",
+            category: "thriller",
+            videoUrl: "https://www.youtube.com/watch?v=5oGyGQZoBYg"
+          },
+          {
+            title: "Thor: Amor e Trovão",
+            year: 2022,
+            duration: "1h 59min",
+            rating: 6.3,
+            genre: "Ação / Fantasia",
+            desc: "Thor embarca em uma jornada diferente de tudo que já enfrentou — uma busca pela paz interior. Mas seu retiro é interrompido por um assassino galáctico chamado Gorr.",
+            poster: "https://image.tmdb.org/t/p/w500/pIkRyD18kl4FhoCNQuWxWu5cBLM.jpg",
+            backdrop: "https://image.tmdb.org/t/p/w1280/57lGJCPuMjCDfRGCsJkEwN9XBKJ.jpg",
+            director: "Taika Waititi",
+            cast: "Chris Hemsworth, Natalie Portman, Christian Bale",
+            category: "action",
+            videoUrl: "https://www.youtube.com/watch?v=Go8nTmfrQd8"
+          }
+        ];
 
-    exec(cmd, (error, stdout, stderr) => {
-      isPushingDb = false;
-      if (error) {
-        console.error('[DB SYNC] Erro ao sincronizar com GitHub:', error.message);
-      } else {
-        console.log('[DB SYNC] Banco de dados sincronizado com sucesso no GitHub!');
+        defaultMovies.forEach(m => {
+          dbRun(
+            `INSERT INTO movies (title, year, duration, rating, genre, "desc", poster, backdrop, director, cast, category, videoUrl) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [m.title, m.year, m.duration, m.rating, m.genre, m.desc, m.poster, m.backdrop, m.director, m.cast, m.category, m.videoUrl]
+          );
+        });
+        console.log(`  ✅ ${defaultMovies.length} filmes semeados com sucesso!`);
       }
+    } catch (err) {
+      console.error('Erro ao semear filmes:', err);
+    }
+  }
 
-      // Se havia alguma gravação pendente enquanto este push rodava, executa novamente
-      if (pendingPush) {
-        pendingPush = false;
-        saveDb();
-      }
-    });
+  console.log('  ✅ Banco de dados pronto e iniciado');
+}
+
+const deasync = require('deasync');
+
+// Tradutor de queries de SQLite (?) para PostgreSQL ($1, $2, $3...)
+function translateQuery(sql) {
+  if (!IS_POSTGRES) {
+    // SQLite: substitui "desc" com aspas por desc sem aspas caso precise
+    return sql;
+  }
+  
+  // PostgreSQL: substituir placeholders ? por $1, $2, $3...
+  let paramCount = 0;
+  let translatedSql = sql.replace(/\?/g, () => {
+    paramCount++;
+    return `$${paramCount}`;
+  });
+
+  // Tradução de funções e termos específicos
+  translatedSql = translatedSql.replace(/datetime\('now'\)/gi, 'CURRENT_TIMESTAMP');
+  translatedSql = translatedSql.replace(/like/gi, 'ILIKE'); // LIKE case-insensitive no Postgres é ILIKE
+  
+  return translatedSql;
+}
+
+// Helper para rodar query de migração sincronizada
+async function dbRunSync(sql) {
+  const translated = translateQuery(sql);
+  if (IS_POSTGRES) {
+    await pgPool.query(translated);
+  } else {
+    db.run(translated);
+    saveDb();
   }
 }
 
-// ---- DB Helpers ----
-function dbGet(sql, params = []) {
-  try {
-    const stmt = db.prepare(sql);
-    stmt.bind(params);
-    const row = stmt.step() ? stmt.getAsObject() : null;
-    stmt.free();
-    return row;
-  } catch { return null; }
+function saveDb() {
+  if (!IS_POSTGRES && db) {
+    fs.writeFileSync(DB_PATH, Buffer.from(db.export()));
+  }
 }
 
-function dbRun(sql, params = []) {
-  db.run(sql, params);
-  saveDb();
-  const res = db.exec('SELECT last_insert_rowid() as id');
-  return res[0]?.values[0][0] ?? null;
+// ---- DB Helpers Síncronos compatíveis com deasync para PostgreSQL ----
+
+function dbGet(sql, params = []) {
+  const translated = translateQuery(sql);
+  
+  if (IS_POSTGRES) {
+    let done = false;
+    let result = null;
+    let error = null;
+
+    pgPool.query(translated, params, (err, res) => {
+      if (err) error = err;
+      else result = res.rows[0] || null;
+      done = true;
+    });
+
+    // Forçar o event loop a rodar até a query PostgreSQL assíncrona terminar
+    while (!done) {
+      deasync.runLoopOnce();
+    }
+
+    if (error) {
+      console.error('[DB PG GET ERROR]', error.message, 'Query:', translated);
+      return null;
+    }
+    return result;
+  } else {
+    try {
+      const stmt = db.prepare(translated);
+      stmt.bind(params);
+      const row = stmt.step() ? stmt.getAsObject() : null;
+      stmt.free();
+      return row;
+    } catch (err) {
+      console.error('[DB SQLITE GET ERROR]', err);
+      return null;
+    }
+  }
 }
 
 function dbAll(sql, params = []) {
-  try {
-    const stmt = db.prepare(sql);
-    stmt.bind(params);
-    const rows = [];
-    while (stmt.step()) rows.push(stmt.getAsObject());
-    stmt.free();
-    return rows;
-  } catch { return []; }
+  const translated = translateQuery(sql);
+
+  if (IS_POSTGRES) {
+    let done = false;
+    let result = [];
+    let error = null;
+
+    pgPool.query(translated, params, (err, res) => {
+      if (err) error = err;
+      else result = res.rows || [];
+      done = true;
+    });
+
+    while (!done) {
+      deasync.runLoopOnce();
+    }
+
+    if (error) {
+      console.error('[DB PG ALL ERROR]', error.message, 'Query:', translated);
+      return [];
+    }
+    return result;
+  } else {
+    try {
+      const stmt = db.prepare(translated);
+      stmt.bind(params);
+      const rows = [];
+      while (stmt.step()) rows.push(stmt.getAsObject());
+      stmt.free();
+      return rows;
+    } catch (err) {
+      console.error('[DB SQLITE ALL ERROR]', err);
+      return [];
+    }
+  }
+}
+
+function dbRun(sql, params = []) {
+  const translated = translateQuery(sql);
+
+  if (IS_POSTGRES) {
+    let done = false;
+    let lastId = null;
+    let error = null;
+
+    // Se for um insert, adicionar RETURNING id para sabermos o last_insert_rowid
+    let finalSql = translated;
+    if (finalSql.trim().toUpperCase().startsWith('INSERT ')) {
+      finalSql += ' RETURNING id';
+    }
+
+    pgPool.query(finalSql, params, (err, res) => {
+      if (err) error = err;
+      else lastId = res.rows[0]?.id || null;
+      done = true;
+    });
+
+    while (!done) {
+      deasync.runLoopOnce();
+    }
+
+    if (error) {
+      console.error('[DB PG RUN ERROR]', error.message, 'Query:', finalSql);
+      return null;
+    }
+    return lastId;
+  } else {
+    try {
+      db.run(translated, params);
+      saveDb();
+      const res = db.exec('SELECT last_insert_rowid() as id');
+      return res[0]?.values[0][0] ?? null;
+    } catch (err) {
+      console.error('[DB SQLITE RUN ERROR]', err);
+      return null;
+    }
+  }
 }
 
 // Generate a 6-digit OTP

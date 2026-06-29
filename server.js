@@ -712,9 +712,20 @@ app.post('/api/auth/register', async (req, res) => {
 
     // Enviar email (ou logar no console em modo dev)
     if (isEmailConfigured()) {
-      await sendVerificationEmail(cleanEmail, name.trim(), code);
-      console.log(`[EMAIL] ✅ Código enviado para: ${cleanEmail}`);
-      return res.json({ step: 'verify', email: cleanEmail });
+      try {
+        await sendVerificationEmail(cleanEmail, name.trim(), code);
+        console.log(`[EMAIL] ✅ Código enviado com sucesso para: ${cleanEmail}`);
+        return res.json({ step: 'verify', email: cleanEmail });
+      } catch (mailErr) {
+        console.error(`[EMAIL ERROR] Falha no envio para ${cleanEmail}. Erro:`, mailErr.message);
+        console.log(`[EMAIL] ⚠️ Fallback ativo — Exibindo código na tela devido a bloqueios de rede: ${code}`);
+        return res.json({
+          step: 'verify',
+          email: cleanEmail,
+          dev_code: code,
+          dev_message: 'Servidor SMTP bloqueado na nuvem. Use o código temporário exibido para validar sua conta.',
+        });
+      }
     } else {
       // MODO DEV: email não configurado, retorna código no response
       console.log(`[EMAIL] ⚠️  Dev mode — Código para ${cleanEmail}: ${code}`);
@@ -728,7 +739,7 @@ app.post('/api/auth/register', async (req, res) => {
 
   } catch (err) {
     console.error('[REGISTER ERROR]', err);
-    return res.status(500).json({ error: 'Erro ao enviar código de verificação' });
+    return res.status(500).json({ error: 'Erro ao cadastrar usuário.' });
   }
 });
 
@@ -845,9 +856,15 @@ app.post('/api/auth/resend-code', async (req, res) => {
     saveDb();
 
     if (isEmailConfigured()) {
-      await sendVerificationEmail(cleanEmail, record.name, newCode);
-      console.log(`[EMAIL] ✅ Código reenviado para: ${cleanEmail}`);
-      return res.json({ success: true });
+      try {
+        await sendVerificationEmail(cleanEmail, record.name, newCode);
+        console.log(`[EMAIL] ✅ Código reenviado com sucesso para: ${cleanEmail}`);
+        return res.json({ success: true });
+      } catch (mailErr) {
+        console.error(`[EMAIL ERROR] Falha no reenvio para ${cleanEmail}. Erro:`, mailErr.message);
+        console.log(`[EMAIL] ⚠️ Fallback ativo no reenvio — Código: ${newCode}`);
+        return res.json({ success: true, dev_code: newCode });
+      }
     } else {
       console.log(`[EMAIL] ⚠️  Dev mode — Novo código para ${cleanEmail}: ${newCode}`);
       return res.json({ success: true, dev_code: newCode });
@@ -855,7 +872,7 @@ app.post('/api/auth/resend-code', async (req, res) => {
 
   } catch (err) {
     console.error('[RESEND CODE ERROR]', err);
-    return res.status(500).json({ error: 'Erro ao reenviar código' });
+    return res.status(500).json({ error: 'Erro ao reenviar código.' });
   }
 });
 

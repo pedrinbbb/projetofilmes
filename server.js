@@ -121,6 +121,73 @@ async function sendVerificationEmail(to, name, code) {
   });
 }
 
+async function sendResetPasswordEmail(to, name, code) {
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;background:#080808;font-family:'Inter',Arial,sans-serif;">
+  <div style="max-width:520px;margin:0 auto;padding:40px 20px;">
+
+    <!-- Header -->
+    <div style="text-align:center;margin-bottom:32px;">
+      <div style="font-size:48px;margin-bottom:12px;">🏆</div>
+      <div style="font-size:28px;font-weight:900;color:#F5F5F5;letter-spacing:-0.5px;">
+        GOAT<span style="color:#FFD700;">CINE</span>
+      </div>
+    </div>
+
+    <!-- Card -->
+    <div style="background:#111111;border:1px solid rgba(255,215,0,0.2);border-radius:20px;padding:40px 36px;">
+
+      <h1 style="font-size:22px;font-weight:800;color:#F5F5F5;margin:0 0 10px;letter-spacing:-0.3px;">
+        Recupere sua senha
+      </h1>
+      <p style="color:#A0A0A0;font-size:15px;line-height:1.6;margin:0 0 32px;">
+        Olá, <strong style="color:#F5F5F5;">${name}</strong>! Use o código abaixo para redefinir sua senha na GOATCINE.
+      </p>
+
+      <!-- OTP Code -->
+      <div style="background:#0a0a0a;border:1px solid rgba(255,215,0,0.3);border-radius:14px;padding:28px;text-align:center;margin-bottom:28px;">
+        <div style="font-size:11px;font-weight:700;color:#B8860B;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">
+          Código de redefinição
+        </div>
+        <div style="font-size:48px;font-weight:900;letter-spacing:14px;color:#FFD700;font-family:monospace;text-shadow:0 0 20px rgba(255,215,0,0.4);">
+          ${code}
+        </div>
+        <div style="font-size:12px;color:#606060;margin-top:12px;">
+          Expira em <strong style="color:#A0A0A0;">15 minutos</strong>
+        </div>
+      </div>
+
+      <p style="color:#606060;font-size:13px;line-height:1.6;margin:0;">
+        Se você não solicitou a redefinição de senha, ignore este email com segurança. Nunca compartilhe seu código com ninguém.
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align:center;margin-top:28px;">
+      <p style="color:#404040;font-size:12px;margin:0;">
+        © 2024 GOATCINE — O Melhor do Cinema, em Dourado.
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+  `;
+
+  await transporter.sendMail({
+    from:    process.env.EMAIL_FROM || `GOATCINE <${process.env.EMAIL_USER}>`,
+    to,
+    subject: `${code} — Código de redefinição GOATCINE`,
+    html,
+  });
+}
+
+
 // =============================================
 //  DATABASE SETUP (sql.js)
 // =============================================
@@ -849,6 +916,119 @@ app.post('/api/auth/resend-code', async (req, res) => {
   } catch (err) {
     console.error('[RESEND CODE ERROR]', err);
     return res.status(500).json({ error: 'Erro ao reenviar código.' });
+  }
+});
+
+/**
+ * POST /api/auth/forgot-password
+ * Recebe o e-mail, gera um código temporário de redefinição no banco e o retorna.
+ * Body: { email }
+ * Response: { success: true, dev_code }
+ */
+app.post('/api/auth/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'O email é obrigatório' });
+
+    const cleanEmail = email.toLowerCase().trim();
+
+    // Usuário existe?
+    const user = dbGet('SELECT id, name FROM users WHERE email = ?', [cleanEmail]);
+    if (!user) return res.status(404).json({ error: 'Nenhum usuário cadastrado com este email.' });
+
+    // Gerar código de 6 dígitos
+    const code = generateOTP();
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // 15 min
+
+    // Salvar código de redefinição na tabela verification_codes com pass_hash vazio para satisfazer a restrição NOT NULL
+    db.run('DELETE FROM verification_codes WHERE email = ?', [cleanEmail]);
+    dbRun(
+      'INSERT INTO verification_codes (email, name, pass_hash, code, expires_at, attempts) VALUES (?, ?, ?, ?, ?, 0)',
+      [cleanEmail, user.name, '', code, expiresAt]
+    );
+
+    console.log(`[FORGOT-PASSWORD] 🔑 Código gerado para redefinição de ${cleanEmail}: ${code}`);
+
+    if (isEmailConfigured()) {
+      try {
+        await sendResetPasswordEmail(cleanEmail, user.name, code);
+        console.log(`[EMAIL] ✅ Código de redefinição enviado para: ${cleanEmail}`);
+        return res.json({
+          success: true,
+          message: 'Código de redefinição de senha enviado para o seu e-mail.'
+        });
+      } catch (mailErr) {
+        console.error(`[EMAIL ERROR] Falha no envio para ${cleanEmail}. Erro:`, mailErr.message);
+        console.log(`[EMAIL] ⚠️ Fallback ativo no forgot-password — Código: ${code}`);
+        return res.json({
+          success: true,
+          dev_code: code,
+          message: 'Falha ao enviar e-mail. Usando modo de desenvolvimento.'
+        });
+      }
+    } else {
+      console.log(`[EMAIL] ⚠️  Dev mode — Código de redefinição para ${cleanEmail}: ${code}`);
+      return res.json({
+        success: true,
+        dev_code: code,
+        message: 'Código gerado no console (Modo Desenvolvimento).'
+      });
+    }
+
+  } catch (err) {
+    console.error('[FORGOT PASSWORD ERROR]', err);
+    return res.status(500).json({ error: 'Erro ao gerar solicitação de redefinição de senha.' });
+  }
+});
+
+/**
+ * POST /api/auth/reset-password
+ * Valida o código OTP e atualiza a senha do usuário.
+ * Body: { email, code, password }
+ * Response: { success: true }
+ */
+app.post('/api/auth/reset-password', async (req, res) => {
+  try {
+    const { email, code, password } = req.body;
+    if (!email || !code || !password)
+      return res.status(400).json({ error: 'Todos os campos são obrigatórios' });
+
+    if (password.length < 8)
+      return res.status(400).json({ error: 'A nova senha deve ter no mínimo 8 caracteres' });
+
+    const cleanEmail = email.toLowerCase().trim();
+
+    // Buscar código no banco
+    const record = dbGet('SELECT * FROM verification_codes WHERE email = ?', [cleanEmail]);
+    if (!record)
+      return res.status(400).json({ error: 'Nenhuma solicitação de redefinição pendente para este email.' });
+
+    // Expirado?
+    if (new Date() > new Date(record.expires_at)) {
+      db.run('DELETE FROM verification_codes WHERE email = ?', [cleanEmail]);
+      saveDb();
+      return res.status(400).json({ error: 'Código expirado. Solicite a redefinição novamente.' });
+    }
+
+    // Código correto?
+    if (record.code !== String(code).trim()) {
+      return res.status(400).json({ error: 'Código de redefinição incorreto.' });
+    }
+
+    // Gerar nova hash de senha e atualizar o usuário
+    const pass_hash = await bcrypt.hash(password, 12);
+    db.run('UPDATE users SET password_hash = ? WHERE email = ?', [pass_hash, cleanEmail]);
+    
+    // Apagar código usado
+    db.run('DELETE FROM verification_codes WHERE email = ?', [cleanEmail]);
+    saveDb();
+
+    console.log(`[AUTH] 🔑 Senha alterada com sucesso via redefinição: ${cleanEmail}`);
+    return res.json({ success: true, message: 'Senha atualizada com sucesso!' });
+
+  } catch (err) {
+    console.error('[RESET PASSWORD ERROR]', err);
+    return res.status(500).json({ error: 'Erro ao redefinir a sua senha.' });
   }
 });
 

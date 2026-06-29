@@ -116,6 +116,9 @@ function initPasswordToggle(toggleId, inputId) {
 initPasswordToggle('login-toggle-pass', 'login-password');
 initPasswordToggle('register-toggle-pass', 'register-password');
 initPasswordToggle('register-toggle-confirm', 'register-confirm');
+initPasswordToggle('forgot-toggle-pass', 'forgot-new-password');
+initPasswordToggle('forgot-toggle-confirm', 'forgot-confirm-password');
+
 
 // ---- PASSWORD STRENGTH ----
 const registerPassword = document.getElementById('register-password');
@@ -261,24 +264,204 @@ function handleDiscordAuth() {
 document.getElementById('login-discord-btn')?.addEventListener('click', handleDiscordAuth);
 document.getElementById('register-discord-btn')?.addEventListener('click', handleDiscordAuth);
 
-// ---- FORGOT PASSWORD ----
+// ---- FORGOT PASSWORD FLOW ----
+const forgotOverlay   = document.getElementById('forgot-overlay');
+const forgotEmailForm = document.getElementById('forgot-email-form');
+const forgotResetForm = document.getElementById('forgot-reset-form');
+const forgotEmailInput = document.getElementById('forgot-email');
+const forgotCodeInput  = document.getElementById('forgot-code');
+const forgotPassInput  = document.getElementById('forgot-new-password');
+const forgotConfInput  = document.getElementById('forgot-confirm-password');
+
+let recoveryEmail = '';
+
+// Abrir modal de recuperação
 document.getElementById('forgot-btn')?.addEventListener('click', () => {
-  const email = document.getElementById('login-email')?.value;
+  const currentEmail = document.getElementById('login-email')?.value.trim();
+  
+  // Limpar formulários e mensagens de erro anteriores
+  forgotEmailForm.classList.remove('hidden');
+  forgotResetForm.classList.add('hidden');
+  forgotEmailInput.value = '';
+  forgotCodeInput.value = '';
+  forgotPassInput.value = '';
+  forgotConfInput.value = '';
+  
+  clearError('forgot-email-group', 'forgot-email-error');
+  clearError('forgot-code-group', 'forgot-code-error');
+  clearError('forgot-pass-group', 'forgot-new-pass-error');
+  clearError('forgot-confirm-group', 'forgot-confirm-error');
+  document.getElementById('forgot-dev-box')?.classList.remove('show');
+
+  if (currentEmail && isValidEmail(currentEmail)) {
+    forgotEmailInput.value = currentEmail;
+    markSuccess('forgot-email-group');
+  } else {
+    document.getElementById('forgot-email-group')?.classList.remove('success', 'error');
+  }
+
+  forgotOverlay.classList.add('show');
+  forgotOverlay.setAttribute('aria-hidden', 'false');
+  setTimeout(() => forgotEmailInput.focus(), 150);
+});
+
+// Botão de voltar do modal de recuperação
+document.getElementById('forgot-back-btn')?.addEventListener('click', () => {
+  forgotOverlay.classList.remove('show');
+  forgotOverlay.setAttribute('aria-hidden', 'true');
+});
+
+// Real-time validation para os campos de recuperação
+forgotEmailInput?.addEventListener('input', function() {
+  if (this.value && !isValidEmail(this.value)) showError('forgot-email-group', 'forgot-email-error', 'Email inválido');
+  else { clearError('forgot-email-group', 'forgot-email-error'); if (this.value) markSuccess('forgot-email-group'); }
+});
+
+forgotCodeInput?.addEventListener('input', function() {
+  if (this.value && this.value.length < 6) showError('forgot-code-group', 'forgot-code-error', 'O código deve ter 6 dígitos');
+  else { clearError('forgot-code-group', 'forgot-code-error'); if (this.value) markSuccess('forgot-code-group'); }
+});
+
+forgotConfInput?.addEventListener('input', function() {
+  const pw = forgotPassInput.value;
+  if (this.value && this.value !== pw) showError('forgot-confirm-group', 'forgot-confirm-error', 'As senhas não coincidem');
+  else { clearError('forgot-confirm-group', 'forgot-confirm-error'); if (this.value) markSuccess('forgot-confirm-group'); }
+});
+
+// Passo 1: Enviar Email para receber o código
+forgotEmailForm?.addEventListener('submit', async function(e) {
+  e.preventDefault();
+  
+  const email = forgotEmailInput.value.trim();
   if (!email || !isValidEmail(email)) {
-    showError('login-email-group', 'login-email-error', 'Digite seu email primeiro');
-    document.getElementById('login-email')?.focus();
+    showError('forgot-email-group', 'forgot-email-error', 'Digite um email válido');
+    forgotEmailInput.focus();
     return;
   }
-  const btn = document.getElementById('forgot-btn');
-  btn.textContent = '✓ Email enviado!';
-  btn.style.color = '#4ADE80';
+
+  const btn = document.getElementById('forgot-send-btn');
+  btn.classList.add('loading');
   btn.disabled = true;
-  setTimeout(() => {
-    btn.textContent = 'Esqueceu a senha?';
-    btn.style.color = '';
+
+  try {
+    const res = await fetch(`${API}/api/auth/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    
+    const data = await res.json();
+    
+    if (!res.ok) {
+      showError('forgot-email-group', 'forgot-email-error', data.error || 'Erro ao processar solicitação');
+      btn.classList.remove('loading');
+      btn.disabled = false;
+      return;
+    }
+
+    // Sucesso no passo 1
+    recoveryEmail = email;
+    btn.classList.remove('loading');
     btn.disabled = false;
-  }, 4000);
+    
+    // Ocultar formulário de email e exibir formulário de redefinição
+    forgotEmailForm.classList.add('hidden');
+    forgotResetForm.classList.remove('hidden');
+
+    // Se retornar dev_code (modo desenvolvimento)
+    const devBox = document.getElementById('forgot-dev-box');
+    const devCode = document.getElementById('forgot-dev-code');
+    if (data.dev_code) {
+      devCode.textContent = data.dev_code;
+      devBox.classList.add('show');
+    } else {
+      devBox.classList.remove('show');
+    }
+
+    setTimeout(() => forgotCodeInput.focus(), 150);
+
+  } catch (err) {
+    showError('forgot-email-group', 'forgot-email-error', 'Erro de conexão com o servidor');
+    btn.classList.remove('loading');
+    btn.disabled = false;
+  }
 });
+
+// Passo 2: Validar código e redefinir senha
+forgotResetForm?.addEventListener('submit', async function(e) {
+  e.preventDefault();
+
+  const code     = forgotCodeInput.value.trim();
+  const password = forgotPassInput.value;
+  const confirm  = forgotConfInput.value;
+  let valid = true;
+
+  clearError('forgot-code-group', 'forgot-code-error');
+  clearError('forgot-pass-group', 'forgot-new-pass-error');
+  clearError('forgot-confirm-group', 'forgot-confirm-error');
+
+  if (!code || code.length !== 6) {
+    showError('forgot-code-group', 'forgot-code-error', 'O código de 6 dígitos é obrigatório');
+    valid = false;
+  } else { markSuccess('forgot-code-group'); }
+
+  if (!password || password.length < 8) {
+    showError('forgot-pass-group', 'forgot-new-pass-error', 'A senha deve ter no mínimo 8 caracteres');
+    valid = false;
+  } else { markSuccess('forgot-pass-group'); }
+
+  if (!confirm || confirm !== password) {
+    showError('forgot-confirm-group', 'forgot-confirm-error', 'As senhas não coincidem');
+    valid = false;
+  } else { markSuccess('forgot-confirm-group'); }
+
+  if (!valid) return;
+
+  const btn = document.getElementById('forgot-submit-btn');
+  btn.classList.add('loading');
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(`${API}/api/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: recoveryEmail, code, password }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      showError('forgot-code-group', 'forgot-code-error', data.error || 'Código incorreto ou expirado');
+      btn.classList.remove('loading');
+      btn.disabled = false;
+      return;
+    }
+
+    // Sucesso na redefinição!
+    btn.classList.remove('loading');
+    btn.disabled = false;
+
+    // Fechar modal de recuperação
+    forgotOverlay.classList.remove('show');
+    forgotOverlay.setAttribute('aria-hidden', 'true');
+
+    showApiSuccessMessage('Sua senha foi redefinida com sucesso! Faça login com a nova senha.');
+    
+    // Focar no campo de login preenchendo o email
+    const loginEmailInput = document.getElementById('login-email');
+    if (loginEmailInput) {
+      loginEmailInput.value = recoveryEmail;
+      markSuccess('login-email-group');
+      document.getElementById('login-password')?.focus();
+    }
+
+  } catch (err) {
+    showError('forgot-code-group', 'forgot-code-error', 'Erro de conexão com o servidor');
+    btn.classList.remove('loading');
+    btn.disabled = false;
+  }
+});
+
 
 // ---- LOGIN FORM SUBMIT ----
 document.getElementById('login-email-form')?.addEventListener('submit', async function(e) {
@@ -682,6 +865,210 @@ function saveAuthAndRedirect(token, user, isNew = false) {
   }
 }
 
+// ---- Forgot Password Flow ----
+(function initForgotPassword() {
+  const forgotBtn = document.getElementById('forgot-btn');
+  const forgotOverlay = document.getElementById('forgot-overlay');
+  const forgotBackBtn = document.getElementById('forgot-back-btn');
+  
+  const emailForm = document.getElementById('forgot-email-form');
+  const emailInput = document.getElementById('forgot-email');
+  const emailError = document.getElementById('forgot-email-error');
+  
+  const resetForm = document.getElementById('forgot-reset-form');
+  const codeInput = document.getElementById('forgot-code');
+  const codeError = document.getElementById('forgot-code-error');
+  const newPassInput = document.getElementById('forgot-new-password');
+  const newPassError = document.getElementById('forgot-new-pass-error');
+  const confirmInput = document.getElementById('forgot-confirm-password');
+  const confirmError = document.getElementById('forgot-confirm-error');
+  
+  const devBox = document.getElementById('forgot-dev-box');
+  const devCodeEl = document.getElementById('forgot-dev-code');
+  
+  const togglePassBtn = document.getElementById('forgot-toggle-pass');
+  const toggleConfirmBtn = document.getElementById('forgot-toggle-confirm');
+
+  let recoveryEmail = '';
+
+  // Helper to toggle passwords visibility
+  function setupTogglePassword(btn, inputEl) {
+    if (!btn || !inputEl) return;
+    btn.addEventListener('click', () => {
+      const isPass = inputEl.type === 'password';
+      inputEl.type = isPass ? 'text' : 'password';
+      const eyeIcon = btn.querySelector('.eye-icon');
+      if (eyeIcon) {
+        eyeIcon.style.opacity = isPass ? '1' : '0.5';
+      }
+    });
+  }
+
+  setupTogglePassword(togglePassBtn, newPassInput);
+  setupTogglePassword(toggleConfirmBtn, confirmInput);
+
+  if (forgotBtn) {
+    forgotBtn.addEventListener('click', () => {
+      forgotOverlay.setAttribute('aria-hidden', 'false');
+      forgotOverlay.classList.add('show');
+      
+      // Reset forms state
+      emailForm.classList.remove('hidden');
+      resetForm.classList.add('hidden');
+      emailInput.value = '';
+      emailError.textContent = '';
+      codeInput.value = '';
+      codeError.textContent = '';
+      newPassInput.value = '';
+      newPassError.textContent = '';
+      confirmInput.value = '';
+      confirmError.textContent = '';
+      if (devBox) devBox.style.display = 'none';
+      recoveryEmail = '';
+    });
+  }
+
+  if (forgotBackBtn) {
+    forgotBackBtn.addEventListener('click', () => {
+      forgotOverlay.setAttribute('aria-hidden', 'true');
+      forgotOverlay.classList.remove('show');
+    });
+  }
+
+  if (emailForm) {
+    emailForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      emailError.textContent = '';
+      
+      const email = emailInput.value.trim();
+      if (!email) {
+        emailError.textContent = 'O email é obrigatório.';
+        return;
+      }
+
+      const sendBtn = document.getElementById('forgot-send-btn');
+      if (sendBtn) sendBtn.classList.add('loading');
+
+      try {
+        const response = await fetch('/api/auth/forgot-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.message || 'Erro ao processar solicitação.');
+        }
+
+        recoveryEmail = email;
+        
+        // Show reset code form
+        emailForm.classList.add('hidden');
+        resetForm.classList.remove('hidden');
+        
+        // Populate dev_code if provided by backend bypass
+        if (data.dev_code && devBox && devCodeEl) {
+          devCodeEl.textContent = data.dev_code;
+          devBox.style.display = 'block';
+        } else if (devBox) {
+          devBox.style.display = 'none';
+        }
+
+      } catch (err) {
+        emailError.textContent = err.message;
+      } finally {
+        if (sendBtn) sendBtn.classList.remove('loading');
+      }
+    });
+  }
+
+  if (resetForm) {
+    resetForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      codeError.textContent = '';
+      newPassError.textContent = '';
+      confirmError.textContent = '';
+
+      const code = codeInput.value.trim();
+      const newPassword = newPassInput.value;
+      const confirmPassword = confirmInput.value;
+
+      let hasError = false;
+      if (!code || code.length !== 6) {
+        codeError.textContent = 'Código inválido. Deve possuir 6 caracteres.';
+        hasError = true;
+      }
+      if (!newPassword || newPassword.length < 8) {
+        newPassError.textContent = 'A senha deve possuir no mínimo 8 caracteres.';
+        hasError = true;
+      }
+      if (newPassword !== confirmPassword) {
+        confirmError.textContent = 'As senhas não coincidem.';
+        hasError = true;
+      }
+
+      if (hasError) return;
+
+      const submitBtn = document.getElementById('forgot-submit-btn');
+      if (submitBtn) submitBtn.classList.add('loading');
+
+      try {
+        const response = await fetch('/api/auth/reset-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: recoveryEmail, code, newPassword })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.message || 'Erro ao redefinir a senha.');
+        }
+
+        // Success! Hide reset overlay
+        forgotOverlay.setAttribute('aria-hidden', 'true');
+        forgotOverlay.classList.remove('show');
+
+        // Show success overlay
+        const overlay = document.getElementById('success-overlay');
+        const titleEl = document.getElementById('success-title');
+        const subEl   = document.getElementById('success-sub');
+        const barEl   = document.getElementById('success-bar');
+
+        if (overlay) {
+          titleEl.textContent = 'Senha alterada com sucesso! 🎉';
+          subEl.textContent = 'Redirecionando para login...';
+          overlay.setAttribute('aria-hidden', 'false');
+          overlay.classList.add('show');
+
+          let p = 0;
+          const iv = setInterval(() => {
+            p += 25;
+            if (p >= 100) {
+              barEl.style.width = '100%';
+              clearInterval(iv);
+              setTimeout(() => {
+                window.location.reload();
+              }, 400);
+            } else {
+              barEl.style.width = p + '%';
+            }
+          }, 150);
+        } else {
+          alert('Senha redefinida com sucesso!');
+          window.location.reload();
+        }
+
+      } catch (err) {
+        codeError.textContent = err.message;
+      } finally {
+        if (submitBtn) submitBtn.classList.remove('loading');
+      }
+    });
+  }
+})();
+
 // ---- INIT ----
 createParticles();
+
 

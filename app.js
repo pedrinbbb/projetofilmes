@@ -748,15 +748,19 @@ function initVideoPlayer() {
     timeDuration.textContent = formatTime(video.duration);
   });
 
-  // Scrubbing/Seeking on click
+  // Scrubbing/Seeking on click / touch
   function seek(e) {
     const rect = progressContainer.getBoundingClientRect();
-    const pct = (e.clientX - rect.left) / rect.width;
+    // Suporte para obter o clientX correto tanto em cliques do mouse quanto toques de celular
+    const clientX = (e.touches && e.touches.length > 0) ? e.touches[0].clientX : e.clientX;
+    const pct = (clientX - rect.left) / rect.width;
     const clampedPct = Math.max(0, Math.min(1, pct));
     video.currentTime = clampedPct * video.duration;
   }
 
   let isDragging = false;
+  
+  // Eventos de Mouse
   progressContainer.addEventListener('mousedown', (e) => {
     isDragging = true;
     seek(e);
@@ -767,6 +771,22 @@ function initVideoPlayer() {
   });
 
   document.addEventListener('mouseup', () => {
+    isDragging = false;
+  });
+
+  // Eventos de Toque (Celular)
+  progressContainer.addEventListener('touchstart', (e) => {
+    isDragging = true;
+    seek(e);
+  }, { passive: true });
+
+  document.addEventListener('touchmove', (e) => {
+    if (isDragging) {
+      seek(e);
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', () => {
     isDragging = false;
   });
 
@@ -820,6 +840,16 @@ function initVideoPlayer() {
 
   // Fullscreen toggle
   function toggleFullscreen() {
+    // Suporte para iOS (Safari/Chrome no iPhone)
+    if (video.webkitEnterFullscreen) {
+      try {
+        video.webkitEnterFullscreen();
+        return;
+      } catch (err) {
+        console.log('[iOS Fullscreen Error]', err);
+      }
+    }
+
     if (!document.fullscreenElement) {
       playerOverlay.requestFullscreen()
         .then(() => {

@@ -1199,13 +1199,26 @@ app.get('/auth/discord/callback', async (req, res) => {
     let dbUser = dbGet('SELECT * FROM users WHERE discord_id = ?', [discordUser.id]);
 
     if (dbUser) {
+      // Caso 1: já tem conta Discord — atualiza dados
       db.run(
         `UPDATE users SET name=?, discord_tag=?, avatar=?, updated_at=datetime('now') WHERE discord_id=?`,
         [discordName, discordTag, avatarUrl, discordUser.id]
       );
       saveDb();
       dbUser = dbGet('SELECT * FROM users WHERE discord_id = ?', [discordUser.id]);
+
+    } else if (discordEmail && (dbUser = dbGet('SELECT * FROM users WHERE email = ?', [discordEmail]))) {
+      // Caso 2: já existe conta com esse email (cadastro normal) — vincula Discord à conta existente
+      console.log(`[DISCORD CB] Email ${discordEmail} já existe — vinculando Discord à conta existente.`);
+      db.run(
+        `UPDATE users SET discord_id=?, discord_tag=?, avatar=?, updated_at=datetime('now') WHERE email=?`,
+        [discordUser.id, discordTag, avatarUrl || dbUser.avatar, discordEmail]
+      );
+      saveDb();
+      dbUser = dbGet('SELECT * FROM users WHERE email = ?', [discordEmail]);
+
     } else {
+      // Caso 3: novo usuário — cria conta
       const userId = dbRun(
         `INSERT INTO users (name, email, discord_id, discord_tag, avatar, method) VALUES (?, ?, ?, ?, ?, 'discord')`,
         [discordName, discordEmail, discordUser.id, discordTag, avatarUrl]

@@ -425,10 +425,8 @@ document.getElementById('register-email-form')?.addEventListener('submit', async
       return;
     }
 
-    // OTP FLOW
-    btn.classList.remove('loading');
-    btn.disabled = false;
-    openOtpVerification(data.email || email, data);
+    // Sucesso no Cadastro Direto!
+    saveAuthAndRedirect(data.token, data.user);
 
   } catch (err) {
     showApiError('Servidor offline. Verifique se o servidor está rodando (npm start).');

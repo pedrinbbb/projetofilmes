@@ -671,9 +671,9 @@ function safeUser(user) {
 
 /**
  * POST /api/auth/register
- * Passo 1: Valida dados e envia código OTP por email
+ * Cria a conta do usuário diretamente no banco de dados e gera o token de sessão.
  * Body: { name, email, password }
- * Response: { step: 'verify', email, dev_code? }
+ * Response: { token, user }
  */
 app.post('/api/auth/register', async (req, res) => {
   try {
@@ -693,53 +693,29 @@ app.post('/api/auth/register', async (req, res) => {
     const existing = dbGet('SELECT id FROM users WHERE email = ?', [cleanEmail]);
     if (existing) return res.status(409).json({ error: 'Este email já está cadastrado' });
 
-    // Hash da senha já aqui (salvo temporariamente)
+    // Hash da senha
     const pass_hash = await bcrypt.hash(password, 12);
 
-    // Remover código antigo para este email (se existir)
-    db.run('DELETE FROM verification_codes WHERE email = ?', [cleanEmail]);
-    saveDb();
-
-    // Gerar OTP
-    const code      = generateOTP();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 min
-
-    // Salvar código temporário no banco
-    dbRun(
-      'INSERT INTO verification_codes (email, name, pass_hash, code, expires_at) VALUES (?, ?, ?, ?, ?)',
-      [cleanEmail, name.trim(), pass_hash, code, expiresAt]
+    // Inserir usuário diretamente no banco
+    const userId = dbRun(
+      `INSERT INTO users (name, email, password_hash, method) VALUES (?, ?, ?, 'email')`,
+      [name.trim(), cleanEmail, pass_hash]
     );
 
-    // Enviar email (ou logar no console em modo dev)
-    if (isEmailConfigured()) {
-      try {
-        await sendVerificationEmail(cleanEmail, name.trim(), code);
-        console.log(`[EMAIL] ✅ Código enviado com sucesso para: ${cleanEmail}`);
-        return res.json({ step: 'verify', email: cleanEmail });
-      } catch (mailErr) {
-        console.error(`[EMAIL ERROR] Falha no envio para ${cleanEmail}. Erro:`, mailErr.message);
-        console.log(`[EMAIL] ⚠️ Fallback ativo — Exibindo código na tela devido a bloqueios de rede: ${code}`);
-        return res.json({
-          step: 'verify',
-          email: cleanEmail,
-          dev_code: code,
-          dev_message: 'Servidor SMTP bloqueado na nuvem. Use o código temporário exibido para validar sua conta.',
-        });
-      }
-    } else {
-      // MODO DEV: email não configurado, retorna código no response
-      console.log(`[EMAIL] ⚠️  Dev mode — Código para ${cleanEmail}: ${code}`);
-      return res.json({
-        step: 'verify',
-        email: cleanEmail,
-        dev_code: code,
-        dev_message: 'Email não configurado. Configure EMAIL_USER e EMAIL_PASS no .env para envio real.',
-      });
-    }
+    // Buscar usuário criado e gerar token de sessão
+    const user = dbGet('SELECT * FROM users WHERE id = ?', [userId]);
+    const token = generateToken(user);
+
+    // Salvar sessão
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(); // 7 dias
+    dbRun('INSERT INTO sessions (user_id, token, expires_at) VALUES (?, ?, ?)', [user.id, token, expiresAt]);
+
+    console.log(`[AUTH] ✅ Nova conta criada diretamente: ${cleanEmail}`);
+    return res.status(201).json({ token, user: safeUser(user) });
 
   } catch (err) {
     console.error('[REGISTER ERROR]', err);
-    return res.status(500).json({ error: 'Erro ao cadastrar usuário.' });
+    return res.status(500).json({ error: 'Erro ao criar a sua conta.' });
   }
 });
 

@@ -1598,9 +1598,9 @@ async function getEfiToken() {
   }
 
   const certData = fs.readFileSync(certPath);
+  const isP12 = certPath.endsWith('.p12') || certPath.endsWith('.pfx');
   const agent = new https.Agent({
-    cert: certData,
-    key: certData,
+    ...(isP12 ? { pfx: certData } : { cert: certData, key: certData }),
     rejectUnauthorized: false
   });
 
@@ -1645,7 +1645,11 @@ app.post('/api/user/subscribe', requireAuth, async (req, res) => {
         
         const certPath = path.resolve(__dirname, process.env.EFI_CERTIFICATE_PATH);
         const certData = fs.readFileSync(certPath);
-        const agent = new https.Agent({ cert: certData, key: certData, rejectUnauthorized: false });
+        const isP12 = certPath.endsWith('.p12') || certPath.endsWith('.pfx');
+        const agent = new https.Agent({
+          ...(isP12 ? { pfx: certData } : { cert: certData, key: certData }),
+          rejectUnauthorized: false
+        });
 
         // Criar cobrança imediata (cob)
         const cobBody = {

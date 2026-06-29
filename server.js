@@ -1140,9 +1140,11 @@ app.get('/auth/discord', (req, res) => {
   if (!CLIENT_ID || CLIENT_ID === 'SEU_CLIENT_ID_AQUI')
     return res.redirect('/login.html?auth_error=discord_not_configured');
 
-  // Detecta automaticamente se está em produção ou local
-  const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI ||
-    `${req.protocol}://${req.get('host')}/auth/discord/callback`;
+  // Garante https em produção (Render usa proxy, x-forwarded-proto tem o protocolo real)
+  const proto = req.headers['x-forwarded-proto'] || req.protocol;
+  const host  = req.headers['x-forwarded-host']  || req.get('host');
+  const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI || `${proto}://${host}/auth/discord/callback`;
+  console.log(`[DISCORD] Redirect URI gerada: ${REDIRECT_URI}`);
 
   const params = new URLSearchParams({
     client_id:     CLIENT_ID,
@@ -1161,9 +1163,12 @@ app.get('/auth/discord/callback', async (req, res) => {
   try {
     const CLIENT_ID     = process.env.DISCORD_CLIENT_ID;
     const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
-    // Mesma lógica dinâmica: usa env var se definida, senão detecta pelo host
-    const REDIRECT_URI  = process.env.DISCORD_REDIRECT_URI ||
-      `${req.protocol}://${req.get('host')}/auth/discord/callback`;
+    const proto = req.headers['x-forwarded-proto'] || req.protocol;
+    const host  = req.headers['x-forwarded-host']  || req.get('host');
+    const REDIRECT_URI  = process.env.DISCORD_REDIRECT_URI || `${proto}://${host}/auth/discord/callback`;
+
+    console.log(`[DISCORD CB] Iniciando callback. URI: ${REDIRECT_URI}`);
+    console.log(`[DISCORD CB] CLIENT_ID existe: ${!!CLIENT_ID}, CLIENT_SECRET existe: ${!!CLIENT_SECRET}`);
 
     const tokenRes  = await fetch('https://discord.com/api/oauth2/token', {
       method:  'POST',
@@ -1171,12 +1176,17 @@ app.get('/auth/discord/callback', async (req, res) => {
       body:    new URLSearchParams({ client_id: CLIENT_ID, client_secret: CLIENT_SECRET, grant_type: 'authorization_code', code, redirect_uri: REDIRECT_URI }),
     });
     const tokenData = await tokenRes.json();
-    if (!tokenData.access_token) return res.redirect('/login.html?auth_error=discord_token_failed');
+    console.log(`[DISCORD CB] Token response status: ${tokenRes.status}`);
+    if (!tokenData.access_token) {
+      console.error('[DISCORD CB] Falha no token:', JSON.stringify(tokenData));
+      return res.redirect('/login.html?auth_error=discord_token_failed');
+    }
 
     const userRes     = await fetch('https://discord.com/api/users/@me', {
       headers: { Authorization: `Bearer ${tokenData.access_token}` },
     });
     const discordUser = await userRes.json();
+    console.log(`[DISCORD CB] User response status: ${userRes.status}, id: ${discordUser.id}`);
     if (!discordUser.id) return res.redirect('/login.html?auth_error=discord_user_failed');
 
     const discordName  = discordUser.global_name || discordUser.username;
@@ -1211,8 +1221,9 @@ app.get('/auth/discord/callback', async (req, res) => {
     res.redirect(`/auth-callback.html?token=${encodeURIComponent(token)}&name=${encodeURIComponent(discordName)}`);
 
   } catch (err) {
-    console.error('[DISCORD CALLBACK ERROR]', err);
+    console.error('[DISCORD CALLBACK ERROR]', err.message, err.stack);
     res.redirect('/login.html?auth_error=server_error');
+
   }
 });
 

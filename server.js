@@ -697,13 +697,13 @@ app.post('/api/auth/register', async (req, res) => {
     const pass_hash = await bcrypt.hash(password, 12);
 
     // Inserir usuário diretamente no banco
-    const userId = dbRun(
+    dbRun(
       `INSERT INTO users (name, email, password_hash, method) VALUES (?, ?, ?, 'email')`,
       [name.trim(), cleanEmail, pass_hash]
     );
 
-    // Buscar usuário criado e gerar token de sessão
-    const user = dbGet('SELECT * FROM users WHERE id = ?', [userId]);
+    // Buscar usuário criado pelo e-mail e gerar token de sessão
+    const user = dbGet('SELECT * FROM users WHERE email = ?', [cleanEmail]);
     const token = generateToken(user);
 
     // Salvar sessão

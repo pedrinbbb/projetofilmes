@@ -3,8 +3,8 @@
    ============================================= */
 
 const EMOJIS = ['🎬','🎭','🏆','🌟','👑','🦁','🐺','🦊','🐉','🎮',
-                '🎸','🚀','⚡','🔥','🌊','🎯','🦅','🐯','🎪','🌙',
-                '🏋️','🎻','🛸','🦋','🎨'];
+                '🎸','🚀','⚡','🔥','🌊','🎯','🦅','🐯','🎲','🌙',
+                '🍕','🎻','🛸','🦋','🎨'];
 
 const COLORS = [
   '#FFD700','#FF6B6B','#4ECDC4','#45B7D1','#96CEB4',
@@ -284,30 +284,41 @@ async function createProfile() {
       }),
     });
 
-    let data;
+    // Try to parse JSON response
+    let data = null;
     try {
       data = await res.json();
     } catch {
-      createError.textContent = `Erro do servidor (${res.status}). Tente novamente em instantes.`;
+      // JSON parse failed — if status was success, profile was created
+      if (res.ok) {
+        // Redirect to profiles page to select the newly created profile
+        window.location.href = '/profiles.html';
+        return;
+      }
+      createError.textContent = `Erro do servidor (${res.status}). Tente novamente.`;
       return;
     }
 
     if (!res.ok) {
-      createError.textContent = data.error || 'Erro ao criar perfil.';
+      createError.textContent = data?.error || 'Erro ao criar perfil.';
       return;
     }
 
-    // Success — go directly to the site with this profile
+    // Success — save profile and go to the site
     const profile = data.profile;
-    localStorage.setItem('goatcine_profile', JSON.stringify({
-      id:           profile.id,
-      name:         profile.name,
-      avatar_icon:  profile.avatar_icon,
-      avatar_color: profile.avatar_color,
-      is_kid:       profile.is_kid,
-    }));
-
-    window.location.href = '/';
+    if (profile) {
+      localStorage.setItem('goatcine_profile', JSON.stringify({
+        id:           profile.id,
+        name:         profile.name,
+        avatar_icon:  profile.avatar_icon,
+        avatar_color: profile.avatar_color,
+        is_kid:       profile.is_kid,
+      }));
+      window.location.href = '/';
+    } else {
+      // Profile created but response missing data — redirect to select it
+      window.location.href = '/profiles.html';
+    }
 
   } catch (err) {
     createError.textContent = 'Sem conexão com o servidor. Verifique sua internet.';

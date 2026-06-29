@@ -2,6 +2,22 @@
    GOATCINE — App Logic
    ============================================= */
 
+// ---- AUTH + PROFILE GUARD ----
+// Sem token → login | Sem perfil → escolher/criar perfil
+(function authProfileGuard() {
+  const token   = localStorage.getItem('goatcine_token');
+  const profile = localStorage.getItem('goatcine_profile');
+
+  if (!token) {
+    window.location.replace('/login.html');
+    return;
+  }
+  if (!profile) {
+    window.location.replace('/profiles.html');
+    return;
+  }
+})();
+
 // Top 10, Hero Slides e Categoria de Filmes carregadas dinamicamente da API
 let MOVIES = { trending: [], new: [], action: [] };
 let TOP10 = [];

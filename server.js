@@ -33,11 +33,20 @@ const ADMIN_JWT_SECRET = JWT_SECRET + '_admin';
 //  EMAIL TRANSPORTER
 // =============================================
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false, 
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
-  }
+  },
+  tls: {
+    ciphers: 'SSLv3',
+    rejectUnauthorized: false
+  },
+  connectionTimeout: 15000, 
+  greetingTimeout: 15000,
+  socketTimeout: 15000
 });
 
 function isEmailConfigured() {

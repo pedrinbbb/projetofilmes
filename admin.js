@@ -192,12 +192,21 @@ async function loadDashboardData() {
 // =============================================
 function renderUsersTable() {
   usersTbody.innerHTML = '';
-  if (users.length === 0) {
-    usersTbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--color-text-muted);">Nenhum usuário cadastrado.</td></tr>`;
+  
+  const query = ($('search-users')?.value || '').toLowerCase().trim();
+  const filteredUsers = users.filter(user => {
+    return user.name.toLowerCase().includes(query) || 
+           (user.email && user.email.toLowerCase().includes(query)) ||
+           (user.discord_tag && user.discord_tag.toLowerCase().includes(query)) ||
+           String(user.id) === query;
+  });
+
+  if (filteredUsers.length === 0) {
+    usersTbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--color-text-muted);">Nenhum usuário correspondente encontrado.</td></tr>`;
     return;
   }
 
-  users.forEach(user => {
+  filteredUsers.forEach(user => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${user.id}</td>
@@ -241,12 +250,23 @@ window.deleteUser = async function(id, name) {
 // =============================================
 function renderMoviesTable() {
   moviesTbody.innerHTML = '';
-  if (movies.length === 0) {
-    moviesTbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--color-text-muted);">Nenhum filme cadastrado no catálogo.</td></tr>`;
+
+  const query = ($('search-movies')?.value || '').toLowerCase().trim();
+  const filteredMovies = movies.filter(movie => {
+    return movie.title.toLowerCase().includes(query) ||
+           movie.genre.toLowerCase().includes(query) ||
+           movie.director.toLowerCase().includes(query) ||
+           movie.cast.toLowerCase().includes(query) ||
+           movie.category.toLowerCase().includes(query) ||
+           String(movie.year) === query;
+  });
+
+  if (filteredMovies.length === 0) {
+    moviesTbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--color-text-muted);">Nenhum filme correspondente encontrado.</td></tr>`;
     return;
   }
 
-  movies.forEach(movie => {
+  filteredMovies.forEach(movie => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>
@@ -433,3 +453,7 @@ function createParticles() {
 createParticles();
 checkAdminAuth();
 window.addEventListener('storage', checkAdminAuth);
+
+// SEARCH LISTENERS (Real-time Filtering)
+$('search-movies')?.addEventListener('input', renderMoviesTable);
+$('search-users')?.addEventListener('input', renderUsersTable);

@@ -101,7 +101,10 @@
       <section class="panel-tab-content active" id="section-movies">
         <div class="section-header">
           <h2>Lista de Filmes no Catálogo</h2>
-          <button id="btn-add-movie" class="btn-primary">+ Cadastrar Filme</button>
+          <div class="header-actions">
+            <input type="text" id="search-movies" class="search-input-admin" placeholder="Pesquisar filme por título, gênero, diretor...">
+            <button id="btn-add-movie" class="btn-primary">+ Cadastrar Filme</button>
+          </div>
         </div>
 
         <div class="table-container">
@@ -128,6 +131,7 @@
       <section class="panel-tab-content" id="section-users">
         <div class="section-header">
           <h2>Contas de Usuários Registrados</h2>
+          <input type="text" id="search-users" class="search-input-admin" placeholder="Pesquisar usuário por nome ou email...">
         </div>
 
         <div class="table-container">

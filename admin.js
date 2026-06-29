@@ -195,9 +195,12 @@ function renderUsersTable() {
   
   const query = ($('search-users')?.value || '').toLowerCase().trim();
   const filteredUsers = users.filter(user => {
-    return user.name.toLowerCase().includes(query) || 
-           (user.email && user.email.toLowerCase().includes(query)) ||
-           (user.discord_tag && user.discord_tag.toLowerCase().includes(query)) ||
+    const name = (user.name || '').toLowerCase();
+    const email = (user.email || '').toLowerCase();
+    const discordTag = (user.discord_tag || '').toLowerCase();
+    return name.includes(query) || 
+           email.includes(query) ||
+           discordTag.includes(query) ||
            String(user.id) === query;
   });
 
@@ -208,17 +211,20 @@ function renderUsersTable() {
 
   filteredUsers.forEach(user => {
     const tr = document.createElement('tr');
+    const safeName = (user.name || 'Sem Nome').replace(/'/g, "\\'").replace(/"/g, '\\"');
+    const methodStr = (user.method || 'email').toUpperCase();
+    
     tr.innerHTML = `
       <td>${user.id}</td>
-      <td><strong>${user.name}</strong></td>
+      <td><strong>${user.name || 'Sem Nome'}</strong></td>
       <td>${user.email || '<span style="color: var(--color-text-muted);">Não fornecido</span>'}</td>
-      <td><span style="font-weight: 500; color: ${user.method === 'discord' ? '#5865F2' : '#FFD700'};">${user.method.toUpperCase()}</span></td>
+      <td><span style="font-weight: 500; color: ${methodStr === 'DISCORD' ? '#5865F2' : '#FFD700'};">${methodStr}</span></td>
       <td>${user.discord_tag || '-'}</td>
-      <td>${new Date(user.created_at).toLocaleDateString('pt-BR')} ${new Date(user.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</td>
+      <td>${user.created_at ? new Date(user.created_at).toLocaleDateString('pt-BR') + ' ' + new Date(user.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '-'}</td>
       <td>
         <div class="actions-cell">
-          <button class="btn-icon" title="Ver Perfis" onclick="openProfilesModal(${user.id}, '${user.name.replace(/'/g, "\\'")}')">👥</button>
-          <button class="btn-icon delete" title="Excluir Conta" onclick="deleteUser(${user.id}, '${user.name.replace(/'/g, "\\'")}')">🗑️</button>
+          <button class="btn-icon" title="Ver Perfis" onclick="openProfilesModal(${user.id}, '${safeName}')">👥</button>
+          <button class="btn-icon delete" title="Excluir Conta" onclick="deleteUser(${user.id}, '${safeName}')">🗑️</button>
         </div>
       </td>
     `;

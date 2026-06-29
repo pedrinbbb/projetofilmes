@@ -1075,30 +1075,29 @@ function openSubModal() {
   
   allPlansList.forEach(plan => {
     const card = document.createElement('div');
-    card.style.cssText = `
-      background: rgba(255, 255, 255, 0.03);
-      border: 2px solid rgba(255, 215, 0, 0.15);
-      border-radius: 12px;
-      padding: 16px;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      gap: 12px;
-    `;
-    card.className = 'plan-card';
+    card.className = 'premium-plan-card';
     card.dataset.id = plan.id;
 
     card.innerHTML = `
-      <div>
-        <h3 style="font-family: 'Outfit', sans-serif; color: var(--gold-primary); font-size: 1.1rem; margin-bottom: 8px;">${plan.name}</h3>
-        <div style="font-size: 1.5rem; font-weight: 700; color: #FFF; margin-bottom: 4px;">R$ ${plan.price.toFixed(2)}</div>
-        <div style="font-size: 0.8rem; color: var(--text-secondary);">por mês</div>
+      <span class="premium-plan-badge">Selecionado</span>
+      <div class="premium-plan-header">
+        <span class="premium-plan-name">${plan.name}</span>
+        <div class="premium-plan-price-box">
+          <span class="premium-plan-symbol">R$</span>
+          <span class="premium-plan-price">${plan.price.toFixed(2).split('.')[0]}</span>
+          <span class="premium-plan-symbol">,${plan.price.toFixed(2).split('.')[1]}</span>
+          <span class="premium-plan-period">/mês</span>
+        </div>
       </div>
-      <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px; font-size: 0.85rem; color: var(--text-secondary);">
-        📱 <strong>${plan.screens}</strong> ${plan.screens === 1 ? 'Tela' : 'Telas'} Simultâneas
+      <div class="premium-plan-features">
+        <div class="premium-plan-feature-item">
+          <span class="premium-plan-feature-icon">✨</span>
+          <span>Resolução Ultra HD</span>
+        </div>
+        <div class="premium-plan-feature-item">
+          <span class="premium-plan-feature-icon">📱</span>
+          <span><strong>${plan.screens}</strong> ${plan.screens === 1 ? 'Tela' : 'Telas'} simultâneas</span>
+        </div>
       </div>
     `;
 
@@ -1127,12 +1126,10 @@ function closeSubModal() {
 
 async function selectPlanForSub(planId, cardElement) {
   selectedPlanIdForSub = planId;
-  document.querySelectorAll('.plan-card').forEach(c => {
-    c.style.borderColor = 'rgba(255, 215, 0, 0.15)';
-    c.style.background = 'rgba(255, 255, 255, 0.03)';
+  document.querySelectorAll('.premium-plan-card').forEach(c => {
+    c.classList.remove('active');
   });
-  cardElement.style.borderColor = 'var(--gold-primary)';
-  cardElement.style.background = 'rgba(255, 215, 0, 0.05)';
+  cardElement.classList.add('active');
 
   // Mostrar área de checkout com loading
   $('sub-checkout-area').classList.remove('hidden');

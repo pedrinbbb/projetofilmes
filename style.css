@@ -2344,3 +2344,241 @@ ul {
   }
 }
 
+/* =============================================
+   PREMIUM CHECKOUT STYLE
+   ============================================= */
+.checkout-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.checkout-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 28px;
+  margin-top: 16px;
+}
+
+@media (max-width: 650px) {
+  .checkout-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+/* Plan card premium style */
+.premium-plan-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 215, 0, 0.08);
+  border-radius: 16px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.premium-plan-card:hover {
+  transform: translateY(-4px);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 215, 0, 0.25);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+}
+
+.premium-plan-card.active {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.08), rgba(184, 134, 11, 0.04));
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 25px rgba(255, 215, 0, 0.15), inset 0 0 15px rgba(255, 215, 0, 0.05);
+}
+
+.premium-plan-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: var(--gold-primary);
+  color: #000;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.premium-plan-card.active .premium-plan-badge {
+  opacity: 1;
+}
+
+.premium-plan-header {
+  display: flex;
+  flex-direction: column;
+}
+
+.premium-plan-name {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  transition: color 0.3s ease;
+}
+
+.premium-plan-card.active .premium-plan-name {
+  color: var(--gold-primary);
+}
+
+.premium-plan-price-box {
+  margin-top: 6px;
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.premium-plan-symbol {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.premium-plan-price {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+}
+
+.premium-plan-period {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.premium-plan-features {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 12px;
+}
+
+.premium-plan-feature-item {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.premium-plan-feature-icon {
+  color: var(--gold-primary);
+  font-size: 0.85rem;
+}
+
+/* Pay area card */
+.premium-pay-box {
+  background: rgba(22, 22, 22, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  padding: 24px;
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.premium-qr-frame {
+  background: #ffffff;
+  padding: 12px;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  transition: transform 0.3s ease;
+  position: relative;
+}
+
+.premium-qr-frame:hover {
+  transform: scale(1.03);
+}
+
+.premium-copypaste-container {
+  width: 100%;
+  position: relative;
+  display: flex;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 215, 0, 0.15);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  transition: border-color 0.3s ease;
+}
+
+.premium-copypaste-container:focus-within {
+  border-color: var(--gold-primary);
+}
+
+.premium-copypaste-input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 14px 16px;
+  color: var(--text-secondary);
+  font-family: monospace;
+  font-size: 0.78rem;
+  outline: none;
+}
+
+.premium-copypaste-btn {
+  background: linear-gradient(135deg, var(--gold-dark), var(--gold-primary));
+  color: #000;
+  border: none;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 0 20px;
+  cursor: pointer;
+  transition: filter 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.premium-copypaste-btn:hover {
+  filter: brightness(1.15);
+}
+
+.premium-status-indicator {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  background: rgba(255, 215, 0, 0.03);
+  border: 1px solid rgba(255, 215, 0, 0.1);
+  border-radius: 12px;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  justify-content: center;
+}
+
+.premium-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--gold-primary);
+  box-shadow: 0 0 10px var(--gold-primary);
+  animation: premiumPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes premiumPulse {
+  0%, 100% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.6); }
+  50% { transform: scale(1.2); opacity: 0.5; box-shadow: 0 0 0 8px rgba(255, 215, 0, 0); }
+}
+
+

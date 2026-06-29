@@ -396,48 +396,48 @@
 
   <!-- ========== SUBSCRIPTION MODAL ========== -->
   <div class="modal-overlay" id="sub-modal-overlay" role="dialog" aria-modal="true" aria-hidden="true" style="z-index: 1100;">
-    <div class="modal" id="sub-modal" style="max-width: 620px; padding: 28px; background: rgba(15, 10, 4, 0.95); border: 1px solid rgba(255, 215, 0, 0.2); border-radius: 20px;">
-      <button class="modal-close" id="sub-modal-close" aria-label="Fechar modal">✕</button>
+    <div class="modal" id="sub-modal" style="max-width: 820px; padding: 32px; background: rgba(10, 10, 10, 0.96); border: 1px solid rgba(255, 215, 0, 0.15); border-radius: 24px; box-shadow: var(--shadow-modal); backdrop-filter: blur(20px);">
+      <button class="modal-close" id="sub-modal-close" aria-label="Fechar modal" style="top: 20px; right: 20px;">✕</button>
 
-      <div style="text-align: center; margin-bottom: 24px;">
-        <span style="font-size: 40px; filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.4));">💳</span>
-        <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.8rem; color: var(--gold-primary); margin-top: 12px; margin-bottom: 8px;">Escolha seu Plano</h2>
-        <p style="color: var(--text-secondary); font-size: 0.9rem;">Assine a GOATCINE para liberar acesso instantâneo a todos os filmes.</p>
+      <div style="text-align: center; margin-bottom: 28px;">
+        <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.8rem; font-weight: 800; letter-spacing: -0.5px; color: var(--text-primary); margin-bottom: 6px;">
+          Adquira seu <span style="color: var(--gold-primary); text-shadow: 0 0 15px rgba(255,215,0,0.3);">Passaporte Premium</span>
+        </h2>
+        <p style="color: var(--text-secondary); font-size: 0.9rem;">Escolha o plano ideal e comece a assistir instantaneamente.</p>
       </div>
 
-      <!-- Plan Cards Grid -->
-      <div id="sub-plans-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px;">
-        <!-- Inserido dinamicamente via JS -->
-      </div>
-
-      <!-- Checkout PIX Area (Hidden by default) -->
-      <div id="sub-checkout-area" class="hidden" style="border-top: 1px solid rgba(255, 215, 0, 0.15); padding-top: 24px; text-align: center;">
-        <h3 style="font-family: 'Outfit', sans-serif; color: var(--gold-primary); font-size: 1.2rem; margin-bottom: 12px;">Pagamento via PIX</h3>
-        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 16px;">Escaneie o QR Code abaixo ou copie a chave copia e cola para concluir a assinatura.</p>
-        
-        <div id="qrcode-container-wrapper" style="background: white; padding: 16px; border-radius: 12px; display: inline-block; margin-bottom: 16px; box-shadow: 0 0 20px rgba(255,255,255,0.05);">
-          <!-- QR Code fictício feito com SVG -->
-          <svg width="180" height="180" viewBox="0 0 29 29" style="display: block; margin: 0 auto;">
-            <path d="M0 0h7v7H0zm1 1v5h5V1zm1 1v3h3V2zM0 22h7v7H0zm1 1v5h5v-5zm1 1v3h3v-3zM22 0h7v7h-7zm1 1v5h5V1zm1 1v3h3V2zM9 0h2v4H9zm4 0h3v2h-3zm5 0h2v3h-2zm-3 3h2v2h-2zm-6 2h2v4H8zm3 0h2v2h-2zm3 2h2v2h-3zm-1 3h2v3h-2zm3 0h3v2h-3zm-9 3h2v2H8zm3 0h3v2h-3zm6 0h2v4h-2zm-3 3h2v2h-2zm-6 2h3v2H8zm5 0h2v2h-2zm3 0h2v2h-2zm-9 3h2v4H7zm5 0h3v2h-3zm4 0h2v2h-2zm-9 3h3v2H7zm5 0h2v2h-2zm4 0h3v2h-3zm-9-19h2v2H9zm3 0h3v2h-3zm4 0h2v2h-2zm-9 3h3v2H7zm5 0h2v2h-2zm4 0h3v2h-3zm-9 3h2v3H9zm4 0h2v2h-2zm3 0h2v3h-2zm-3 4h2v2h-2zm3 0h2v2h-2z" fill="#000"/>
-          </svg>
+      <div class="checkout-grid">
+        <!-- Lado Esquerdo: Planos -->
+        <div style="display: flex; flex-direction: column; gap: 16px;" id="sub-plans-grid">
+          <!-- Inserido dinamicamente via JS com classe premium-plan-card -->
         </div>
 
-        <div style="max-width: 100%; display: flex; flex-direction: column; gap: 12px; align-items: center; margin-bottom: 24px;">
-          <input type="text" id="pix-copy-paste" value="" readonly style="width: 100%; max-width: 380px; padding: 10px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,215,0,0.2); border-radius: 8px; color: var(--text-secondary); font-family: monospace; font-size: 0.75rem; text-align: center; outline: none;" />
-          <button id="btn-copy-pix" class="btn-secondary" style="padding: 8px 16px; font-size: 0.85rem;">Copiar Código Pix</button>
-        </div>
+        <!-- Lado Direito: Checkout -->
+        <div id="sub-checkout-area" class="hidden" style="display: flex; flex-direction: column; justify-content: space-between;">
+          <div class="premium-pay-box">
+            <h3 style="font-family: 'Outfit', sans-serif; color: var(--text-primary); font-size: 1.1rem; font-weight: 700; margin-bottom: 8px;">Pagamento via PIX</h3>
+            <p style="color: var(--text-muted); font-size: 0.78rem; text-align: center; margin-bottom: 20px;">Escaneie o QR Code abaixo com o app do seu banco ou copie a chave Pix.</p>
 
-        <!-- Status de aguardando pagamento (sem botão de simular) -->
-        <div id="pix-waiting-status" style="display: flex; align-items: center; gap: 10px; justify-content: center; padding: 14px 20px; background: rgba(255,215,0,0.05); border: 1px solid rgba(255,215,0,0.15); border-radius: 10px; color: var(--text-secondary); font-size: 0.85rem; max-width: 360px; margin: 0 auto;">
-          <span style="display:inline-block; width: 10px; height: 10px; border-radius: 50%; background: #FFD700; animation: pixPulse 1.5s ease-in-out infinite; flex-shrink:0;"></span>
-          Aguardando confirmação do pagamento PIX...
+            <div class="premium-qr-frame">
+              <div id="qrcode-container-wrapper" style="width: 180px; height: 180px; display: flex; align-items: center; justify-content: center; background: white; border-radius: 8px;">
+                <!-- Imagem do QR Code -->
+              </div>
+            </div>
+
+            <div class="premium-copypaste-container">
+              <input type="text" id="pix-copy-paste" class="premium-copypaste-input" readonly value="" placeholder="Gerando código Pix..." />
+              <button id="btn-copy-pix" class="premium-copypaste-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Copiar
+              </button>
+            </div>
+
+            <div class="premium-status-indicator">
+              <span class="premium-status-dot"></span>
+              Aguardando confirmação do pagamento...
+            </div>
+          </div>
         </div>
-        <style>
-          @keyframes pixPulse {
-            0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(255,215,0,0.5); }
-            50% { opacity: 0.6; transform: scale(0.9); box-shadow: 0 0 0 6px rgba(255,215,0,0); }
-          }
-        </style>
       </div>
     </div>
   </div>

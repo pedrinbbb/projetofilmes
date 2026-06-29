@@ -1,493 +1,11 @@
 /* =============================================
    GOATCINE — App Logic
    ============================================= */
-// ---- MOVIE DATABASE ----
-const MOVIES = {
-  trending: [
-    {
-      id: 1,
-      title: "Dune: Part Two",
-      year: 2024,
-      duration: "2h 46min",
-      rating: 8.5,
-      genre: "Ficção Científica",
-      desc: "Paul Atreides se une a Chani e aos Fremen enquanto busca vingança contra os conspiradores que destruíram sua família. Confrontando uma escolha entre o amor de sua vida e o destino do universo, ele se esforça para evitar um futuro terrível.",
-      poster: "https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg",
-      backdrop: "https://image.tmdb.org/t/p/w1280/xOMo8BRK7PfcJv9JCnx7s5hj0PX.jpg",
-      director: "Denis Villeneuve",
-      cast: "Timothée Chalamet, Zendaya, Rebecca Ferguson",
-      category: "trending",
-      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" // MP4 Direto
-    },
-    {
-      id: 2,
-      title: "Oppenheimer",
-      year: 2023,
-      duration: "3h 0min",
-      rating: 8.3,
-      genre: "Drama / História",
-      desc: "A história do físico J. Robert Oppenheimer e seu papel no desenvolvimento da primeira bomba atômica durante a Segunda Guerra Mundial. Uma obra-prima cinematográfica de Christopher Nolan.",
-      poster: "https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
-      backdrop: "https://image.tmdb.org/t/p/w1280/rLb2cwF3Pazuxaj0sRXQ037tGI1.jpg",
-      director: "Christopher Nolan",
-      cast: "Cillian Murphy, Emily Blunt, Matt Damon",
-      category: "trending",
-      videoUrl: "https://www.youtube.com/watch?v=F3OxA9C30dQ" // YouTube Iframe
-    },
-    {
-      id: 3,
-      title: "Poor Things",
-      year: 2023,
-      duration: "2h 21min",
-      rating: 8.0,
-      genre: "Fantasia / Drama",
-      desc: "A incrível história de Bella Baxter, uma jovem mulher trazida de volta à vida pelo brilhante e incomum cientista Dr. Godwin Baxter. Sob a proteção de Baxter, Bella anseia por aprender.",
-      poster: "https://image.tmdb.org/t/p/w500/kCGlIMHnOm8JPXIf8XMjUZbCIOI.jpg",
-      backdrop: "https://image.tmdb.org/t/p/w1280/5YZbUmjbMa3ClvSoRdnMYJi7LVKS.jpg",
-      director: "Yorgos Lanthimos",
-      cast: "Emma Stone, Mark Ruffalo, Willem Dafoe",
-      category: "trending",
-      videoUrl: "https://www.youtube.com/watch?v=Rrvn_LSDzZg" // YouTube
-    },
-    {
-      id: 4,
-      title: "The Batman",
-      year: 2022,
-      duration: "2h 56min",
-      rating: 7.8,
-      genre: "Ação / Drama",
-      desc: "No segundo ano de Batman patrulhando Gotham, um assassino em série conhecido como Charada começa a deixar pistas enigmáticas, desafiando o Cavaleiro das Trevas a descobrir sua identidade.",
-      poster: "https://image.tmdb.org/t/p/w500/74xTEgt7R36Fpooo50r9T25onhq.jpg",
-      backdrop: "https://image.tmdb.org/t/p/w1280/b0PlSFdDwbyK0cf5RxwDpaOJQvQ.jpg",
-      director: "Matt Reeves",
-      cast: "Robert Pattinson, Zoë Kravitz, Paul Dano",
-      category: "trending",
-      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4" // MP4 Direto
-    },
-    {
-      id: 5,
-      title: "Parasite",
-      year: 2019,
-      duration: "2h 12min",
-      rating: 8.5,
-      genre: "Thriller / Drama",
-      desc: "Greed and class discrimination threaten the newly formed symbiotic relationship between the wealthy Park family and the destitute Kim clan. Vencedor do Oscar de Melhor Filme.",
-      poster: "https://image.tmdb.org/t/p/w500/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg",
-      backdrop: "https://image.tmdb.org/t/p/w1280/TU9NIjwzjoKPwQHoKn5HEhkEL3.jpg",
-      director: "Bong Joon Ho",
-      cast: "Song Kang-ho, Lee Sun-kyun, Cho Yeo-jeong",
-      category: "trending",
-      videoUrl: "https://www.youtube.com/watch?v=5xH0HfJHsaY"
-    },
-    {
-      id: 6,
-      title: "Interstellar",
-      year: 2014,
-      duration: "2h 49min",
-      rating: 8.6,
-      genre: "Ficção Científica",
-      desc: "Equipe de exploradores que viajam por um buraco de minhoca no espaço na tentativa de garantir a sobrevivência da humanidade. Uma jornada épica pelo cosmos com Christopher Nolan.",
-      poster: "https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg",
-      backdrop: "https://image.tmdb.org/t/p/w1280/xJHokMbljvjADYdit5fK5VQsXEG.jpg",
-      director: "Christopher Nolan",
-      cast: "Matthew McConaughey, Anne Hathaway, Jessica Chastain",
-      category: "trending",
-      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4" // MP4 Direto
-    },
-    {
-      id: 7,
-      title: "Past Lives",
-      year: 2023,
-      duration: "1h 46min",
-      rating: 7.9,
-      genre: "Romance / Drama",
-      desc: "Duas amizades de infância são separadas depois que uma delas emigra da Coreia. Vinte anos depois, eles se reencontram em Nova York por uma semana enquanto confrontam o que poderia ter sido.",
-      poster: "https://image.tmdb.org/t/p/w500/k3waqVXSngKtCCpGhRZNsOlCgXB.jpg",
-      backdrop: "https://image.tmdb.org/t/p/w1280/eHMh7kChaNeD4VTdMhZuFlatNSA.jpg",
-      director: "Celine Song",
-      cast: "Greta Lee, Teo Yoo, John Magaro",
-      category: "trending",
-      videoUrl: "https://www.youtube.com/watch?v=kA244xewjcI"
-    },
-    {
-      id: 8,
-      title: "Everything Everywhere",
-      year: 2022,
-      duration: "2h 19min",
-      rating: 7.8,
-      genre: "Ação / Comédia",
-      desc: "An aging Chinese immigrant is swept up in an insane adventure, where she alone can save the world by exploring other universes connecting with the lives she could have led.",
-      poster: "https://image.tmdb.org/t/p/w500/w3LxiVYdWWRvEVdn5RYq6jIqkb1.jpg",
-      backdrop: "https://image.tmdb.org/t/p/w1280/feSiISwgEpVzR1v3zv2n2LsbXLC.jpg",
-      director: "Daniel Kwan",
-      cast: "Michelle Yeoh, Ke Huy Quan, Jamie Lee Curtis",
-      category: "trending",
-      videoUrl: "https://www.youtube.com/watch?v=wxN1T1UxQ2A"
-    },
-  ],
-  new: [
-    {
-      id: 26,
-      title: "Creed: Nascido para Lutar",
-      year: 2016,
-      duration: "2h 13min",
-      rating: 7.6,
-      genre: "Ação / Drama",
-      desc: "Adonis Johnson, filho do campeão de boxe Apollo Creed, decide seguir os passos do pai. Ele viaja para Filadélfia e convence Rocky Balboa, o antigo rival e amigo de seu pai, a ser seu treinador.",
-      poster: "creed_poster.png",
-      backdrop: "creed_backdrop.png",
-      director: "Ryan Coogler",
-      cast: "Michael B. Jordan, Sylvester Stallone, Tessa Thompson",
-      category: "new",
-      videoUrl: "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/Creed%20Nascido%20Para%20Lutar%202016%20Bluray%201080p%20Dublado%20-%20WWW.THEPIRATEFILMES.COM.mp4"
-    },
-    {
-      id: 25,
-      title: "Dupla Perigosa",
-      year: 2026,
-      duration: "2h 15min",
-      rating: 8.9,
-      genre: "Ação / Conspiração",
-      desc: "Dois meios-irmãos que não se falavam há muito tempo se reencontram após a morte misteriosa do pai deles. Ao buscarem a verdade, desvendam segredos de uma conspiração que pode destruir a família.",
-      poster: "dupla_perigosa_poster.png",
-      backdrop: "dupla_perigosa_backdrop.png",
-      director: "Ángel Manuel Soto",
-      cast: "Dave Bautista, Jason Momoa, Temuera Morrison",
-      category: "new",
-      videoUrl: "/api/video/stream?id=16O_SsTEQ3xavbjWNbM2MfpeOsQL7lXS2"
-    },
-    {
-      id: 9,
-      title: "Furiosa",
-      year: 2024,
-      duration: "2h 28min",
-      rating: 7.8,
-      genre: "Ação / Aventura",
-      desc: "A origem de Furiosa desde a terra natal e como ela chegou a governar o War Rig. Uma épica de ação e sobrevivência no mundo pós-apocalíptico de Mad Max.",
-      poster: "https://image.tmdb.org/t/p/w500/iADOJ8Zymht2JPMoy3R7xceZprc.jpg",
-      backdrop: "https://image.tmdb.org/t/p/w1280/fqv8v6AycXKsivp1T5yKtLbGXce.jpg",
-      director: "George Miller",
-      cast: "Anya Taylor-Joy, Chris Hemsworth, Tom Burke",
-      category: "new",
-      videoUrl: "https://www.youtube.com/watch?v=XJMuhwVlca4"
-    },
-    {
-      id: 10,
-      title: "Civil War",
-      year: 2024,
-      duration: "1h 49min",
-      rating: 7.3,
-      genre: "Ação / Drama",
-      desc: "A team of military-embedded journalists race against time to reach DC before rebel factions descend upon the White House. Um olhar perturbador sobre um futuro próximo.",
-      poster: "https://image.tmdb.org/t/p/w500/sh7Rg8Er3tFcN9BpKIPOMvALgZd.jpg",
-      backdrop: "https://image.tmdb.org/t/p/w1280/ugS5FVfCI3RV0ZwZtBV3HAV75OX.jpg",
-      director: "Alex Garland",
-      cast: "Kirsten Dunst, Wagner Moura, Cailee Spaeny",
-      category: "new",
-      videoUrl: "https://www.youtube.com/watch?v=aDyQxtg0V2w"
-    },
-    {
-      id: 11,
-      title: "Longlegs",
-      year: 2024,
-      duration: "1h 41min",
-      rating: 6.3,
-      genre: "Terror / Thriller",
-      desc: "Uma agente do FBI é chamada para ajudar a capturar um serial killer solitário. Um thriller psicológico aterrorizante com Nicolas Cage em performance memorável.",
-      poster: "https://image.tmdb.org/t/p/w500/qRaa8x5Q2bAZOaOnLm5K7kPHxij.jpg",
-      backdrop: "https://image.tmdb.org/t/p/w1280/3TNSoa0UHGEzEz5WZOE4BtaEsYE.jpg",
-      director: "Osgood Perkins",
-      cast: "Maika Monroe, Nicolas Cage, Alicia Witt",
-      category: "new",
-      videoUrl: "https://www.youtube.com/watch?v=ccWzW5W3S-4"
-    },
-    {
-      id: 12,
-      title: "Inside Out 2",
-      year: 2024,
-      duration: "1h 40min",
-      rating: 7.5,
-      genre: "Animação / Comédia",
-      desc: "Riley entra na adolescência e novas emoções surgem na cabeça dela, colocando em risco a harmonia estabelecida pelas emoções originais. Uma sequência emocionante e necessária.",
-      poster: "https://image.tmdb.org/t/p/w500/vpnVM9B6NMmQpWeZvzLvDESb2QY.jpg",
-      backdrop: "https://image.tmdb.org/t/p/w1280/tEHbMiMU0wvtinCJzPAZoMRPWNX.jpg",
-      director: "Kelsey Mann",
-      cast: "Amy Poehler, Maya Hawke, Kensington Tallman",
-      category: "new",
-      videoUrl: "https://www.youtube.com/watch?v=LEjhY15eCx0"
-    },
-    {
-      id: 13,
-      title: "Alien: Romulus",
-      year: 2024,
-      duration: "1h 59min",
-      rating: 7.3,
-      genre: "Terror / Ficção",
-      desc: "Um grupo de jovens colonizadores do espaço profundo se veem face a face com a forma de vida mais aterrorizante do universo. Um retorno às origens da franquia Alien.",
-      poster: "https://image.tmdb.org/t/p/w500/b33nnKl1GSFbao4l3fZDDqsMx0F.jpg",
-      backdrop: "https://image.tmdb.org/t/p/w1280/9SSEUrSqhljBMzRe4aBTh17rUaC.jpg",
-      director: "Fede Álvarez",
-      cast: "Cailee Spaeny, David Jonsson, Archie Renaux",
-      category: "new",
-      videoUrl: "https://www.youtube.com/watch?v=x0XDEy1t9dI"
-    },
-    {
-      id: 14,
-      title: "Deadpool & Wolverine",
-      year: 2024,
-      duration: "2h 7min",
-      rating: 7.7,
-      genre: "Ação / Comédia",
-      desc: "Deadpool recruta um relutante Wolverine para uma missão que impacta a história do MCU. O duo mais improbável do cinema em uma aventura caótica e divertida.",
-      poster: "https://image.tmdb.org/t/p/w500/8cdWjvZQUExUUTzyp4t6EDMubfO.jpg",
-      backdrop: "https://image.tmdb.org/t/p/w1280/yDHYTfA3R0jFYba16jBB1ef8oIt.jpg",
-      director: "Shawn Levy",
-      cast: "Ryan Reynolds, Hugh Jackman, Emma Corrin",
-      category: "new",
-      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4" // MP4 Direto
-    },
-    {
-      id: 15,
-      title: "Challengers",
-      year: 2024,
-      duration: "2h 11min",
-      rating: 7.4,
-      genre: "Drama / Romance",
-      desc: "A former tennis prodigy turned coach puts her husband and her ex-boyfriend, now rivals, against each other. Um triângulo amoroso servido com tensão e estilo por Luca Guadagnino.",
-      poster: "https://image.tmdb.org/t/p/w500/H6vke7MJABMCmBT7Kw4PPZP0XT.jpg",
-      backdrop: "https://image.tmdb.org/t/p/w1280/2rmK7mnchw9Xr3XdiAwdt5OXcIh.jpg",
-      director: "Luca Guadagnino",
-      cast: "Zendaya, Mike Faist, Josh O'Connor",
-      category: "new",
-      videoUrl: "https://www.youtube.com/watch?v=VobT0to272U"
-    },
-    {
-      id: 16,
-      title: "Twisters",
-      year: 2024,
-      duration: "2h 2min",
-      rating: 7.2,
-      genre: "Ação / Aventura",
-      desc: "Kate Cooper, ex-perseguidora de tempestades traumatizada por um incidente no passado, é atraída de volta para as planícies do Oklahoma por seu amigo de infância.",
-      poster: "https://image.tmdb.org/t/p/w500/pjnD08FlMAIXsfOLKQbovhFbOpo.jpg",
-      backdrop: "https://image.tmdb.org/t/p/w1280/cOXKUkFKqHQpIVaVZMornoTe6BP.jpg",
-      director: "Lee Isaac Chung",
-      cast: "Daisy Edgar-Jones, Glen Powell, Anthony Ramos",
-      category: "new",
-      videoUrl: "https://www.youtube.com/watch?v=l49T1Bq-580"
-    },
-  ],
-  action: [
-    {
-      id: 26,
-      title: "Creed: Nascido para Lutar",
-      year: 2016,
-      duration: "2h 13min",
-      rating: 7.6,
-      genre: "Ação / Drama",
-      desc: "Adonis Johnson, filho do campeão de boxe Apollo Creed, decide seguir os passos do pai. Ele viaja para Filadélfia e convence Rocky Balboa, o antigo rival e amigo de seu pai, a ser seu treinador.",
-      poster: "creed_poster.png",
-      backdrop: "creed_backdrop.png",
-      director: "Ryan Coogler",
-      cast: "Michael B. Jordan, Sylvester Stallone, Tessa Thompson",
-      category: "action",
-      videoUrl: "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/Creed%20Nascido%20Para%20Lutar%202016%20Bluray%201080p%20Dublado%20-%20WWW.THEPIRATEFILMES.COM.mp4"
-    },
-    {
-      id: 25,
-      title: "Dupla Perigosa",
-      year: 2026,
-      duration: "2h 15min",
-      rating: 8.9,
-      genre: "Ação / Conspiração",
-      desc: "Dois meios-irmãos que não se falavam há muito tempo se reencontram após a morte misteriosa do pai deles. Ao buscarem a verdade, desvendam segredos de uma conspiração que pode destruir a família.",
-      poster: "dupla_perigosa_poster.png",
-      backdrop: "dupla_perigosa_backdrop.png",
-      director: "Ángel Manuel Soto",
-      cast: "Dave Bautista, Jason Momoa, Temuera Morrison",
-      category: "action",
-      videoUrl: "/api/video/stream?id=16O_SsTEQ3xavbjWNbM2MfpeOsQL7lXS2"
-    },
-    {
-      id: 17,
-      title: "Mission: Impossible 7",
-      year: 2023,
-      duration: "2h 43min",
-      rating: 7.7,
-      genre: "Ação / Aventura",
-      desc: "Ethan Hunt e sua equipe IMF embarcam em sua missão mais perigosa até agora: rastrear uma ameaça de arma nova e terrível antes que ela se espalhe.",
-      poster: "https://image.tmdb.org/t/p/w500/NNxYkU70HPurnNCSiCjYAmacwm.jpg",
-      backdrop: "https://image.tmdb.org/t/p/w1280/8Up8DZ8PLRZ23VVUP9mfAzZjRMF.jpg",
-      director: "Christopher McQuarrie",
-      cast: "Tom Cruise, Hayley Atwell, Ving Rhames",
-      category: "action",
-      videoUrl: "https://www.youtube.com/watch?v=2m1drlOZSDw"
-    },
-    {
-      id: 18,
-      title: "Top Gun: Maverick",
-      year: 2022,
-      duration: "2h 10min",
-      rating: 8.2,
-      genre: "Ação / Drama",
-      desc: "Após mais de trinta anos de serviço como um dos principais pilotos da marinha, Pete Mitchell está onde sempre pertenceu, empurrando o envelope como piloto corajoso.",
-      poster: "https://image.tmdb.org/t/p/w500/62HCnUTziyWcpDaBO2i1DX17ljH.jpg",
-      backdrop: "https://image.tmdb.org/t/p/w1280/AkB5TbGRmItPMNIMODHHCxGBzgs.jpg",
-      director: "Joseph Kosinski",
-      cast: "Tom Cruise, Miles Teller, Jennifer Connelly",
-      category: "action",
-      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutback.mp4" // MP4 Direto
-    },
-    {
-      id: 19,
-      title: "John Wick 4",
-      year: 2023,
-      duration: "2h 49min",
-      rating: 7.7,
-      genre: "Ação / Thriller",
-      desc: "John Wick descobre um caminho para derrotar a Alta Mesa. Mas antes de ganhar sua liberdade, Wick deve enfrentar um novo inimigo com alianças poderosas.",
-      poster: "https://image.tmdb.org/t/p/w500/vZloFAK7NmvMGKE7VkF5UHaz0I.jpg",
-      backdrop: "https://image.tmdb.org/t/p/w1280/aeqZdp31F6VBqWmVYKkacfpj7RZ.jpg",
-      director: "Chad Stahelski",
-      cast: "Keanu Reeves, Donnie Yen, Bill Skarsgård",
-      category: "action",
-      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" // MP4 Direto
-    },
-    {
-      id: 20,
-      title: "Avatar: The Way of Water",
-      year: 2022,
-      duration: "3h 12min",
-      rating: 7.6,
-      genre: "Ficção / Aventura",
-      desc: "Jake Sully e Ney'tiri formaram uma família e fazem tudo para ficar juntos. No entanto, eles devem deixar seu lar e explorar as regiões de Pandora.",
-      poster: "https://image.tmdb.org/t/p/w500/t6HIqrRAclMCA60NsSmeqe9RmNV.jpg",
-      backdrop: "https://image.tmdb.org/t/p/w1280/s16H6tpK2utvwDtzZ8Qy8tMp5ED.jpg",
-      director: "James Cameron",
-      cast: "Sam Worthington, Zoe Saldana, Sigourney Weaver",
-      category: "action",
-      videoUrl: "https://www.youtube.com/watch?v=d9MyW72ELq0"
-    },
-    {
-      id: 21,
-      title: "Black Panther: Wakanda Forever",
-      year: 2022,
-      duration: "2h 41min",
-      rating: 7.1,
-      genre: "Ação / Aventura",
-      desc: "A rainha Ramonda, Shuri, M'Baku, Okoye e os Doras Milaje lutam para proteger sua nação das potências mundiais intervencionistas após a morte do rei T'Challa.",
-      poster: "https://image.tmdb.org/t/p/w500/sv1xJUazXoQuI2bsktqKkm59SBHH.jpg",
-      backdrop: "https://image.tmdb.org/t/p/w1280/xDMIl84Qo5Tsu62c9DGWhmPI67A.jpg",
-      director: "Ryan Coogler",
-      cast: "Letitia Wright, Lupita Nyong'o, Angela Bassett",
-      category: "action",
-      videoUrl: "https://www.youtube.com/watch?v=_Z3QKkl1WyM"
-    },
-    {
-      id: 22,
-      title: "Gladiator II",
-      year: 2024,
-      duration: "2h 28min",
-      rating: 6.8,
-      genre: "Ação / Drama",
-      desc: "Anos após os eventos do primeiro Gladiador, Lucio assiste ao Império Romano ser governado por tiranos. Para poder lutar pelos povos de Roma, ele deve entrar no Coliseu.",
-      poster: "https://image.tmdb.org/t/p/w500/2cxhvwyEwRlysAmRH4iodkvo0z5.jpg",
-      backdrop: "https://image.tmdb.org/t/p/w1280/tkm9LkM7RfKpTNqpGKJJ8prIqYR.jpg",
-      director: "Ridley Scott",
-      cast: "Paul Mescal, Pedro Pascal, Denzel Washington",
-      category: "action",
-      videoUrl: "https://www.youtube.com/watch?v=gT3rXG40a6E"
-    },
-    {
-      id: 23,
-      title: "The Fall Guy",
-      year: 2024,
-      duration: "2h 6min",
-      rating: 7.2,
-      genre: "Ação / Comédia",
-      desc: "A stuntman, fresh off an almost career-ending accident, is thrown back into action when the star of a studio's biggest film goes missing.",
-      poster: "https://image.tmdb.org/t/p/w500/oBIQDKcqNxKckjugtmzpIIOgoc4.jpg",
-      backdrop: "https://image.tmdb.org/t/p/w1280/H5HjE7Xb9N09rbWn1zBfxgI8uz.jpg",
-      director: "David Leitch",
-      cast: "Ryan Gosling, Emily Blunt, Winston Duke",
-      category: "action",
-      videoUrl: "https://www.youtube.com/watch?v=j7jPnwVGdZ8"
-    },
-    {
-      id: 24,
-      title: "Thor: Love and Thunder",
-      year: 2022,
-      duration: "1h 59min",
-      rating: 6.3,
-      genre: "Ação / Fantasia",
-      desc: "Thor embarca em uma jornada diferente de tudo que já enfrentou — uma busca pela paz interior. Mas seu retiro é interrompido por um assassino galáctico chamado Gorr.",
-      poster: "https://image.tmdb.org/t/p/w500/pIkRyD18kl4FhoCNQuWxWu5cBLM.jpg",
-      backdrop: "https://image.tmdb.org/t/p/w1280/57lGJCPuMjCDfRGCsJkEwN9XBKJ.jpg",
-      director: "Taika Waititi",
-      cast: "Chris Hemsworth, Natalie Portman, Christian Bale",
-      category: "action",
-      videoUrl: "https://www.youtube.com/watch?v=Go8nTmfrQd8"
-    },
-  ]
-};
 
-// Top 10 compiled from best movies
-const TOP10 = [
-  MOVIES.new[0],      // Dupla Perigosa - 8.9 (Novo Top 1)
-  MOVIES.trending[5], // Interstellar 8.6
-  MOVIES.trending[0], // Dune 2 - 8.5
-  MOVIES.trending[4], // Parasite - 8.5
-  MOVIES.trending[1], // Oppenheimer - 8.3
-  MOVIES.action[2],   // Top Gun: Maverick (agora com id correto 18, index 2 no array action. Note que index 0 é Dupla Perigosa, index 1 é M:I 7, index 2 é Top Gun)
-  MOVIES.trending[2], // Poor Things - 8.0
-  MOVIES.trending[6], // Past Lives - 7.9
-  MOVIES.trending[3], // The Batman - 7.8
-  MOVIES.new[1],      // Furiosa (index 1 agora) - 7.8
-];
-
-// Hero slides
-const HERO_SLIDES = [
-  {
-    title: "Dupla Perigosa",
-    year: 2026,
-    duration: "2h 15min",
-    rating: 8.9,
-    genre: "Ação / Conspiração",
-    desc: "Dois meios-irmãos que não se falavam há muito tempo se reencontram após a morte misteriosa do pai deles. Ao buscarem a verdade, desvendam segredos de uma conspiração que pode destruir a família.",
-    backdrop: "dupla_perigosa_backdrop.png",
-    movieId: 25
-  },
-  {
-    title: "Dune: Part Two",
-    year: 2024,
-    duration: "2h 46min",
-    rating: 8.5,
-    genre: "Ficção Científica",
-    desc: "Paul Atreides se une a Chani e aos Fremen enquanto busca vingança contra os conspiradores que destruíram sua família. Uma épica jornada cinematográfica.",
-    backdrop: "https://image.tmdb.org/t/p/w1280/xOMo8BRK7PfcJv9JCnx7s5hj0PX.jpg",
-    movieId: 1
-  },
-  {
-    title: "Interstellar",
-    year: 2014,
-    duration: "2h 49min",
-    rating: 8.6,
-    genre: "Ficção Científica",
-    desc: "Uma equipe de exploradores viaja por um buraco de minhoca no espaço na tentativa de garantir a sobrevivência da humanidade. Uma obra-prima de Christopher Nolan.",
-    backdrop: "https://image.tmdb.org/t/p/w1280/xJHokMbljvjADYdit5fK5VQsXEG.jpg",
-    movieId: 6
-  },
-  {
-    title: "Oppenheimer",
-    year: 2023,
-    duration: "3h 0min",
-    rating: 8.3,
-    genre: "Drama / História",
-    desc: "A história do físico J. Robert Oppenheimer e seu papel no desenvolvimento da primeira bomba atômica. Vencedor de 7 Oscars, incluindo Melhor Filme.",
-    backdrop: "https://image.tmdb.org/t/p/w1280/rLb2cwF3Pazuxaj0sRXQ037tGI1.jpg",
-    movieId: 2
-  }
-];
+// Top 10, Hero Slides e Categoria de Filmes carregadas dinamicamente da API
+let MOVIES = { trending: [], new: [], action: [] };
+let TOP10 = [];
+let HERO_SLIDES = [];
 
 // ---- STATE ----
 let currentHeroSlide = 0;
@@ -535,8 +53,54 @@ function simulateLoading() {
 }
 
 // ---- INIT ----
-function initApp() {
+async function initApp() {
   createParticles();
+
+  try {
+    const res = await fetch('/api/movies');
+    if (!res.ok) throw new Error('Erro ao carregar catálogo');
+    const data = await res.json();
+    const list = data.movies || [];
+
+    // Organizar por categorias
+    MOVIES.trending = list.filter(m => m.category === 'trending');
+    MOVIES.new = list.filter(m => m.category === 'new');
+    MOVIES.action = list.filter(m => m.category === 'action');
+
+    // Gerar Top 10 dinâmico
+    TOP10 = [...list].sort((a, b) => b.rating - a.rating).slice(0, 10);
+
+    // Gerar Hero Slides com os 3 melhores avaliados
+    const candidates = [...list].sort((a, b) => b.rating - a.rating);
+    HERO_SLIDES = candidates.slice(0, 3).map(m => ({
+      title: m.title,
+      year: m.year,
+      duration: m.duration,
+      rating: m.rating,
+      genre: m.genre,
+      desc: m.desc,
+      backdrop: m.backdrop,
+      movieId: m.id
+    }));
+
+    if (HERO_SLIDES.length === 0) {
+      HERO_SLIDES.push({
+        title: "GOATCINE",
+        year: 2026,
+        duration: "0",
+        rating: 10,
+        genre: "Premium",
+        desc: "Bem-vindo ao GOATCINE! Adicione filmes pelo painel administrativo para ver o catálogo carregado.",
+        backdrop: "",
+        movieId: 0
+      });
+    }
+
+  } catch (err) {
+    console.error('[LOAD CATALOGUE ERROR]', err);
+    showToast('⚠️ Erro ao conectar com o catálogo de filmes.');
+  }
+
   renderCarousel('carousel-trending', MOVIES.trending);
   renderCarousel('carousel-new', MOVIES.new);
   renderCarousel('carousel-action', MOVIES.action);

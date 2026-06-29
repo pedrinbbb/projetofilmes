@@ -14,11 +14,20 @@ const fetch      = require('node-fetch');
 const cors       = require('cors');
 const nodemailer = require('nodemailer');
 const initSqlJs  = require('sql.js');
+const crypto     = require('crypto');
 
 const app        = express();
 const PORT       = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'goatcine_dev_secret';
 const DB_PATH    = fs.existsSync('/data') ? '/data/goatcine.db' : path.join(__dirname, 'goatcine.db');
+
+// Autenticação única de Admin
+let ADMIN_PASSWORD = process.env.ADMIN_PASS;
+if (!ADMIN_PASSWORD) {
+  ADMIN_PASSWORD = crypto.randomBytes(6).toString('hex'); // 12 caracteres aleatórios hex
+}
+const ADMIN_JWT_SECRET = JWT_SECRET + '_admin';
+
 
 // =============================================
 //  EMAIL TRANSPORTER
@@ -159,6 +168,407 @@ async function initDatabase() {
     );
   `);
 
+  db.run(`
+    CREATE TABLE IF NOT EXISTS movies (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      title       TEXT    NOT NULL,
+      year        INTEGER NOT NULL,
+      duration    TEXT    NOT NULL,
+      rating      REAL    NOT NULL,
+      genre       TEXT    NOT NULL,
+      desc        TEXT    NOT NULL,
+      poster      TEXT    NOT NULL,
+      backdrop    TEXT    NOT NULL,
+      director    TEXT    NOT NULL,
+      cast        TEXT    NOT NULL,
+      category    TEXT    NOT NULL,
+      videoUrl    TEXT    NOT NULL
+    );
+  `);
+
+  // Seed de filmes se a tabela estiver vazia
+  const countRes = db.exec('SELECT COUNT(*) as count FROM movies');
+  const count = countRes[0]?.values[0][0] ?? 0;
+  if (count === 0) {
+    console.log('  📦 Populando tabela de filmes (Seeding)...');
+    const defaultMovies = [
+      {
+        title: "Dune: Part Two",
+        year: 2024,
+        duration: "2h 46min",
+        rating: 8.5,
+        genre: "Ficção Científica",
+        desc: "Paul Atreides se une a Chani e aos Fremen enquanto busca vingança contra os conspiradores que destruíram sua família. Confrontando uma escolha entre o amor de sua vida e o destino do universo, ele se esforça para evitar um futuro terrível.",
+        poster: "https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg",
+        backdrop: "https://image.tmdb.org/t/p/w1280/xOMo8BRK7PfcJv9JCnx7s5hj0PX.jpg",
+        director: "Denis Villeneuve",
+        cast: "Timothée Chalamet, Zendaya, Rebecca Ferguson",
+        category: "trending",
+        videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+      },
+      {
+        title: "Oppenheimer",
+        year: 2023,
+        duration: "3h 0min",
+        rating: 8.3,
+        genre: "Drama / História",
+        desc: "A história do físico J. Robert Oppenheimer e seu papel no desenvolvimento da primeira bomba atômica durante a Segunda Guerra Mundial. Uma obra-prima cinematográfica de Christopher Nolan.",
+        poster: "https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
+        backdrop: "https://image.tmdb.org/t/p/w1280/rLb2cwF3Pazuxaj0sRXQ037tGI1.jpg",
+        director: "Christopher Nolan",
+        cast: "Cillian Murphy, Emily Blunt, Matt Damon",
+        category: "trending",
+        videoUrl: "https://www.youtube.com/watch?v=F3OxA9C30dQ"
+      },
+      {
+        title: "Poor Things",
+        year: 2023,
+        duration: "2h 21min",
+        rating: 8.0,
+        genre: "Fantasia / Drama",
+        desc: "A incrível história de Bella Baxter, uma jovem mulher trazida de volta à vida pelo brilhante e incomum cientista Dr. Godwin Baxter. Sob a proteção de Baxter, Bella anseia por aprender.",
+        poster: "https://image.tmdb.org/t/p/w500/kCGlIMHnOm8JPXIf8XMjUZbCIOI.jpg",
+        backdrop: "https://image.tmdb.org/t/p/w1280/5YZbUmjbMa3ClvSoRdnMYJi7LVKS.jpg",
+        director: "Yorgos Lanthimos",
+        cast: "Emma Stone, Mark Ruffalo, Willem Dafoe",
+        category: "trending",
+        videoUrl: "https://www.youtube.com/watch?v=Rrvn_LSDzZg"
+      },
+      {
+        title: "The Batman",
+        year: 2022,
+        duration: "2h 56min",
+        rating: 7.8,
+        genre: "Ação / Drama",
+        desc: "No segundo ano de Batman patrulhando Gotham, um assassino em série conhecido como Charada começa a deixar pistas enigmáticas, desafiando o Cavaleiro das Trevas a descobrir sua identidade.",
+        poster: "https://image.tmdb.org/t/p/w500/74xTEgt7R36Fpooo50r9T25onhq.jpg",
+        backdrop: "https://image.tmdb.org/t/p/w1280/b0PlSFdDwbyK0cf5RxwDpaOJQvQ.jpg",
+        director: "Matt Reeves",
+        cast: "Robert Pattinson, Zoë Kravitz, Paul Dano",
+        category: "trending",
+        videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"
+      },
+      {
+        title: "Parasite",
+        year: 2019,
+        duration: "2h 12min",
+        rating: 8.5,
+        genre: "Thriller / Drama",
+        desc: "Greed and class discrimination threaten the newly formed symbiotic relationship between the wealthy Park family and the destitute Kim clan. Vencedor do Oscar de Melhor Filme.",
+        poster: "https://image.tmdb.org/t/p/w500/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg",
+        backdrop: "https://image.tmdb.org/t/p/w1280/TU9NIjwzjoKPwQHoKn5HEhkEL3.jpg",
+        director: "Bong Joon Ho",
+        cast: "Song Kang-ho, Lee Sun-kyun, Cho Yeo-jeong",
+        category: "trending",
+        videoUrl: "https://www.youtube.com/watch?v=5xH0HfJHsaY"
+      },
+      {
+        title: "Interstellar",
+        year: 2014,
+        duration: "2h 49min",
+        rating: 8.6,
+        genre: "Ficção Científica",
+        desc: "Equipe de exploradores que viajam por um buraco de minhoca no espaço na tentativa de garantir a sobrevivência da humanidade. Uma jornada épica pelo cosmos com Christopher Nolan.",
+        poster: "https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg",
+        backdrop: "https://image.tmdb.org/t/p/w1280/xJHokMbljvjADYdit5fK5VQsXEG.jpg",
+        director: "Christopher Nolan",
+        cast: "Matthew McConaughey, Anne Hathaway, Jessica Chastain",
+        category: "trending",
+        videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4"
+      },
+      {
+        title: "Past Lives",
+        year: 2023,
+        duration: "1h 46min",
+        rating: 7.9,
+        genre: "Romance / Drama",
+        desc: "Duas amizades de infância são separadas depois que uma delas emigra da Coreia. Vinte anos depois, eles se reencontram em Nova York por uma semana enquanto confrontam o que poderia ter sido.",
+        poster: "https://image.tmdb.org/t/p/w500/k3waqVXSngKtCCpGhRZNsOlCgXB.jpg",
+        backdrop: "https://image.tmdb.org/t/p/w1280/eHMh7kChaNeD4VTdMhZuFlatNSA.jpg",
+        director: "Celine Song",
+        cast: "Greta Lee, Teo Yoo, John Magaro",
+        category: "trending",
+        videoUrl: "https://www.youtube.com/watch?v=kA244xewjcI"
+      },
+      {
+        title: "Everything Everywhere",
+        year: 2022,
+        duration: "2h 19min",
+        rating: 7.8,
+        genre: "Ação / Comédia",
+        desc: "An aging Chinese immigrant is swept up in an insane adventure, where she alone can save the world by exploring other universes connecting with the lives she could have led.",
+        poster: "https://image.tmdb.org/t/p/w500/w3LxiVYdWWRvEVdn5RYq6jIqkb1.jpg",
+        backdrop: "https://image.tmdb.org/t/p/w1280/feSiISwgEpVzR1v3zv2n2LsbXLC.jpg",
+        director: "Daniel Kwan",
+        cast: "Michelle Yeoh, Ke Huy Quan, Jamie Lee Curtis",
+        category: "trending",
+        videoUrl: "https://www.youtube.com/watch?v=wxN1T1UxQ2A"
+      },
+      {
+        title: "Creed: Nascido para Lutar",
+        year: 2016,
+        duration: "2h 13min",
+        rating: 7.6,
+        genre: "Ação / Drama",
+        desc: "Adonis Johnson, filho do campeão de boxe Apollo Creed, decide seguir os passos do pai. Ele viaja para Filadélfia e convence Rocky Balboa, o antigo rival e amigo de seu pai, a ser seu treinador.",
+        poster: "creed_poster.png",
+        backdrop: "creed_backdrop.png",
+        director: "Ryan Coogler",
+        cast: "Michael B. Jordan, Sylvester Stallone, Tessa Thompson",
+        category: "new",
+        videoUrl: "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/Creed%20Nascido%20Para%20Lutar%202016%20Bluray%201080p%20Dublado%20-%20WWW.THEPIRATEFILMES.COM.mp4"
+      },
+      {
+        title: "Dupla Perigosa",
+        year: 2026,
+        duration: "2h 15min",
+        rating: 8.9,
+        genre: "Ação / Conspiração",
+        desc: "Dois meios-irmãos que não se falavam há muito tempo se reencontram após a morte misteriosa do pai deles. Ao buscarem a verdade, desvendam segredos de uma conspiração que pode destruir a família.",
+        poster: "dupla_perigosa_poster.png",
+        backdrop: "dupla_perigosa_backdrop.png",
+        director: "Ángel Manuel Soto",
+        cast: "Dave Bautista, Jason Momoa, Temuera Morrison",
+        category: "new",
+        videoUrl: "/api/video/stream?id=16O_SsTEQ3xavbjWNbM2MfpeOsQL7lXS2"
+      },
+      {
+        title: "Furiosa",
+        year: 2024,
+        duration: "2h 28min",
+        rating: 7.8,
+        genre: "Ação / Aventura",
+        desc: "A origem de Furiosa desde a terra natal e como ela chegou a governar o War Rig. Uma épica de ação e sobrevivência no mundo pós-apocalíptico de Mad Max.",
+        poster: "https://image.tmdb.org/t/p/w500/iADOJ8Zymht2JPMoy3R7xceZprc.jpg",
+        backdrop: "https://image.tmdb.org/t/p/w1280/fqv8v6AycXKsivp1T5yKtLbGXce.jpg",
+        director: "George Miller",
+        cast: "Anya Taylor-Joy, Chris Hemsworth, Tom Burke",
+        category: "new",
+        videoUrl: "https://www.youtube.com/watch?v=XJMuhwVlca4"
+      },
+      {
+        title: "Civil War",
+        year: 2024,
+        duration: "1h 49min",
+        rating: 7.3,
+        genre: "Ação / Drama",
+        desc: "A team of military-embedded journalists race against time to reach DC before rebel factions descend upon the White House. Um olhar perturbador sobre um futuro próximo.",
+        poster: "https://image.tmdb.org/t/p/w500/sh7Rg8Er3tFcN9BpKIPOMvALgZd.jpg",
+        backdrop: "https://image.tmdb.org/t/p/w1280/ugS5FVfCI3RV0ZwZtBV3HAV75OX.jpg",
+        director: "Alex Garland",
+        cast: "Kirsten Dunst, Wagner Moura, Cailee Spaeny",
+        category: "new",
+        videoUrl: "https://www.youtube.com/watch?v=aDyQxtg0V2w"
+      },
+      {
+        title: "Longlegs",
+        year: 2024,
+        duration: "1h 41min",
+        rating: 6.3,
+        genre: "Terror / Thriller",
+        desc: "Uma agente do FBI é chamada para ajudar a capturar um serial killer solitário. Um thriller psicológico aterrorizante com Nicolas Cage em performance memorável.",
+        poster: "https://image.tmdb.org/t/p/w500/qRaa8x5Q2bAZOaOnLm5K7kPHxij.jpg",
+        backdrop: "https://image.tmdb.org/t/p/w1280/3TNSoa0UHGEzEz5WZOE4BtaEsYE.jpg",
+        director: "Osgood Perkins",
+        cast: "Maika Monroe, Nicolas Cage, Alicia Witt",
+        category: "new",
+        videoUrl: "https://www.youtube.com/watch?v=ccWzW5W3S-4"
+      },
+      {
+        title: "Inside Out 2",
+        year: 2024,
+        duration: "1h 40min",
+        rating: 7.5,
+        genre: "Animação / Comédia",
+        desc: "Riley entra na adolescência e novas emoções surgem na cabeça dela, colocando em risco a harmonia estabelecida pelas emoções originais. Uma sequência emocionante e necessária.",
+        poster: "https://image.tmdb.org/t/p/w500/vpnVM9B6NMmQpWeZvzLvDESb2QY.jpg",
+        backdrop: "https://image.tmdb.org/t/p/w1280/tEHbMiMU0wvtinCJzPAZoMRPWNX.jpg",
+        director: "Kelsey Mann",
+        cast: "Amy Poehler, Maya Hawke, Kensington Tallman",
+        category: "new",
+        videoUrl: "https://www.youtube.com/watch?v=LEjhY15eCx0"
+      },
+      {
+        title: "Alien: Romulus",
+        year: 2024,
+        duration: "1h 59min",
+        rating: 7.3,
+        genre: "Terror / Ficção",
+        desc: "Um grupo de jovens colonizadores do espaço profundo se veem face a face com a forma de vida mais aterrorizante do universo. Um retorno às origens da franquia Alien.",
+        poster: "https://image.tmdb.org/t/p/w500/b33nnKl1GSFbao4l3fZDDqsMx0F.jpg",
+        backdrop: "https://image.tmdb.org/t/p/w1280/9SSEUrSqhljBMzRe4aBTh17rUaC.jpg",
+        director: "Fede Álvarez",
+        cast: "Cailee Spaeny, David Jonsson, Archie Renaux",
+        category: "new",
+        videoUrl: "https://www.youtube.com/watch?v=x0XDEy1t9dI"
+      },
+      {
+        title: "Deadpool & Wolverine",
+        year: 2024,
+        duration: "2h 7min",
+        rating: 7.7,
+        genre: "Ação / Comédia",
+        desc: "Deadpool recruta um relutante Wolverine para uma missão que impacta a história do MCU. O duo mais improvável do cinema em uma aventura caótica e divertida.",
+        poster: "https://image.tmdb.org/t/p/w500/8cdWjvZQUExUUTzyp4t6EDMubfO.jpg",
+        backdrop: "https://image.tmdb.org/t/p/w1280/yDHYTfA3R0jFYba16jBB1ef8oIt.jpg",
+        director: "Shawn Levy",
+        cast: "Ryan Reynolds, Hugh Jackman, Emma Corrin",
+        category: "new",
+        videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"
+      },
+      {
+        title: "Challengers",
+        year: 2024,
+        duration: "2h 11min",
+        rating: 7.4,
+        genre: "Drama / Romance",
+        desc: "A former tennis prodigy turned coach puts her husband and her ex-boyfriend, now rivals, against each other. Um triângulo amoroso servido com tensão e estilo por Luca Guadagnino.",
+        poster: "https://image.tmdb.org/t/p/w500/H6vke7MJABMCmBT7Kw4PPZP0XT.jpg",
+        backdrop: "https://image.tmdb.org/t/p/w1280/2rmK7mnchw9Xr3XdiAwdt5OXcIh.jpg",
+        director: "Luca Guadagnino",
+        cast: "Zendaya, Mike Faist, Josh O'Connor",
+        category: "new",
+        videoUrl: "https://www.youtube.com/watch?v=VobT0to272U"
+      },
+      {
+        title: "Twisters",
+        year: 2024,
+        duration: "2h 2min",
+        rating: 7.2,
+        genre: "Ação / Aventura",
+        desc: "Kate Cooper, ex-perseguidora de tempestades traumatizada por um incidente no passado, é atraída de volta para as planícies do Oklahoma por seu amigo de infância.",
+        poster: "https://image.tmdb.org/t/p/w500/pjnD08FlMAIXsfOLKQbovhFbOpo.jpg",
+        backdrop: "https://image.tmdb.org/t/p/w1280/cOXKUkFKqHQpIVaVZMornoTe6BP.jpg",
+        director: "Lee Isaac Chung",
+        cast: "Daisy Edgar-Jones, Glen Powell, Anthony Ramos",
+        category: "new",
+        videoUrl: "https://www.youtube.com/watch?v=l49T1Bq-580"
+      },
+      {
+        title: "Mission: Impossible 7",
+        year: 2023,
+        duration: "2h 43min",
+        rating: 7.7,
+        genre: "Ação / Aventura",
+        desc: "Ethan Hunt e sua equipe IMF embarcam em sua missão mais perigosa até agora: rastrear uma ameaça de arma nova e terrível antes que ela se espalhe.",
+        poster: "https://image.tmdb.org/t/p/w500/NNxYkU70HPurnNCSiCjYAmacwm.jpg",
+        backdrop: "https://image.tmdb.org/t/p/w1280/8Up8DZ8PLRZ23VVUP9mfAzZjRMF.jpg",
+        director: "Christopher McQuarrie",
+        cast: "Tom Cruise, Hayley Atwell, Ving Rhames",
+        category: "action",
+        videoUrl: "https://www.youtube.com/watch?v=2m1drlOZSDw"
+      },
+      {
+        title: "Top Gun: Maverick",
+        year: 2022,
+        duration: "2h 10min",
+        rating: 8.2,
+        genre: "Ação / Drama",
+        desc: "Após mais de trinta anos de serviço como um dos principais pilotos da marinha, Pete Mitchell está onde sempre pertenceu, empurrando o envelope como piloto corajoso.",
+        poster: "https://image.tmdb.org/t/p/w500/62HCnUTziyWcpDaBO2i1DX17ljH.jpg",
+        backdrop: "https://image.tmdb.org/t/p/w1280/AkB5TbGRmItPMNIMODHHCxGBzgs.jpg",
+        director: "Joseph Kosinski",
+        cast: "Tom Cruise, Miles Teller, Jennifer Connelly",
+        category: "action",
+        videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutback.mp4"
+      },
+      {
+        title: "John Wick 4",
+        year: 2023,
+        duration: "2h 49min",
+        rating: 7.7,
+        genre: "Ação / Thriller",
+        desc: "John Wick descobre um caminho para derrotar a Alta Mesa. Mas antes de ganhar sua liberdade, Wick deve enfrentar um novo inimigo com alianças poderosas.",
+        poster: "https://image.tmdb.org/t/p/w500/vZloFAK7NmvMGKE7VkF5UHaz0I.jpg",
+        backdrop: "https://image.tmdb.org/t/p/w1280/aeqZdp31F6VBqWmVYKkacfpj7RZ.jpg",
+        director: "Chad Stahelski",
+        cast: "Keanu Reeves, Donnie Yen, Bill Skarsgård",
+        category: "action",
+        videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
+      },
+      {
+        title: "Avatar: The Way of Water",
+        year: 2022,
+        duration: "3h 12min",
+        rating: 7.6,
+        genre: "Ficção / Aventura",
+        desc: "Jake Sully e Ney'tiri formaram uma família e fazem tudo para ficar juntos. No entanto, eles devem deixar seu lar e explorar as regiões de Pandora.",
+        poster: "https://image.tmdb.org/t/p/w500/t6HIqrRAclMCA60NsSmeqe9RmNV.jpg",
+        backdrop: "https://image.tmdb.org/t/p/w1280/s16H6tpK2utvwDtzZ8Qy8tMp5ED.jpg",
+        director: "James Cameron",
+        cast: "Sam Worthington, Zoe Saldana, Sigourney Weaver",
+        category: "action",
+        videoUrl: "https://www.youtube.com/watch?v=d9MyW72ELq0"
+      },
+      {
+        title: "Black Panther: Wakanda Forever",
+        year: 2022,
+        duration: "2h 41min",
+        rating: 7.1,
+        genre: "Ação / Aventura",
+        desc: "A rainha Ramonda, Shuri, M'Baku, Okoye e os Doras Milaje lutam para proteger sua nação das potências mundiais intervencionistas após a morte do rei T'Challa.",
+        poster: "https://image.tmdb.org/t/p/w500/sv1xJUazXoQuI2bsktqKkm59SBHH.jpg",
+        backdrop: "https://image.tmdb.org/t/p/w1280/xDMIl84Qo5Tsu62c9DGWhmPI67A.jpg",
+        director: "Ryan Coogler",
+        cast: "Letitia Wright, Lupita Nyong'o, Angela Bassett",
+        category: "action",
+        videoUrl: "https://www.youtube.com/watch?v=_Z3QKkl1WyM"
+      },
+      {
+        title: "Gladiator II",
+        year: 2024,
+        duration: "2h 28min",
+        rating: 6.8,
+        genre: "Ação / Drama",
+        desc: "Anos após os eventos do primeiro Gladiador, Lucio assiste ao Império Romano ser governado por tiranos. Para poder lutar pelos povos de Roma, ele deve entrar no Coliseu.",
+        poster: "https://image.tmdb.org/t/p/w500/2cxhvwyEwRlysAmRH4iodkvo0z5.jpg",
+        backdrop: "https://image.tmdb.org/t/p/w1280/tkm9LkM7RfKpTNqpGKJJ8prIqYR.jpg",
+        director: "Ridley Scott",
+        cast: "Paul Mescal, Pedro Pascal, Denzel Washington",
+        category: "action",
+        videoUrl: "https://www.youtube.com/watch?v=gT3rXG40a6E"
+      },
+      {
+        title: "The Fall Guy",
+        year: 2024,
+        duration: "2h 6min",
+        rating: 7.2,
+        genre: "Ação / Comédia",
+        desc: "A stuntman, fresh off an almost career-ending accident, is thrown back into action when the star of a studio's biggest film goes missing.",
+        poster: "https://image.tmdb.org/t/p/w500/oBIQDKcqNxKckjugtmzpIIOgoc4.jpg",
+        backdrop: "https://image.tmdb.org/t/p/w1280/H5HjE7Xb9N09rbWn1zBfxgI8uz.jpg",
+        director: "David Leitch",
+        cast: "Ryan Gosling, Emily Blunt, Winston Duke",
+        category: "action",
+        videoUrl: "https://www.youtube.com/watch?v=j7jPnwVGdZ8"
+      },
+      {
+        title: "Thor: Love and Thunder",
+        year: 2022,
+        duration: "1h 59min",
+        rating: 6.3,
+        genre: "Ação / Fantasia",
+        desc: "Thor embarca em uma jornada diferente de tudo que já enfrentou — uma busca pela paz interior. Mas seu retiro é interrompido por um assassino galáctico chamado Gorr.",
+        poster: "https://image.tmdb.org/t/p/w500/pIkRyD18kl4FhoCNQuWxWu5cBLM.jpg",
+        backdrop: "https://image.tmdb.org/t/p/w1280/57lGJCPuMjCDfRGCsJkEwN9XBKJ.jpg",
+        director: "Taika Waititi",
+        cast: "Chris Hemsworth, Natalie Portman, Christian Bale",
+        category: "action",
+        videoUrl: "https://www.youtube.com/watch?v=Go8nTmfrQd8"
+      }
+    ];
+
+    defaultMovies.forEach(m => {
+      db.run(
+        `INSERT INTO movies (title, year, duration, rating, genre, desc, poster, backdrop, director, cast, category, videoUrl) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [m.title, m.year, m.duration, m.rating, m.genre, m.desc, m.poster, m.backdrop, m.director, m.cast, m.category, m.videoUrl]
+      );
+    });
+    saveDb();
+    console.log(`  ✅ ${defaultMovies.length} filmes semeados com sucesso!`);
+  }
+
   saveDb();
   console.log('  ✅ Banco SQLite iniciado');
 }
@@ -220,6 +630,27 @@ function requireAuth(req, res, next) {
     next();
   } catch {
     return res.status(401).json({ error: 'Token inválido ou expirado' });
+  }
+}
+
+function generateAdminToken() {
+  return jwt.sign(
+    { role: 'admin', user: 'admin' },
+    ADMIN_JWT_SECRET,
+    { expiresIn: '2h' }
+  );
+}
+
+function requireAdminAuth(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith('Bearer '))
+    return res.status(401).json({ error: 'Token administrativo não fornecido' });
+  const token = authHeader.slice(7);
+  try {
+    req.admin = jwt.verify(token, ADMIN_JWT_SECRET);
+    next();
+  } catch {
+    return res.status(401).json({ error: 'Token administrativo inválido ou expirado' });
   }
 }
 
@@ -639,8 +1070,147 @@ app.get('/api/video/stream', async (req, res) => {
   }
 });
 
+// =============================================
+//  ADMIN API ENDPOINTS
+// =============================================
+
+// Login Admin
+app.post('/api/admin/login', (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Usuário e senha são obrigatórios' });
+  }
+
+  if (username === 'admin' && password === ADMIN_PASSWORD) {
+    const token = generateAdminToken();
+    console.log('[ADMIN] ✅ Login administrativo efetuado');
+    return res.json({ token });
+  }
+
+  return res.status(401).json({ error: 'Usuário ou senha incorretos' });
+});
+
+// Listar Usuários (Admin)
+app.get('/api/admin/users', requireAdminAuth, (req, res) => {
+  try {
+    const stmt = db.prepare('SELECT id, name, email, discord_tag, method, created_at FROM users ORDER BY id DESC');
+    const users = [];
+    while (stmt.step()) {
+      users.push(stmt.getAsObject());
+    }
+    stmt.free();
+    return res.json({ users });
+  } catch (err) {
+    console.error('[ADMIN GET USERS ERROR]', err);
+    return res.status(500).json({ error: 'Erro ao buscar usuários' });
+  }
+});
+
+// Deletar Usuário (Admin)
+app.delete('/api/admin/users/:id', requireAdminAuth, (req, res) => {
+  const { id } = req.params;
+  try {
+    // Apagar também sessões ativas do usuário deletado
+    db.run('DELETE FROM sessions WHERE user_id = ?', [id]);
+    db.run('DELETE FROM users WHERE id = ?', [id]);
+    saveDb();
+    console.log(`[ADMIN] ❌ Usuário deletado. ID: ${id}`);
+    return res.json({ success: true, message: 'Usuário excluído com sucesso.' });
+  } catch (err) {
+    console.error('[ADMIN DELETE USER ERROR]', err);
+    return res.status(500).json({ error: 'Erro ao deletar usuário' });
+  }
+});
+
+// =============================================
+//  MOVIES API ENDPOINTS (Public & Admin CRUD)
+// =============================================
+
+// Listar todos os Filmes (Público)
+app.get('/api/movies', (req, res) => {
+  try {
+    const stmt = db.prepare('SELECT * FROM movies ORDER BY id DESC');
+    const movies = [];
+    while (stmt.step()) {
+      movies.push(stmt.getAsObject());
+    }
+    stmt.free();
+    return res.json({ movies });
+  } catch (err) {
+    console.error('[GET MOVIES ERROR]', err);
+    return res.status(500).json({ error: 'Erro ao buscar catálogo de filmes' });
+  }
+});
+
+// Adicionar Filme (Admin)
+app.post('/api/movies', requireAdminAuth, (req, res) => {
+  try {
+    const { title, year, duration, rating, genre, desc, poster, backdrop, director, cast, category, videoUrl } = req.body;
+    if (!title || !year || !duration || !rating || !genre || !desc || !poster || !backdrop || !director || !cast || !category || !videoUrl) {
+      return res.status(400).json({ error: 'Todos os campos do filme são obrigatórios' });
+    }
+
+    const movieId = dbRun(
+      `INSERT INTO movies (title, year, duration, rating, genre, desc, poster, backdrop, director, cast, category, videoUrl) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [title, year, duration, parseFloat(rating), genre, desc, poster, backdrop, director, cast, category, videoUrl]
+    );
+
+    console.log(`[ADMIN] 🎬 Novo filme adicionado: "${title}" (ID: ${movieId})`);
+    return res.status(201).json({ success: true, id: movieId, message: 'Filme adicionado com sucesso!' });
+  } catch (err) {
+    console.error('[ADD MOVIE ERROR]', err);
+    return res.status(500).json({ error: 'Erro ao adicionar filme no catálogo' });
+  }
+});
+
+// Editar Filme (Admin)
+app.put('/api/movies/:id', requireAdminAuth, (req, res) => {
+  const { id } = req.params;
+  try {
+    const { title, year, duration, rating, genre, desc, poster, backdrop, director, cast, category, videoUrl } = req.body;
+    if (!title || !year || !duration || !rating || !genre || !desc || !poster || !backdrop || !director || !cast || !category || !videoUrl) {
+      return res.status(400).json({ error: 'Todos os campos do filme são obrigatórios' });
+    }
+
+    db.run(
+      `UPDATE movies SET title=?, year=?, duration=?, rating=?, genre=?, desc=?, poster=?, backdrop=?, director=?, cast=?, category=?, videoUrl=?
+       WHERE id=?`,
+      [title, parseInt(year), duration, parseFloat(rating), genre, desc, poster, backdrop, director, cast, category, videoUrl, id]
+    );
+    saveDb();
+
+    console.log(`[ADMIN] 🎬 Filme atualizado: "${title}" (ID: ${id})`);
+    return res.json({ success: true, message: 'Filme atualizado com sucesso!' });
+  } catch (err) {
+    console.error('[EDIT MOVIE ERROR]', err);
+    return res.status(500).json({ error: 'Erro ao atualizar filme' });
+  }
+});
+
+// Deletar Filme (Admin)
+app.delete('/api/movies/:id', requireAdminAuth, (req, res) => {
+  const { id } = req.params;
+  try {
+    db.run('DELETE FROM movies WHERE id = ?', [id]);
+    saveDb();
+    console.log(`[ADMIN] ❌ Filme excluído. ID: ${id}`);
+    return res.json({ success: true, message: 'Filme removido do catálogo com sucesso.' });
+  } catch (err) {
+    console.error('[DELETE MOVIE ERROR]', err);
+    return res.status(500).json({ error: 'Erro ao excluir filme' });
+  }
+});
+
+// =============================================
+//  AMIGAVEIS / OUTROS
+// =============================================
 app.get('/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'login.html'));
+});
+
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
 app.get('/auth-callback', (req, res) => {
@@ -661,6 +1231,11 @@ initDatabase().then(() => {
     console.log('  ─────────────────────────────────────────');
     console.log(`  🌐 Site:  http://localhost:${PORT}`);
     console.log(`  🔑 Login: http://localhost:${PORT}/login`);
+    console.log(`  🛡️ Admin: http://localhost:${PORT}/admin`);
+    console.log('  ─────────────────────────────────────────');
+    console.log('  🔑 CREDENCIAIS DO PAINEL ADMIN:');
+    console.log('     Usuário: admin');
+    console.log(`     Senha:   ${ADMIN_PASSWORD}`);
     console.log('  ─────────────────────────────────────────');
 
     const discordOk = process.env.DISCORD_CLIENT_ID && process.env.DISCORD_CLIENT_ID !== 'SEU_CLIENT_ID_AQUI';

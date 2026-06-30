@@ -2,10 +2,6 @@
    GOATCINE — Profiles Page Logic
    ============================================= */
 
-const EMOJIS = ['🎬','🎭','🏆','🌟','👑','🦁','🐺','🦊','🐉','🎮',
-                '🎸','🚀','⚡','🔥','🌊','🎯','🦅','🐯','🎲','🌙',
-                '🍕','🎻','🛸','🦋','🎨'];
-
 const PROFILE_IMAGE_AVATARS = [
   {
     url: 'https://i.postimg.cc/HLpy2Qpv/image.png',
@@ -43,7 +39,7 @@ const COLORS = [
   '#85C1E9','#F1948A','#82E0AA','#F8C471','#AEB6BF',
 ];
 
-let selectedEmoji  = EMOJIS[0];
+let selectedEmoji  = PROFILE_IMAGE_AVATARS[0].url;
 let selectedColor  = COLORS[0];
 let isKid          = false;
 let isManageMode   = false;
@@ -129,23 +125,9 @@ function setAvatarContent(element, avatarValue, color, altText = 'Avatar do perf
 
 // ---- BUILD PICKERS ----
 function buildEmojiPicker() {
-  EMOJIS.forEach((emoji, i) => {
+  PROFILE_IMAGE_AVATARS.forEach((avatar, i) => {
     const btn = document.createElement('button');
-    btn.className = 'emoji-btn' + (i === 0 ? ' selected' : '');
-    btn.textContent = emoji;
-    btn.type = 'button';
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
-      selectedEmoji = emoji;
-      updatePreview();
-    });
-    emojiGrid.appendChild(btn);
-  });
-
-  PROFILE_IMAGE_AVATARS.forEach((avatar) => {
-    const btn = document.createElement('button');
-    btn.className = 'emoji-btn avatar-image-btn';
+    btn.className = 'emoji-btn avatar-image-btn' + (i === 0 ? ' selected' : '');
     btn.type = 'button';
     btn.title = avatar.label;
     btn.setAttribute('aria-label', avatar.label);
@@ -291,7 +273,7 @@ function showCreatePanel(required = false) {
   // Reset form
   nameInput.value = '';
   createError.textContent = '';
-  selectedEmoji = EMOJIS[0];
+  selectedEmoji = PROFILE_IMAGE_AVATARS[0].url;
   selectedColor = COLORS[0];
   isKid = false;
   kidToggle.classList.remove('on');

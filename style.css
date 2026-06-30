@@ -1763,68 +1763,58 @@ ul {
     position: fixed;
     top: calc(10px + env(safe-area-inset-top));
     left: 14px;
-    right: 14px;
     z-index: 1100;
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
+    display: flex;
     align-items: center;
-    gap: 10px;
-    min-height: 52px;
-    padding: 8px 10px 8px 14px;
-    border: 1px solid rgba(255, 215, 0, 0.18);
-    border-radius: 18px;
-    background: rgba(8, 8, 8, 0.86);
-    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.44);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-  }
-
-  .mobile-home-brand,
-  .mobile-home-brand-fallback {
-    display: inline-flex;
-    min-width: 0;
-    align-items: center;
-    gap: 9px;
-  }
-
-  .mobile-home-brand img {
-    max-height: 30px;
-  }
-
-  .mobile-home-brand-fallback {
-    display: none;
-  }
-
-  .mobile-home-brand .logo-icon {
-    font-size: 18px;
-  }
-
-  .mobile-home-brand .logo-text {
-    font-size: 17px;
+    min-height: 44px;
+    pointer-events: none;
   }
 
   .mobile-home-search {
     display: flex;
-    min-width: 0;
-    height: 40px;
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
     align-items: center;
+    justify-content: flex-start;
     gap: 8px;
-    padding: 0 12px;
+    padding: 0 13px;
     border: 1px solid rgba(255, 215, 0, 0.28);
-    border-radius: 14px;
+    border-radius: 16px;
     color: var(--gold-primary);
     background: linear-gradient(180deg, rgba(18, 14, 4, 0.94), rgba(7, 7, 7, 0.94));
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.44);
+    pointer-events: auto;
+    overflow: hidden;
+    transition: width 0.32s cubic-bezier(0.22, 1, 0.36, 1), border-radius 0.24s ease, box-shadow 0.24s ease;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  .mobile-home-search:focus-within,
+  .mobile-home-search.search-open {
+    width: min(188px, calc(100vw - 28px));
+    border-radius: 16px;
+    box-shadow: 0 16px 38px rgba(0, 0, 0, 0.5), 0 0 18px rgba(255, 215, 0, 0.12);
   }
 
   .mobile-home-search input {
     min-width: 0;
-    width: 100%;
+    width: 0;
     border: 0;
     outline: 0;
     color: var(--text-primary);
     background: transparent;
     font-size: 12px;
     font-weight: 800;
+    opacity: 0;
+    transition: width 0.28s ease, opacity 0.18s ease;
+  }
+
+  .mobile-home-search:focus-within input,
+  .mobile-home-search.search-open input {
+    width: 100%;
+    opacity: 1;
   }
 
   .mobile-home-search input::placeholder {

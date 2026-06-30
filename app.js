@@ -637,6 +637,7 @@ function performSearch(q) {
 function initSearch() {
   const searchInput = $('search-input');
   const mobileSearchInput = $('mobile-search-input');
+  const mobileSearchForm = $('mobile-home-search-form');
   const clearBtn = $('search-pill-clear');
   const searchContainer = $('nav-search-container');
   const searchPill = searchContainer?.querySelector('.search-pill');
@@ -674,7 +675,18 @@ function initSearch() {
     runSearchFrom(mobileSearchInput, e.target.value);
   }, 300));
 
-  $('mobile-home-search-form')?.addEventListener('submit', (e) => {
+  mobileSearchForm?.addEventListener('click', () => {
+    mobileSearchForm.classList.add('search-open');
+    setTimeout(() => mobileSearchInput?.focus(), 40);
+  });
+
+  mobileSearchInput?.addEventListener('blur', () => {
+    if (!mobileSearchInput.value.trim()) {
+      mobileSearchForm?.classList.remove('search-open');
+    }
+  });
+
+  mobileSearchForm?.addEventListener('submit', (e) => {
     e.preventDefault();
     runSearchFrom(mobileSearchInput, mobileSearchInput?.value || '');
     mobileSearchInput?.blur();
@@ -685,6 +697,7 @@ function initSearch() {
     clearBtn.addEventListener('click', () => {
       if (searchInput) searchInput.value = '';
       if (mobileSearchInput) mobileSearchInput.value = '';
+      mobileSearchForm?.classList.remove('search-open');
       performSearch('');
       searchInput?.focus();
     });
@@ -694,6 +707,7 @@ function initSearch() {
     if (e.key === 'Escape') {
       if (searchInput) searchInput.value = '';
       if (mobileSearchInput) mobileSearchInput.value = '';
+      mobileSearchForm?.classList.remove('search-open');
       performSearch('');
       searchInput?.blur();
       mobileSearchInput?.blur();

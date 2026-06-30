@@ -939,7 +939,6 @@ ul {
   cursor: pointer;
   position: relative;
   border-radius: var(--radius-md);
-  transition: transform var(--transition-normal);
 }
 
 .card-poster-wrapper {
@@ -948,15 +947,19 @@ ul {
   overflow: hidden;
   aspect-ratio: 2/3;
   width: 100%;
+  transition: box-shadow var(--transition-normal);
 }
 
 .movie-card:hover {
-  transform: scale(1.06) translateY(-4px);
   z-index: 10;
 }
 
+.movie-card:hover .card-poster-wrapper {
+  box-shadow: 0 0 16px var(--gold-glow-strong);
+}
+
 .movie-card:hover .card-poster {
-  box-shadow: 0 16px 40px rgba(0,0,0,0.7), var(--shadow-gold);
+  transform: scale(1.05);
 }
 
 .card-poster {
@@ -965,7 +968,7 @@ ul {
   object-fit: cover;
   border-radius: var(--radius-md);
   background: var(--bg-card);
-  transition: box-shadow var(--transition-normal);
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
   border: 1px solid var(--border-subtle);
 }
 
@@ -1029,11 +1032,6 @@ ul {
 
 .card-info {
   padding: 10px 4px 0;
-  transition: opacity var(--transition-normal);
-}
-
-.movie-card:hover .card-info {
-  opacity: 0;
 }
 
 .card-name {
@@ -1064,7 +1062,7 @@ ul {
 }
 
 .movie-card:hover .card-poster-wrapper::after {
-  border-color: var(--gold-dark);
+  border-color: var(--gold-primary);
 }
 
 .continue-card .continue-poster-wrap {

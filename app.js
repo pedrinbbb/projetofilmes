@@ -29,6 +29,8 @@ let heroInterval = null;
 let myList = new Set();
 let isSearchOpen = false;
 let currentModalMovie = null;
+let activeView = 'home';
+let currentCatalogType = 'movies';
 
 // ---- DOM REFS ----
 const $ = (id) => document.getElementById(id);
@@ -390,12 +392,31 @@ function initNavbar() {
     });
   }
 
-  // Nav link active state
-  document.querySelectorAll('.nav-link').forEach(link => {
-    link.addEventListener('click', function(e) {
-      document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-      this.classList.add('active');
-    });
+  // Nav link router navigation click handlers
+  $('nav-logo-link')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    showSection('home');
+  });
+
+  $('nav-home')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    showSection('home');
+  });
+
+  $('nav-movies')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    showSection('movies');
+  });
+
+  $('nav-series')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    showSection('series');
+  });
+
+  $('nav-originals')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    showSection('home');
+    $('originais')?.scrollIntoView({ behavior: 'smooth' });
   });
 }
 
@@ -404,20 +425,23 @@ function performSearch(q) {
   const standardContent = $('standard-content');
   const searchResultsSection = $('search-results-section');
   const searchResultsGrid = $('search-results-grid');
+  const catalogSection = $('catalog-section');
   const heroSection = $('hero');
   const clearBtn = $('search-pill-clear');
 
   if (!q) {
-    if (standardContent) standardContent.classList.remove('hidden');
-    if (searchResultsSection) searchResultsSection.classList.add('hidden');
-    if (heroSection) heroSection.style.display = 'block';
     if (clearBtn) clearBtn.classList.add('hidden');
+    if (searchResultsSection) searchResultsSection.classList.add('hidden');
     if (searchResultsGrid) searchResultsGrid.innerHTML = '';
+    
+    // Retornar ao estado da activeView
+    showSection(activeView);
     return;
   }
 
   if (clearBtn) clearBtn.classList.remove('hidden');
   if (standardContent) standardContent.classList.add('hidden');
+  if (catalogSection) catalogSection.classList.add('hidden');
   if (heroSection) heroSection.style.display = 'none';
   if (searchResultsSection) {
     searchResultsSection.classList.remove('hidden');
@@ -1687,6 +1711,110 @@ function initSubscriptionEvents() {
       .catch(() => showToast('⚠️ Falha ao copiar.'));
   });
   $('btn-activate-trial')?.addEventListener('click', activateTrial);
+}
+
+// ---- CATALOG & ROUTING ----
+function showSection(viewName) {
+  const standardContent = $('standard-content');
+  const searchResultsSection = $('search-results-section');
+  const catalogSection = $('catalog-section');
+  const heroSection = $('hero');
+  const searchInput = $('search-input');
+
+  activeView = viewName;
+
+  // Limpar busca caso mude de página
+  if (viewName !== 'search') {
+    if (searchInput) searchInput.value = '';
+    const clearBtn = $('search-pill-clear');
+    if (clearBtn) clearBtn.classList.add('hidden');
+    if (searchResultsSection) searchResultsSection.classList.add('hidden');
+  }
+
+  // Atualizar links ativos na navbar
+  document.querySelectorAll('.nav-link').forEach(link => {
+    link.classList.remove('active');
+  });
+  
+  if (viewName === 'home') {
+    $('nav-home')?.classList.add('active');
+    standardContent?.classList.remove('hidden');
+    heroSection?.style.display = 'block';
+    catalogSection?.classList.add('hidden');
+  } else if (viewName === 'movies') {
+    $('nav-movies')?.classList.add('active');
+    standardContent?.classList.add('hidden');
+    heroSection?.style.display = 'none';
+    catalogSection?.classList.remove('hidden');
+    renderCatalog('movies');
+  } else if (viewName === 'series') {
+    $('nav-series')?.classList.add('active');
+    standardContent?.classList.add('hidden');
+    heroSection?.style.display = 'none';
+    catalogSection?.classList.remove('hidden');
+    renderCatalog('series');
+  }
+}
+
+function renderCatalog(type) {
+  currentCatalogType = type;
+  const catalogTitle = $('catalog-title');
+  const catalogGrid = $('catalog-grid');
+  const genreFilter = $('catalog-genre-filter');
+
+  if (!catalogTitle || !catalogGrid || !genreFilter) return;
+
+  // Filtrar títulos com base no tipo
+  const allMovies = [...MOVIES.trending, ...MOVIES.new, ...MOVIES.action, ...MOVIES.series];
+  // Remover duplicados
+  const uniqueMovies = Array.from(new Map(allMovies.map(m => [m.id, m])).values());
+  
+  const catalogList = uniqueMovies.filter(m => {
+    if (type === 'series') return m.type === 'series';
+    return m.type !== 'series';
+  });
+
+  catalogTitle.textContent = type === 'series' ? '🏆 Séries de TV' : '🎬 Catálogo de Filmes';
+
+  // Extrair todos os gêneros únicos
+  const genres = new Set();
+  catalogList.forEach(m => {
+    if (m.genre) {
+      m.genre.split('/').forEach(g => {
+        const clean = g.trim();
+        if (clean) genres.add(clean);
+      });
+    }
+  });
+
+  // Popular o dropdown de gêneros
+  const sortedGenres = Array.from(genres).sort();
+  genreFilter.innerHTML = `<option value="all">Todos os Gêneros</option>` +
+    sortedGenres.map(g => `<option value="${g}">${g}</option>`).join('');
+
+  // Função interna para renderizar o grid filtrado
+  function filterAndDisplay() {
+    const selectedGenre = genreFilter.value;
+    const filtered = selectedGenre === 'all' 
+      ? catalogList 
+      : catalogList.filter(m => m.genre && m.genre.includes(selectedGenre));
+
+    catalogGrid.innerHTML = '';
+    if (filtered.length === 0) {
+      catalogGrid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-secondary);">Nenhum título encontrado para este gênero.</div>`;
+    } else {
+      filtered.forEach(m => {
+        catalogGrid.appendChild(createMovieCard(m));
+      });
+    }
+  }
+
+  // Resetar para "Todos os Gêneros" e desenhar inicial
+  genreFilter.value = 'all';
+  filterAndDisplay();
+
+  // Registrar evento change
+  genreFilter.onchange = filterAndDisplay;
 }
 
 // ---- START ----

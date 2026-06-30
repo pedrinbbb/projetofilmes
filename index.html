@@ -215,6 +215,24 @@
       </div>
     </section>
 
+    <!-- Seção de Catálogo de Filmes / Séries -->
+    <section class="row-section hidden" id="catalog-section" style="padding: 40px 48px; min-height: 50vh; margin-top: 100px;">
+      <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; gap: 20px; flex-wrap: wrap;">
+        <h2 class="row-title" id="catalog-title" style="font-size: 24px; font-weight: 700; color: var(--text-primary); font-family: 'Outfit', sans-serif;"></h2>
+        
+        <!-- Filtro por Gêneros -->
+        <div class="catalog-filters" style="display: flex; gap: 12px; align-items: center;">
+          <span style="color: var(--text-secondary); font-size: 0.88rem;">Filtrar por:</span>
+          <select id="catalog-genre-filter" style="background: #111; border: 1px solid rgba(255, 215, 0, 0.2); color: var(--text-primary); padding: 8px 16px; border-radius: 8px; outline: none; font-size: 0.88rem; cursor: pointer; transition: border-color 0.3s ease;">
+            <!-- Preenchido pelo JS -->
+          </select>
+        </div>
+      </div>
+      <div class="netflix-search-grid" id="catalog-grid">
+        <!-- Preenchido dinamicamente pelo JS -->
+      </div>
+    </section>
+
     <div id="standard-content">
       <!-- Category Tabs -->
       <section class="categories-section" id="categories-section" aria-label="Categorias">

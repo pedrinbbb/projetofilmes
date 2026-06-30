@@ -326,7 +326,7 @@ async function runMigrationsAndSeeds() {
       user_id      INTEGER NOT NULL,
       name         VARCHAR(255) NOT NULL,
       avatar_color VARCHAR(50) NOT NULL DEFAULT '#FFD700',
-      avatar_icon  VARCHAR(50) NOT NULL DEFAULT '🎬',
+      avatar_icon  VARCHAR(500) NOT NULL DEFAULT '🎬',
       is_kid       INTEGER NOT NULL DEFAULT 0,
       created_at   VARCHAR(100) NOT NULL DEFAULT CURRENT_TIMESTAMP
     )`);
@@ -372,6 +372,7 @@ async function runMigrationsAndSeeds() {
     await dbRunSync("ALTER TABLE movies ADD COLUMN IF NOT EXISTS subtitlesUrl VARCHAR(500) DEFAULT NULL");
     await dbRunSync("ALTER TABLE episodes ADD COLUMN IF NOT EXISTS subtitlesUrl VARCHAR(500) DEFAULT NULL");
     await dbRunSync("ALTER TABLE movies ADD COLUMN IF NOT EXISTS position INTEGER DEFAULT 0");
+    await dbRunSync("ALTER TABLE profiles ALTER COLUMN avatar_icon TYPE VARCHAR(500)");
   }
 
   await dbRunSync('CREATE INDEX IF NOT EXISTS idx_episodes_movie_season_number ON episodes (movie_id, season, number)');

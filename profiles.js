@@ -6,6 +6,41 @@ const EMOJIS = ['🎬','🎭','🏆','🌟','👑','🦁','🐺','🦊','🐉','
                 '🎸','🚀','⚡','🔥','🌊','🎯','🦅','🐯','🎲','🌙',
                 '🍕','🎻','🛸','🦋','🎨'];
 
+const PROFILE_IMAGE_AVATARS = [
+  {
+    url: 'https://i.postimg.cc/50tJ2rnK/image.png',
+    label: 'Avatar real 1'
+  },
+  {
+    url: 'https://i.postimg.cc/HLpy2Qpv/image.png',
+    label: 'Avatar real 2'
+  },
+  {
+    url: 'https://i.postimg.cc/G2ts0dTH/image.png',
+    label: 'Avatar real 3'
+  },
+  {
+    url: 'https://i.postimg.cc/hv7zjsrf/image.png',
+    label: 'Avatar real 4'
+  },
+  {
+    url: 'https://i.postimg.cc/3W5yDGSb/image.png',
+    label: 'Avatar real 5'
+  },
+  {
+    url: 'https://i.postimg.cc/tRLDzm8D/image.png',
+    label: 'Avatar real 6'
+  },
+  {
+    url: 'https://i.postimg.cc/T3x9z5dp/image.png',
+    label: 'Avatar real 7'
+  },
+  {
+    url: 'https://i.postimg.cc/T3QrBkHG/image.png',
+    label: 'Avatar real 8'
+  }
+];
+
 const COLORS = [
   '#FFD700','#FF6B6B','#4ECDC4','#45B7D1','#96CEB4',
   '#FFEAA7','#DDA0DD','#98D8C8','#F7DC6F','#BB8FCE',
@@ -67,6 +102,35 @@ const kidToggle      = document.getElementById('kid-toggle');
 const cancelBtn      = document.getElementById('create-cancel-btn');
 const submitBtn      = document.getElementById('create-submit-btn');
 
+function isImageAvatar(value) {
+  return /^(https?:\/\/|data:image\/)/i.test(value || '');
+}
+
+function setAvatarContent(element, avatarValue, color, altText = 'Avatar do perfil') {
+  element.innerHTML = '';
+
+  if (isImageAvatar(avatarValue)) {
+    const img = document.createElement('img');
+    img.src = avatarValue;
+    img.alt = altText;
+    img.loading = 'lazy';
+    img.referrerPolicy = 'no-referrer';
+    img.onerror = () => {
+      element.textContent = '🎬';
+      element.style.background = color + '22';
+    };
+
+    element.appendChild(img);
+    element.style.background = '#111111';
+    element.style.borderColor = color + '88';
+    return;
+  }
+
+  element.textContent = avatarValue;
+  element.style.background = color + '22';
+  element.style.borderColor = color + '55';
+}
+
 // ---- BUILD PICKERS ----
 function buildEmojiPicker() {
   EMOJIS.forEach((emoji, i) => {
@@ -78,6 +142,22 @@ function buildEmojiPicker() {
       document.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
       selectedEmoji = emoji;
+      updatePreview();
+    });
+    emojiGrid.appendChild(btn);
+  });
+
+  PROFILE_IMAGE_AVATARS.forEach((avatar) => {
+    const btn = document.createElement('button');
+    btn.className = 'emoji-btn avatar-image-btn';
+    btn.type = 'button';
+    btn.title = avatar.label;
+    btn.setAttribute('aria-label', avatar.label);
+    setAvatarContent(btn, avatar.url, COLORS[0], avatar.label);
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedEmoji = avatar.url;
       updatePreview();
     });
     emojiGrid.appendChild(btn);
@@ -102,8 +182,7 @@ function buildColorPicker() {
 }
 
 function updatePreview() {
-  previewAvatar.textContent = selectedEmoji;
-  previewAvatar.style.background = selectedColor + '22'; // 13% opacity
+  setAvatarContent(previewAvatar, selectedEmoji, selectedColor, 'Prévia do avatar');
   previewAvatar.style.borderColor = selectedColor;
   previewAvatar.style.boxShadow = `0 0 28px ${selectedColor}55`;
 }
@@ -119,9 +198,7 @@ function renderProfiles() {
 
     const avatar = document.createElement('div');
     avatar.className = 'profile-avatar';
-    avatar.textContent = profile.avatar_icon;
-    avatar.style.background = profile.avatar_color + '22';
-    avatar.style.borderColor = profile.avatar_color + '55';
+    setAvatarContent(avatar, profile.avatar_icon, profile.avatar_color, `Avatar de ${profile.name}`);
 
     const name = document.createElement('div');
     name.className = 'profile-name';

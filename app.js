@@ -1555,26 +1555,42 @@ function initUserSession() {
     const menuUserEmail = $('menu-user-email');
     const dropdown = $('user-menu-dropdown');
 
+    const isImageAvatar = (value) => /^(https?:\/\/|data:image\/)/i.test(value || '');
+
     // Populate user info
     if (menuUserName) menuUserName.textContent = profile ? profile.name : (user.name || 'Usuário');
     if (menuUserEmail) menuUserEmail.textContent = user.email || 'Conectado via Discord';
 
     // Avatar: show active profile emoji if available, else photo/letter
     if (profile && profile.avatar_icon) {
-      const emojiStyle = `
-        width: 100%; height: 100%; border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 22px; background: ${profile.avatar_color}22;
-      `;
-      if (navAvatar) {
-        navAvatar.innerHTML = `<span style="${emojiStyle}">${profile.avatar_icon}</span>`;
-        navAvatar.style.background = profile.avatar_color + '22';
-        navAvatar.style.borderColor = profile.avatar_color + '88';
-      }
-      if (menuAvatarCircle) {
-        menuAvatarCircle.innerHTML = `<span style="${emojiStyle}; font-size:26px;">${profile.avatar_icon}</span>`;
-        menuAvatarCircle.style.background = profile.avatar_color + '22';
-        menuAvatarCircle.style.borderColor = profile.avatar_color + '88';
+      if (isImageAvatar(profile.avatar_icon)) {
+        const imageMarkup = `<img src="${profile.avatar_icon}" alt="${profile.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" referrerpolicy="no-referrer" />`;
+        if (navAvatar) {
+          navAvatar.innerHTML = imageMarkup;
+          navAvatar.style.background = '#111111';
+          navAvatar.style.borderColor = profile.avatar_color + '88';
+        }
+        if (menuAvatarCircle) {
+          menuAvatarCircle.innerHTML = imageMarkup;
+          menuAvatarCircle.style.background = '#111111';
+          menuAvatarCircle.style.borderColor = profile.avatar_color + '88';
+        }
+      } else {
+        const emojiStyle = `
+          width: 100%; height: 100%; border-radius: 50%;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 22px; background: ${profile.avatar_color}22;
+        `;
+        if (navAvatar) {
+          navAvatar.innerHTML = `<span style="${emojiStyle}">${profile.avatar_icon}</span>`;
+          navAvatar.style.background = profile.avatar_color + '22';
+          navAvatar.style.borderColor = profile.avatar_color + '88';
+        }
+        if (menuAvatarCircle) {
+          menuAvatarCircle.innerHTML = `<span style="${emojiStyle}; font-size:26px;">${profile.avatar_icon}</span>`;
+          menuAvatarCircle.style.background = profile.avatar_color + '22';
+          menuAvatarCircle.style.borderColor = profile.avatar_color + '88';
+        }
       }
     } else if (user.avatar) {
       if (navAvatar) {

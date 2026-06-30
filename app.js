@@ -1634,7 +1634,7 @@ function initUserSession() {
 
     $('menu-btn-settings')?.addEventListener('click', () => {
       dropdown.classList.remove('show');
-      showToast('⚙️ Abrindo configurações da conta...');
+      window.location.href = '/account-profile.html#assinatura';
     });
 
     // Logout

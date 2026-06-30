@@ -2053,6 +2053,61 @@ app.get('/api/user/subscription', requireAuth, (req, res) => {
 });
 
 // Ativar Teste Grátis de 2 Horas
+app.get('/api/user/billing', requireAuth, (req, res) => {
+  try {
+    const logs = dbAll(`
+      SELECT
+        l.id, l.plan_id, l.txid, l.amount, l.status, l.created_at, l.paid_at,
+        p.name as plan_name
+      FROM payment_logs l
+      LEFT JOIN plans p ON l.plan_id = p.id
+      WHERE l.user_id = ?
+      ORDER BY l.id DESC
+    `, [req.user.id]);
+
+    return res.json({ logs });
+  } catch (err) {
+    console.error('[USER BILLING ERROR]', err);
+    return res.status(500).json({ error: 'Erro ao buscar cobrancas.' });
+  }
+});
+
+app.get('/api/user/devices', requireAuth, (req, res) => {
+  try {
+    const sessions = dbAll(
+      'SELECT id, token, created_at, expires_at FROM sessions WHERE user_id = ? ORDER BY id DESC',
+      [req.user.id]
+    ).map(session => ({
+      id: session.id,
+      name: 'GOATCINE Web',
+      created_at: session.created_at,
+      expires_at: session.expires_at,
+      current: session.token === req.token
+    }));
+
+    return res.json({ devices: sessions });
+  } catch (err) {
+    console.error('[USER DEVICES ERROR]', err);
+    return res.status(500).json({ error: 'Erro ao buscar dispositivos.' });
+  }
+});
+
+app.delete('/api/user/devices/:id', requireAuth, (req, res) => {
+  try {
+    const sessionId = parseInt(req.params.id, 10);
+    const session = dbGet('SELECT id, token FROM sessions WHERE id = ? AND user_id = ?', [sessionId, req.user.id]);
+
+    if (!session)
+      return res.status(404).json({ error: 'Dispositivo nao encontrado.' });
+
+    dbRun('DELETE FROM sessions WHERE id = ? AND user_id = ?', [sessionId, req.user.id]);
+    return res.json({ success: true, disconnectedCurrent: session.token === req.token });
+  } catch (err) {
+    console.error('[USER DEVICE DELETE ERROR]', err);
+    return res.status(500).json({ error: 'Erro ao desconectar dispositivo.' });
+  }
+});
+
 app.post('/api/user/trial', requireAuth, (req, res) => {
   try {
     const user = dbGet('SELECT has_used_trial, sub_active FROM users WHERE id = ?', [req.user.id]);

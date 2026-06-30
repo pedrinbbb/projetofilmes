@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GOATCINE - Meu perfil</title>
+  <title>GOATCINE - Configurações</title>
   <meta name="robots" content="noindex" />
   <link id="dynamic-favicon" rel="icon" type="image/png" href="/uploads/favicon.png?v=1" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -13,83 +13,218 @@
   <link rel="stylesheet" href="account-profile.css" />
 </head>
 <body>
-  <main class="account-page">
-    <header class="account-header">
-      <div>
-        <a class="brand-link" href="/">
-          <img src="/uploads/logo.png?v=1" alt="GOATCINE" onerror="this.style.display='none'; document.getElementById('brand-fallback').style.display='inline-flex';" />
-          <span class="brand-fallback" id="brand-fallback"><i class="fa-solid fa-trophy"></i> GOAT<span>CINE</span></span>
-        </a>
-        <h1>Sua conta</h1>
-        <p>Ajuste foto, nome e PIN dessa tela. Mudanças passam a valer assim que você salvar.</p>
-      </div>
+  <button class="top-profile-trigger" id="top-profile-trigger" type="button" aria-haspopup="true" aria-expanded="false">
+    <span class="top-avatar" id="top-avatar"></span>
+    <span class="top-profile-copy">
+      <strong id="top-profile-name">Perfil</strong>
+      <small>Conta</small>
+    </span>
+    <i class="fa-solid fa-chevron-down"></i>
+  </button>
 
-      <div class="active-profile-pill" id="active-profile-pill">
-        <div class="pill-avatar" id="pill-avatar"></div>
-        <div>
-          <strong id="pill-name">Perfil</strong>
-          <span>Tela 01 · Aberto</span>
-        </div>
-      </div>
-    </header>
+  <div class="top-profile-menu" id="top-profile-menu" aria-hidden="true">
+    <button type="button" data-menu-target="conta"><i class="fa-regular fa-user"></i> Meu perfil</button>
+    <button type="button" data-menu-target="assinatura"><i class="fa-solid fa-sliders"></i> Configurações</button>
+    <a href="/profiles.html"><i class="fa-solid fa-repeat"></i> Trocar perfil</a>
+    <button type="button" id="menu-logout-btn"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sair da conta</button>
+  </div>
 
-    <form class="profile-form" id="profile-form">
-      <section class="profile-section">
-        <div class="section-head">
-          <span>01 · Retrato</span>
-          <h2>Foto da tela</h2>
-        </div>
-        <div class="avatar-editor">
-          <div class="profile-preview" id="profile-preview"></div>
-          <div class="avatar-actions">
-            <button class="ghost-btn" type="button" id="toggle-avatar-picker">
-              <i class="fa-regular fa-images"></i>
-              Trocar imagem
-            </button>
-            <p>Escolha um dos avatares disponíveis para este perfil.</p>
-            <div class="avatar-grid" id="avatar-grid" hidden></div>
+  <main class="settings-page">
+    <aside class="settings-sidebar">
+      <span class="sidebar-kicker">Conta · Settings</span>
+      <h2>Sua experiência</h2>
+      <nav class="settings-nav" aria-label="Configurações da conta">
+        <button class="settings-nav-item active" type="button" data-section="conta">
+          <i class="fa-regular fa-user"></i>
+          Conta
+        </button>
+        <button class="settings-nav-item" type="button" data-section="assinatura">
+          <i class="fa-regular fa-credit-card"></i>
+          Assinatura
+        </button>
+        <button class="settings-nav-item" type="button" data-section="cobranca">
+          <i class="fa-regular fa-rectangle-list"></i>
+          Cobrança
+        </button>
+        <button class="settings-nav-item" type="button" data-section="dispositivos">
+          <i class="fa-solid fa-desktop"></i>
+          Dispositivos
+        </button>
+      </nav>
+    </aside>
+
+    <section class="settings-content">
+      <section class="settings-view active" id="view-conta" data-title="Sua conta" data-copy="Ajuste foto, nome e PIN dessa tela. Mudanças passam a valer assim que você salvar.">
+        <header class="account-header">
+          <div>
+            <a class="brand-link" href="/">
+              <img src="/uploads/logo.png?v=1" alt="GOATCINE" onerror="this.style.display='none'; document.getElementById('brand-fallback').style.display='inline-flex';" />
+              <span class="brand-fallback" id="brand-fallback"><i class="fa-solid fa-trophy"></i> GOAT<span>CINE</span></span>
+            </a>
+            <span class="page-kicker">Settings · Conta</span>
+            <h1>Sua conta</h1>
+            <p>Ajuste foto, nome e PIN dessa tela. Mudanças passam a valer assim que você salvar.</p>
           </div>
-        </div>
+        </header>
+
+        <form class="profile-form" id="profile-form">
+          <section class="profile-section">
+            <div class="section-head">
+              <span>01 · Retrato</span>
+              <h2>Foto da tela</h2>
+            </div>
+            <div class="avatar-editor">
+              <div class="profile-preview" id="profile-preview"></div>
+              <div class="avatar-actions">
+                <button class="ghost-btn" type="button" id="toggle-avatar-picker">
+                  <i class="fa-regular fa-images"></i>
+                  Trocar imagem
+                </button>
+                <p>Escolha um dos avatares disponíveis para este perfil.</p>
+                <div class="avatar-grid" id="avatar-grid" hidden></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="profile-section">
+            <div class="section-head">
+              <span>02 · Identidade</span>
+              <h2>Nome do perfil</h2>
+            </div>
+            <label class="field-label" for="profile-name">Como aparece no início</label>
+            <input class="profile-input" id="profile-name" maxlength="24" autocomplete="off" />
+            <small>Até 24 caracteres</small>
+          </section>
+
+          <section class="profile-section">
+            <div class="section-head">
+              <span>03 · PIN</span>
+              <h2>Trava da tela</h2>
+            </div>
+            <div class="pin-tabs" role="group" aria-label="Opções de PIN">
+              <button type="button" class="pin-tab active" data-pin-mode="keep">Manter atual</button>
+              <button type="button" class="pin-tab" data-pin-mode="set">Definir PIN</button>
+              <button type="button" class="pin-tab" data-pin-mode="remove">Remover PIN</button>
+            </div>
+            <p class="pin-status" id="pin-status">Nenhum PIN definido</p>
+            <div class="pin-input-row" id="pin-input-row" hidden>
+              <input class="pin-input" id="profile-pin" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="PIN de 4 dígitos" />
+              <span>4 dígitos</span>
+            </div>
+          </section>
+
+          <section class="save-bar">
+            <span id="save-state"><i class="fa-solid fa-circle"></i> Pronto para salvar</span>
+            <div class="save-actions">
+              <a class="cancel-link" href="/">Cancelar</a>
+              <button class="save-btn" type="submit">
+                Salvar alterações
+                <i class="fa-solid fa-circle-check"></i>
+              </button>
+            </div>
+          </section>
+        </form>
       </section>
 
-      <section class="profile-section">
-        <div class="section-head">
-          <span>02 · Identidade</span>
-          <h2>Nome do perfil</h2>
-        </div>
-        <label class="field-label" for="profile-name">Como aparece no início</label>
-        <input class="profile-input" id="profile-name" maxlength="24" autocomplete="off" />
-        <small>Até 24 caracteres</small>
+      <section class="settings-view" id="view-assinatura">
+        <header class="section-hero">
+          <span class="page-kicker">Settings · Assinatura</span>
+          <h1>Seu plano</h1>
+          <p>Visualize seu plano atual e mude quando quiser. Pagamento em PIX, sem cartão recorrente.</p>
+          <span class="status-pill" id="subscription-status">Carregando</span>
+        </header>
+
+        <section class="profile-section">
+          <div class="section-head">
+            <span>01 · Plano atual</span>
+            <h2 id="current-plan-name">Carregando</h2>
+          </div>
+          <div class="subscription-summary">
+            <div>
+              <strong id="current-plan-price">R$ 0,00</strong>
+              <span>/ mês via PIX</span>
+            </div>
+            <div class="metric-card">
+              <span><i class="fa-solid fa-users"></i> Telas simultâneas</span>
+              <strong id="current-plan-screens">0</strong>
+            </div>
+            <div class="metric-card">
+              <span><i class="fa-solid fa-desktop"></i> Dispositivos</span>
+              <strong id="current-plan-devices">0</strong>
+            </div>
+            <div class="wide-note">
+              <i class="fa-regular fa-circle-check"></i>
+              <span id="current-plan-expiry">Nenhum plano ativo</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="profile-section">
+          <div class="section-head">
+            <span>02 · Escolha um plano</span>
+            <h2>Planos</h2>
+          </div>
+          <div class="plans-grid" id="settings-plans-grid"></div>
+          <div class="checkout-panel" id="settings-checkout" hidden>
+            <label>Código PIX copia e cola</label>
+            <textarea id="settings-pix-code" readonly></textarea>
+            <button class="ghost-btn" type="button" id="copy-pix-btn"><i class="fa-regular fa-copy"></i> Copiar PIX</button>
+          </div>
+        </section>
       </section>
 
-      <section class="profile-section">
-        <div class="section-head">
-          <span>03 · PIN</span>
-          <h2>Trava da tela</h2>
-        </div>
-        <div class="pin-tabs" role="group" aria-label="Opções de PIN">
-          <button type="button" class="pin-tab active" data-pin-mode="keep">Manter atual</button>
-          <button type="button" class="pin-tab" data-pin-mode="set">Definir PIN</button>
-          <button type="button" class="pin-tab" data-pin-mode="remove">Remover PIN</button>
-        </div>
-        <p class="pin-status" id="pin-status">Nenhum PIN definido</p>
-        <div class="pin-input-row" id="pin-input-row" hidden>
-          <input class="pin-input" id="profile-pin" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="PIN de 4 dígitos" />
-          <span>4 dígitos</span>
-        </div>
-      </section>
-
-      <section class="save-bar">
-        <span id="save-state"><i class="fa-solid fa-circle"></i> Pronto para salvar</span>
-        <div class="save-actions">
-          <a class="cancel-link" href="/">Cancelar</a>
-          <button class="save-btn" type="submit">
-            Salvar alterações
-            <i class="fa-solid fa-circle-check"></i>
+      <section class="settings-view" id="view-cobranca">
+        <header class="section-hero hero-row">
+          <div>
+            <span class="page-kicker">Settings · Cobrança</span>
+            <h1>Cobrança & histórico</h1>
+            <p>Acompanhe sua próxima cobrança e o histórico de pagamentos via PIX.</p>
+          </div>
+          <button class="save-btn compact" type="button" data-section-jump="assinatura">
+            Fazer novo pagamento
+            <i class="fa-solid fa-circle-arrow-right"></i>
           </button>
-        </div>
+        </header>
+
+        <section class="profile-section">
+          <div class="section-head">
+            <span>01 · Próxima cobrança</span>
+            <h2>Quando você é cobrado</h2>
+          </div>
+          <div class="billing-next">
+            <span><i class="fa-regular fa-calendar"></i> Próxima cobrança</span>
+            <strong id="next-billing-date">Nenhuma</strong>
+          </div>
+        </section>
+
+        <section class="profile-section">
+          <div class="section-head">
+            <span>02 · Histórico</span>
+            <h2><span id="billing-count">0</span> pagamentos</h2>
+          </div>
+          <div class="billing-list" id="billing-list"></div>
+        </section>
       </section>
-    </form>
+
+      <section class="settings-view" id="view-dispositivos">
+        <header class="section-hero hero-row">
+          <div>
+            <span class="page-kicker">Settings · Dispositivos</span>
+            <h1>Dispositivos conectados</h1>
+            <p>Veja onde sua conta está sendo usada e desconecte qualquer dispositivo que você não reconhece.</p>
+          </div>
+          <span class="status-pill" id="devices-count">0 devices</span>
+        </header>
+
+        <section class="profile-section">
+          <div class="section-head">
+            <span>01 · Sessões</span>
+            <h2>Onde você está logado</h2>
+          </div>
+          <div class="devices-list" id="devices-list"></div>
+        </section>
+      </section>
+    </section>
   </main>
 
   <div class="toast" id="toast" role="alert" aria-live="polite"></div>

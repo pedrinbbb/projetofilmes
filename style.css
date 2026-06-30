@@ -2680,8 +2680,9 @@ ul {
   background: rgba(0, 0, 0, 0.75);
   color: #ffffff;
   font-family: 'Outfit', 'Inter', sans-serif;
-  font-size: 1.15rem;
-  font-weight: 500;
+  font-size: 1.32rem;
+  font-weight: 600;
+  line: 78%;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
   border-radius: 4px;
 }

@@ -2219,15 +2219,16 @@ app.post('/api/movies', requireAdminAuth, (req, res) => {
     const isSeries = normalizedType === 'series';
     const finalDuration = isSeries ? (duration || 'Serie') : duration;
     const finalVideoUrl = isSeries ? (videoUrl || '') : videoUrl;
+    const parsedRating = parseFloat(rating);
 
-    if (!title || !year || rating === undefined || rating === null || !genre || !desc || !poster || !backdrop || !director || !cast || !category || (!isSeries && (!finalDuration || !finalVideoUrl))) {
+    if (!title || !year || Number.isNaN(parsedRating) || !genre || !desc || !poster || !backdrop || !director || !cast || !category || (!isSeries && (!finalDuration || !finalVideoUrl))) {
       return res.status(400).json({ error: 'Todos os campos obrigatorios devem ser preenchidos' });
     }
 
     const movieId = dbRun(
       `INSERT INTO movies (title, year, duration, rating, genre, desc, poster, backdrop, director, cast, category, type, videoUrl) 
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [title, year, finalDuration, parseFloat(rating), genre, desc, poster, backdrop, director, cast, category, normalizedType, finalVideoUrl]
+      [title, year, finalDuration, parsedRating, genre, desc, poster, backdrop, director, cast, category, normalizedType, finalVideoUrl]
     );
 
     console.log(`[ADMIN] 🎬 Novo titulo adicionado: "${title}" (ID: ${movieId})`);
@@ -2247,15 +2248,16 @@ app.put('/api/movies/:id', requireAdminAuth, (req, res) => {
     const isSeries = normalizedType === 'series';
     const finalDuration = isSeries ? (duration || 'Serie') : duration;
     const finalVideoUrl = isSeries ? (videoUrl || '') : videoUrl;
+    const parsedRating = parseFloat(rating);
 
-    if (!title || !year || rating === undefined || rating === null || !genre || !desc || !poster || !backdrop || !director || !cast || !category || (!isSeries && (!finalDuration || !finalVideoUrl))) {
+    if (!title || !year || Number.isNaN(parsedRating) || !genre || !desc || !poster || !backdrop || !director || !cast || !category || (!isSeries && (!finalDuration || !finalVideoUrl))) {
       return res.status(400).json({ error: 'Todos os campos obrigatorios devem ser preenchidos' });
     }
 
     dbRun(
       `UPDATE movies SET title=?, year=?, duration=?, rating=?, genre=?, desc=?, poster=?, backdrop=?, director=?, cast=?, category=?, type=?, videoUrl=?
        WHERE id=?`,
-      [title, parseInt(year), finalDuration, parseFloat(rating), genre, desc, poster, backdrop, director, cast, category, normalizedType, finalVideoUrl, id]
+      [title, parseInt(year), finalDuration, parsedRating, genre, desc, poster, backdrop, director, cast, category, normalizedType, finalVideoUrl, id]
     );
 
     console.log(`[ADMIN] 🎬 Titulo atualizado: "${title}" (ID: ${id})`);

@@ -19,7 +19,7 @@
 })();
 
 // Top 10, Hero Slides e Categoria de Filmes carregadas dinamicamente da API
-let MOVIES = { trending: [], new: [], action: [] };
+let MOVIES = { trending: [], new: [], action: [], series: [] };
 let TOP10 = [];
 let HERO_SLIDES = [];
 
@@ -83,16 +83,20 @@ async function initApp() {
       videoUrl: m.videoUrl || m.videourl || ''
     }));
 
-    // Organizar por categorias
-    MOVIES.trending = list.filter(m => m.category === 'trending');
-    MOVIES.new = list.filter(m => m.category === 'new');
-    MOVIES.action = list.filter(m => m.category === 'action');
+    const movieList = list.filter(m => m.type !== 'series');
+    const seriesList = list.filter(m => m.type === 'series');
+
+    // Organizar filmes por categorias e séries em uma prateleira própria
+    MOVIES.trending = movieList.filter(m => m.category === 'trending');
+    MOVIES.new = movieList.filter(m => m.category === 'new');
+    MOVIES.action = movieList.filter(m => m.category === 'action');
+    MOVIES.series = seriesList;
 
     // Gerar Top 10 dinâmico
-    TOP10 = [...list].sort((a, b) => b.rating - a.rating).slice(0, 10);
+    TOP10 = [...movieList].sort((a, b) => b.rating - a.rating).slice(0, 10);
 
     // Gerar Hero Slides com os 3 melhores avaliados
-    const candidates = [...list].sort((a, b) => b.rating - a.rating);
+    const candidates = [...movieList].sort((a, b) => b.rating - a.rating);
     HERO_SLIDES = candidates.slice(0, 3).map(m => ({
       title: m.title,
       year: m.year,
@@ -125,6 +129,7 @@ async function initApp() {
   renderCarousel('carousel-trending', MOVIES.trending);
   renderCarousel('carousel-new', MOVIES.new);
   renderCarousel('carousel-action', MOVIES.action);
+  renderCarousel('carousel-series', MOVIES.series);
   renderTop10();
   initCarouselArrows();
   initHeroSlider();
@@ -230,6 +235,7 @@ function initCarouselArrows() {
     ['arrow-left-0', 'arrow-right-0', 'carousel-trending'],
     ['arrow-left-1', 'arrow-right-1', 'carousel-new'],
     ['arrow-left-2', 'arrow-right-2', 'carousel-action'],
+    ['arrow-left-3', 'arrow-right-3', 'carousel-series'],
   ];
 
   pairs.forEach(([leftId, rightId, carouselId]) => {
@@ -399,7 +405,7 @@ function performSearch(q) {
   }
 
   // Filtrar todos os filmes
-  const allMovies = [...MOVIES.trending, ...MOVIES.new, ...MOVIES.action];
+  const allMovies = [...MOVIES.trending, ...MOVIES.new, ...MOVIES.action, ...MOVIES.series];
   
   // Remover duplicados
   const uniqueMovies = Array.from(new Map(allMovies.map(m => [m.id, m])).values());
@@ -473,7 +479,7 @@ function initCategoryTabs() {
 
 // ---- MODAL ----
 function findMovieById(id) {
-  const allMovies = [...MOVIES.trending, ...MOVIES.new, ...MOVIES.action];
+  const allMovies = [...MOVIES.trending, ...MOVIES.new, ...MOVIES.action, ...MOVIES.series];
   return allMovies.find(m => m.id === id);
 }
 
@@ -640,7 +646,7 @@ function openModal(movie) {
   `;
 
   // Similar movies
-  const allMovies = [...MOVIES.trending, ...MOVIES.new, ...MOVIES.action];
+  const allMovies = [...MOVIES.trending, ...MOVIES.new, ...MOVIES.action, ...MOVIES.series];
   const similar = allMovies.filter(m => m.id !== movie.id && (
     m.genre.split('/')[0].trim() === movie.genre.split('/')[0].trim() ||
     m.category === movie.category

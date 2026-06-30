@@ -540,6 +540,14 @@ body {
   color: var(--color-text-light);
 }
 
+.btn-icon.wide {
+  width: auto;
+  min-width: 48px;
+  padding: 0 10px;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
 .btn-icon:hover {
   background: rgba(212, 175, 55, 0.15);
   border-color: var(--color-gold-dark);

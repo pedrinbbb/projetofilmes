@@ -94,6 +94,7 @@
       <!-- SELETOR DE ABAS -->
       <nav class="tab-navigation">
         <button class="tab-btn active" id="tab-movies-btn">Gerenciar Filmes</button>
+        <button class="tab-btn" id="tab-series-btn">Gerenciar Séries</button>
         <button class="tab-btn" id="tab-users-btn">Visualizar Contas</button>
         <button class="tab-btn" id="tab-plans-btn">Gerenciar Planos</button>
         <button class="tab-btn" id="tab-payments-btn">Cobranças & Logs</button>
@@ -116,7 +117,6 @@
               <tr>
                 <th>Pôster</th>
                 <th>Título</th>
-                <th>Tipo</th>
                 <th>Ano</th>
                 <th>Duração</th>
                 <th>Nota</th>
@@ -131,7 +131,36 @@
         </div>
       </section>
 
-      <!-- ABA 2: VISUALIZAR CONTAS -->
+      <!-- ABA 2: GERENCIAR SÉRIES -->
+      <section class="panel-tab-content" id="section-series">
+        <div class="section-header">
+          <h2>Lista de Séries no Catálogo</h2>
+          <div class="header-actions">
+            <input type="text" id="search-series" class="search-input-admin" placeholder="Pesquisar série por título, gênero, diretor...">
+            <button id="btn-add-series" class="btn-primary">+ Cadastrar Série</button>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Pôster</th>
+                <th>Título</th>
+                <th>Ano</th>
+                <th>Nota</th>
+                <th>Categoria</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="series-list-tbody">
+              <!-- Inserido dinamicamente -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ABA 3: VISUALIZAR CONTAS -->
       <section class="panel-tab-content" id="section-users">
         <div class="section-header">
           <h2>Contas de Usuários Registrados</h2>
@@ -335,7 +364,7 @@
           <input type="text" id="m-title" required placeholder="Ex: Creed: Nascido para Lutar">
         </div>
 
-        <div class="form-group">
+        <div class="form-group is-hidden" id="movie-type-group">
           <label for="m-type">Tipo</label>
           <select id="m-type" required>
             <option value="movie">Filme</option>

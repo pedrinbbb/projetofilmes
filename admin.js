@@ -13,17 +13,20 @@ const userGroup = $('user-group');
 const passGroup = $('pass-group');
 
 const tabMoviesBtn = $('tab-movies-btn');
+const tabSeriesBtn = $('tab-series-btn');
 const tabUsersBtn = $('tab-users-btn');
 const tabPlansBtn = $('tab-plans-btn');
 const tabPaymentsBtn = $('tab-payments-btn');
 const tabCustomizeBtn = $('tab-customize-btn');
 const sectionMovies = $('section-movies');
+const sectionSeries = $('section-series');
 const sectionUsers = $('section-users');
 const sectionPlans = $('section-plans');
 const sectionPayments = $('section-payments');
 const sectionCustomize = $('section-customize');
 
 const moviesTbody = $('movies-list-tbody');
+const seriesTbody = $('series-list-tbody');
 const usersTbody = $('users-list-tbody');
 const paymentsTbody = $('payments-list-tbody');
 
@@ -61,6 +64,7 @@ const movieModal = $('movie-modal');
 const movieForm = $('movie-form');
 const modalTitle = $('modal-title');
 const btnAddMovie = $('btn-add-movie');
+const btnAddSeries = $('btn-add-series');
 const btnCancelMovie = $('btn-cancel-movie');
 const modalCloseBtn = $('modal-close-btn');
 const episodesModal = $('episodes-modal');
@@ -75,6 +79,7 @@ const btnClearEpisode = $('btn-clear-episode');
 let currentSeriesId = null;
 let currentSeriesTitle = '';
 let currentEpisodes = [];
+let movieModalMode = 'movie';
 
 // ---- AUTH UTILS ----
 function getAdminToken() {
@@ -193,12 +198,14 @@ $('btn-logout').addEventListener('click', () => {
 // =============================================
 function switchTab(target) {
   tabMoviesBtn.classList.toggle('active', target === 'movies');
+  tabSeriesBtn.classList.toggle('active', target === 'series');
   tabUsersBtn.classList.toggle('active', target === 'users');
   tabPlansBtn.classList.toggle('active', target === 'plans');
   tabPaymentsBtn.classList.toggle('active', target === 'payments');
   tabCustomizeBtn.classList.toggle('active', target === 'customize');
 
   sectionMovies.classList.toggle('active', target === 'movies');
+  sectionSeries.classList.toggle('active', target === 'series');
   sectionUsers.classList.toggle('active', target === 'users');
   sectionPlans.classList.toggle('active', target === 'plans');
   sectionPayments.classList.toggle('active', target === 'payments');
@@ -206,6 +213,7 @@ function switchTab(target) {
 }
 
 tabMoviesBtn.addEventListener('click', () => switchTab('movies'));
+tabSeriesBtn.addEventListener('click', () => switchTab('series'));
 tabUsersBtn.addEventListener('click', () => switchTab('users'));
 tabPlansBtn.addEventListener('click', () => switchTab('plans'));
 tabPaymentsBtn.addEventListener('click', () => switchTab('payments'));
@@ -225,6 +233,7 @@ async function loadDashboardData() {
     movies = data.movies || [];
     $('stat-movies-count').textContent = movies.length;
     renderMoviesTable();
+    renderSeriesTable();
   } catch (err) {
     console.error('Erro ao carregar filmes:', err);
   }
@@ -393,45 +402,42 @@ window.deleteUser = async function(id, name) {
 // =============================================
 //  TABELA DE FILMES
 // =============================================
-function renderMoviesTable() {
-  moviesTbody.innerHTML = '';
-
-  const query = ($('search-movies')?.value || '').toLowerCase().trim();
-  const filteredMovies = movies.filter(movie => {
+function filterTitlesByQuery(items, query) {
+  return items.filter(movie => {
     return movie.title.toLowerCase().includes(query) ||
            movie.genre.toLowerCase().includes(query) ||
            movie.director.toLowerCase().includes(query) ||
            movie.cast.toLowerCase().includes(query) ||
            movie.category.toLowerCase().includes(query) ||
-           getMovieType(movie).includes(query) ||
            String(movie.year) === query;
   });
+}
+
+function renderMoviesTable() {
+  moviesTbody.innerHTML = '';
+
+  const query = ($('search-movies')?.value || '').toLowerCase().trim();
+  const movieItems = movies.filter(movie => getMovieType(movie) === 'movie');
+  const filteredMovies = filterTitlesByQuery(movieItems, query);
 
   if (filteredMovies.length === 0) {
-    moviesTbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--color-text-muted);">Nenhum filme correspondente encontrado.</td></tr>`;
+    moviesTbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--color-text-muted);">Nenhum filme correspondente encontrado.</td></tr>`;
     return;
   }
 
   filteredMovies.forEach(movie => {
-    const type = getMovieType(movie);
-    const typeLabel = type === 'series' ? 'Serie' : 'Filme';
-    const manageEpisodesBtn = type === 'series'
-      ? `<button class="btn-icon" title="Gerenciar Episodios" onclick="openEpisodesModal(${movie.id})">Eps</button>`
-      : '';
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>
         <img src="${movie.poster.startsWith('http') ? movie.poster : '/' + movie.poster}" alt="Poster" class="poster-thumb">
       </td>
       <td><strong>${movie.title}</strong></td>
-      <td><span class="type-badge ${type}">${typeLabel}</span></td>
       <td>${movie.year}</td>
-      <td>${type === 'series' ? '-' : movie.duration}</td>
+      <td>${movie.duration}</td>
       <td>⭐ ${movie.rating.toFixed(1)}</td>
       <td><span style="color: var(--color-gold-bright); font-weight: 500;">${movie.category}</span></td>
       <td>
         <div class="actions-cell">
-          ${manageEpisodesBtn}
           <button class="btn-icon" title="Editar Filme" onclick="openEditModal(${movie.id})">✏️</button>
           <button class="btn-icon delete" title="Excluir Filme" onclick="deleteMovie(${movie.id})">🗑️</button>
         </div>
@@ -441,10 +447,46 @@ function renderMoviesTable() {
   });
 }
 
+function renderSeriesTable() {
+  seriesTbody.innerHTML = '';
+
+  const query = ($('search-series')?.value || '').toLowerCase().trim();
+  const seriesItems = movies.filter(movie => getMovieType(movie) === 'series');
+  const filteredSeries = filterTitlesByQuery(seriesItems, query);
+
+  if (filteredSeries.length === 0) {
+    seriesTbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--color-text-muted);">Nenhuma série correspondente encontrada.</td></tr>`;
+    return;
+  }
+
+  filteredSeries.forEach(series => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>
+        <img src="${series.poster.startsWith('http') ? series.poster : '/' + series.poster}" alt="Poster" class="poster-thumb">
+      </td>
+      <td><strong>${series.title}</strong></td>
+      <td>${series.year}</td>
+      <td>⭐ ${series.rating.toFixed(1)}</td>
+      <td><span style="color: var(--color-gold-bright); font-weight: 500;">${series.category}</span></td>
+      <td>
+        <div class="actions-cell">
+          <button class="btn-icon wide" title="Gerenciar Episódios" onclick="openEpisodesModal(${series.id})">Eps</button>
+          <button class="btn-icon" title="Editar Série" onclick="openEditModal(${series.id})">✏️</button>
+          <button class="btn-icon delete" title="Excluir Série" onclick="deleteMovie(${series.id})">🗑️</button>
+        </div>
+      </td>
+    `;
+    seriesTbody.appendChild(tr);
+  });
+}
+
 // DELETAR FILME
 window.deleteMovie = async function(id, title) {
-  title = title || movies.find(m => m.id === id)?.title || 'titulo';
-  if (!confirm(`Excluir o filme "${title}" do catálogo?`)) return;
+  const item = movies.find(m => m.id === id);
+  const itemType = getMovieType(item) === 'series' ? 'série' : 'filme';
+  title = title || item?.title || 'titulo';
+  if (!confirm(`Excluir ${itemType} "${title}" do catálogo?`)) return;
 
   const token = getAdminToken();
   try {
@@ -454,7 +496,7 @@ window.deleteMovie = async function(id, title) {
     });
 
     if (res.ok) {
-      showToast(`✕ Filme "${title}" excluído com sucesso.`);
+      showToast(`✕ ${itemType === 'série' ? 'Série' : 'Filme'} "${title}" excluído com sucesso.`);
       loadDashboardData();
     } else {
       const data = await res.json();
@@ -468,16 +510,17 @@ window.deleteMovie = async function(id, title) {
 // =============================================
 //  MODAL FILME (ADD / EDIT)
 // =============================================
-function openMovieModal(isEdit = false) {
+function openMovieModal(isEdit = false, mode = 'movie') {
+  movieModalMode = mode === 'series' ? 'series' : 'movie';
   movieModal.classList.add('open');
   movieModal.setAttribute('aria-hidden', 'false');
   document.body.style.overflow = 'hidden';
 
   if (!isEdit) {
-    modalTitle.textContent = 'Cadastrar Novo Filme';
+    modalTitle.textContent = movieModalMode === 'series' ? 'Cadastrar Nova Série' : 'Cadastrar Novo Filme';
     movieForm.reset();
     $('movie-id').value = '';
-    $('m-type').value = 'movie';
+    $('m-type').value = movieModalMode;
     updateMovieTypeFields();
   }
 }
@@ -488,7 +531,8 @@ function closeMovieModal() {
   document.body.style.overflow = '';
 }
 
-btnAddMovie.addEventListener('click', () => openMovieModal(false));
+btnAddMovie.addEventListener('click', () => openMovieModal(false, 'movie'));
+btnAddSeries?.addEventListener('click', () => openMovieModal(false, 'series'));
 btnCancelMovie.addEventListener('click', closeMovieModal);
 modalCloseBtn.addEventListener('click', closeMovieModal);
 movieModal.addEventListener('click', (e) => {
@@ -499,10 +543,12 @@ function updateMovieTypeFields() {
   const isSeries = $('m-type').value === 'series';
   const durationGroup = $('movie-duration-group');
   const videoGroup = $('movie-video-group');
+  const titleLabel = document.querySelector('label[for="m-title"]');
   durationGroup?.classList.toggle('is-hidden', isSeries);
   videoGroup?.classList.toggle('is-hidden', isSeries);
   $('m-duration').required = !isSeries;
   $('m-videoUrl').required = !isSeries;
+  if (titleLabel) titleLabel.textContent = isSeries ? 'Título da Série' : 'Título do Filme';
   if (isSeries) {
     $('m-duration').value = $('m-duration').value || 'Serie';
     $('m-videoUrl').value = '';
@@ -517,10 +563,11 @@ window.openEditModal = function(id) {
   const movie = movies.find(m => m.id === id);
   if (!movie) return;
 
-  modalTitle.textContent = 'Editar Dados do Filme';
+  const type = getMovieType(movie);
+  modalTitle.textContent = type === 'series' ? 'Editar Dados da Série' : 'Editar Dados do Filme';
   
   $('movie-id').value = movie.id;
-  $('m-type').value = getMovieType(movie);
+  $('m-type').value = type;
   $('m-title').value = movie.title;
   $('m-year').value = movie.year;
   $('m-duration').value = movie.duration;
@@ -535,7 +582,7 @@ window.openEditModal = function(id) {
   $('m-desc').value = movie.desc;
   updateMovieTypeFields();
 
-  openMovieModal(true);
+  openMovieModal(true, type);
 };
 
 // SUBMIT FORM (CREATE OR UPDATE)
@@ -593,9 +640,16 @@ movieForm.addEventListener('submit', async (e) => {
 
     const data = await res.json();
     if (res.ok) {
-      showToast(isEdit ? '✓ Dados do filme atualizados!' : '✓ Filme adicionado ao catálogo!');
+      showToast(isEdit
+        ? (isSeries ? '✓ Dados da série atualizados!' : '✓ Dados do filme atualizados!')
+        : (isSeries ? '✓ Série adicionada ao catálogo!' : '✓ Filme adicionado ao catálogo!')
+      );
       closeMovieModal();
-      loadDashboardData();
+      await loadDashboardData();
+      if (!isEdit && isSeries && data.id) {
+        switchTab('series');
+        setTimeout(() => openEpisodesModal(data.id), 150);
+      }
     } else {
       showToast(data.error || 'Erro ao processar filme');
     }
@@ -1336,6 +1390,7 @@ window.addEventListener('storage', checkAdminAuth);
 
 // SEARCH LISTENERS (Real-time Filtering)
 $('search-movies')?.addEventListener('input', renderMoviesTable);
+$('search-series')?.addEventListener('input', renderSeriesTable);
 $('search-users')?.addEventListener('input', renderUsersTable);
 $('search-payments')?.addEventListener('input', renderPaymentsTable);
 

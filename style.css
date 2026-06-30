@@ -2682,7 +2682,8 @@ ul {
   font-family: 'Outfit', 'Inter', sans-serif;
   font-size: 1.32rem;
   font-weight: 600;
-  line: 78%;
+  line: 70%;
+  line-height: 1.05;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
   border-radius: 4px;
 }

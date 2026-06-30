@@ -1087,13 +1087,13 @@ a { color: inherit; text-decoration: none; }
     margin: 0 -14px 48px;
     padding: 10px 14px;
     border: 0;
-    border-bottom: 1px solid rgba(255, 215, 0, 0.12);
+    border-bottom: 0;
     border-radius: 0;
-    background: rgba(3, 3, 3, 0.92);
+    background: transparent;
     box-shadow: none;
     overflow-x: auto;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 
   .settings-sidebar::-webkit-scrollbar {

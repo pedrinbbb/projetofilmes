@@ -1718,6 +1718,11 @@ function initUserSession() {
       window.location.href = '/account-profile.html';
     });
 
+    $('menu-btn-my-goat')?.addEventListener('click', () => {
+      dropdown.classList.remove('show');
+      window.location.href = '/my-goat.html';
+    });
+
     $('menu-btn-settings')?.addEventListener('click', () => {
       dropdown.classList.remove('show');
       window.location.href = '/account-profile.html#assinatura';

@@ -141,7 +141,7 @@ async function initApp() {
   renderCarousel('carousel-action', MOVIES.action);
   renderCarousel('carousel-series', MOVIES.series);
   renderTop10();
-  initTop10SlideButtons();
+  refreshTop10SlideButtons();
   initCarouselArrows();
   initHeroSlider();
   initNavbar();
@@ -241,6 +241,7 @@ function renderTop10() {
 
   if (moviesGrid) {
     moviesGrid.innerHTML = '';
+    moviesGrid.dataset.top10Index = '0';
     TOP10_MOVIES.forEach((movie, idx) => {
       moviesGrid.appendChild(createTop10Card(movie, idx));
     });
@@ -248,42 +249,38 @@ function renderTop10() {
 
   if (seriesGrid) {
     seriesGrid.innerHTML = '';
+    seriesGrid.dataset.top10Index = '0';
     TOP10_SERIES.forEach((series, idx) => {
       seriesGrid.appendChild(createTop10Card(series, idx));
     });
   }
 }
 
-function getTop10Step(grid) {
-  const card = grid.querySelector('.top10-card');
-  if (!card) return 0;
-  const styles = window.getComputedStyle(grid);
-  const gap = parseFloat(styles.columnGap || styles.gap || '0') || 0;
-  return (card.getBoundingClientRect().width + gap) * 4;
-}
-
 function slideTop10Grid(grid) {
   if (!grid) return;
-  const step = getTop10Step(grid);
-  if (!step) return;
+  const cards = Array.from(grid.querySelectorAll('.top10-card'));
+  if (cards.length === 0) return;
 
-  const maxScroll = grid.scrollWidth - grid.clientWidth;
-  const nextLeft = grid.scrollLeft + step;
-  const shouldLoop = nextLeft >= maxScroll - 8;
+  const currentIndex = parseInt(grid.dataset.top10Index || '0', 10) || 0;
+  const nextIndex = (currentIndex + 4) % cards.length;
+  grid.dataset.top10Index = String(nextIndex);
 
-  grid.scrollTo({
-    left: shouldLoop ? 0 : Math.min(nextLeft, maxScroll),
-    behavior: 'smooth'
+  cards[nextIndex].scrollIntoView({
+    behavior: 'smooth',
+    block: 'nearest',
+    inline: 'start'
   });
 }
 
-function initTop10SlideButtons() {
+window.slideTop10ById = function(gridId) {
+  slideTop10Grid($(gridId));
+};
+
+function refreshTop10SlideButtons() {
   document.querySelectorAll('.top10-slide-btn').forEach((button) => {
-    const grid = $(button.dataset.target);
-    button.hidden = !grid || grid.scrollWidth <= grid.clientWidth + 8;
-    button.addEventListener('click', () => {
-      slideTop10Grid(grid);
-    });
+    const gridId = button.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+    const grid = gridId ? $(gridId) : null;
+    button.hidden = !grid || grid.querySelectorAll('.top10-card').length <= 4;
   });
 }
 // ---- CAROUSEL ARROWS ----

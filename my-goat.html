@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Minha GOAT - GOATCINE</title>
+  <meta name="robots" content="noindex" />
+  <link id="dynamic-favicon" rel="icon" type="image/png" href="/uploads/favicon.png?v=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.3.0/css/all.min.css" />
+  <link rel="stylesheet" href="my-goat.css" />
+</head>
+<body>
+  <header class="goat-header">
+    <a class="goat-home" href="/" aria-label="Voltar para o inicio">
+      <i class="fa-solid fa-house"></i>
+    </a>
+
+    <div class="goat-title">
+      <span>GOATCINE</span>
+      <h1>Minha GOAT</h1>
+    </div>
+
+    <form class="goat-search" id="goat-search-form" role="search">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input id="goat-search-input" type="search" placeholder="Buscar na Minha lista..." autocomplete="off" />
+    </form>
+
+    <button class="goat-settings-btn" id="goat-settings-btn" type="button" aria-label="Abrir opcoes" aria-expanded="false">
+      <i class="fa-solid fa-gear"></i>
+    </button>
+
+    <nav class="goat-settings-menu" id="goat-settings-menu" aria-hidden="true">
+      <a href="/profiles.html"><i class="fa-solid fa-users-gear"></i> Gerenciar perfis</a>
+      <a href="/account-profile.html#conta"><i class="fa-regular fa-user"></i> Conta</a>
+      <a href="/account-profile.html#assinatura"><i class="fa-regular fa-credit-card"></i> Assinatura</a>
+      <a href="/account-profile.html#cobranca"><i class="fa-regular fa-rectangle-list"></i> Cobranca</a>
+      <a href="/account-profile.html#dispositivos"><i class="fa-solid fa-display"></i> Dispositivos</a>
+    </nav>
+  </header>
+
+  <main class="goat-page">
+    <section class="goat-hero">
+      <div class="goat-hero-bg" aria-hidden="true"></div>
+      <div class="goat-avatar" id="goat-avatar"></div>
+      <div class="goat-hero-copy">
+        <span class="goat-kicker">Perfil ativo</span>
+        <h2 id="goat-profile-name">Minha tela</h2>
+        <p>Continue sua experiencia com seus titulos salvos, atalhos de conta e troca rapida de perfil.</p>
+        <a class="goat-switch-btn" href="/profiles.html">
+          <i class="fa-solid fa-repeat"></i>
+          Trocar perfil
+        </a>
+      </div>
+    </section>
+
+    <section class="goat-list-section">
+      <div class="goat-section-head">
+        <div>
+          <span class="goat-kicker">Biblioteca</span>
+          <h2>Minha lista</h2>
+        </div>
+        <span class="goat-count" id="goat-list-count">0 titulos</span>
+      </div>
+
+      <div class="goat-list-grid" id="goat-list-grid"></div>
+      <div class="goat-empty hidden" id="goat-empty">
+        <i class="fa-regular fa-bookmark"></i>
+        <h3>Sua lista ainda esta vazia</h3>
+        <p>Adicione filmes e series pelo botao Minha Lista no catalogo principal.</p>
+        <a href="/" class="goat-switch-btn">Explorar catalogo</a>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast"></div>
+  <script src="my-goat.js"></script>
+</body>
+</html>

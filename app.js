@@ -53,6 +53,48 @@ const heroDesc = $('hero-desc');
 const heroBg = $('hero-bg');
 const heroParticles = $('hero-particles');
 
+function getActiveProfileId() {
+  try {
+    const profile = JSON.parse(localStorage.getItem('goatcine_profile') || 'null');
+    return profile?.id || 'default';
+  } catch {
+    return 'default';
+  }
+}
+
+function getMyListKey() {
+  return `goatcine_my_list_${getActiveProfileId()}`;
+}
+
+function loadMyList() {
+  try {
+    myList = new Set(JSON.parse(localStorage.getItem(getMyListKey()) || '[]').map(String));
+  } catch {
+    myList = new Set();
+  }
+}
+
+function saveMyList() {
+  localStorage.setItem(getMyListKey(), JSON.stringify(Array.from(myList)));
+}
+
+function toggleMyListItem(movie) {
+  if (!movie?.id) return false;
+  const id = String(movie.id);
+
+  if (myList.has(id)) {
+    myList.delete(id);
+    saveMyList();
+    showToast(`Removido da sua lista`);
+    return false;
+  }
+
+  myList.add(id);
+  saveMyList();
+  showToast(`${movie.title} adicionado a Minha lista`);
+  return true;
+}
+
 // ---- LOADING ----
 function simulateLoading() {
   let progress = 0;
@@ -75,6 +117,7 @@ function simulateLoading() {
 // ---- INIT ----
 async function initApp() {
   createParticles();
+  loadMyList();
 
   try {
     const res = await fetch('/api/movies');
@@ -436,7 +479,7 @@ function initHeroButtons() {
 
   if (listBtn) {
     listBtn.addEventListener('click', () => {
-      showToast('✓ Adicionado à sua lista!');
+      toggleMyListItem(findMovieById(HERO_SLIDES[currentHeroSlide]?.movieId));
     });
   }
 
@@ -928,13 +971,7 @@ function openModal(movie) {
   }
 
   modalListBtn.onclick = () => {
-    if (myList.has(movie.id)) {
-      myList.delete(movie.id);
-      showToast(`✕ Removido da sua lista`);
-    } else {
-      myList.add(movie.id);
-      showToast(`✓ ${movie.title} adicionado à lista!`);
-    }
+    toggleMyListItem(movie);
   };
 
   // Show modal
@@ -1735,6 +1772,10 @@ function initUserSession() {
     if (navAvatar && dropdown) {
       navAvatar.addEventListener('click', (e) => {
         e.stopPropagation();
+        if (isMobileViewport()) {
+          window.location.href = '/my-goat.html';
+          return;
+        }
         setMobileSearchMode(false);
         dropdown.classList.toggle('show');
         dropdown.setAttribute('aria-hidden', dropdown.classList.contains('show') ? 'false' : 'true');

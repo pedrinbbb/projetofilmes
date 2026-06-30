@@ -1721,7 +1721,8 @@ ul {
 
   .nav-logo,
   .nav-hamburger,
-  .nav-links li:not(:first-child) {
+  .nav-links li:not(:first-child),
+  .nav-search-container {
     display: none !important;
   }
 
@@ -1768,61 +1769,6 @@ ul {
     content: "\f015";
   }
 
-  .nav-search-container {
-    position: fixed;
-    left: 16px;
-    right: 16px;
-    top: calc(12px + env(safe-area-inset-top));
-    z-index: 1100;
-    display: block;
-  }
-
-  .search-pill,
-  .nav-search-container.mobile-search-active .search-pill {
-    width: auto;
-    height: 44px;
-    padding: 0 14px;
-    flex-direction: row;
-    justify-content: flex-start;
-    gap: 10px;
-    border: 1px solid rgba(255, 215, 0, 0.32);
-    border-radius: 16px;
-    background: linear-gradient(180deg, rgba(18, 14, 4, 0.97), rgba(7, 7, 7, 0.97));
-    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.46), inset 0 0 0 1px rgba(255, 215, 0, 0.04);
-  }
-
-  .search-pill::before,
-  .nav-search-container.mobile-search-active .search-pill::before {
-    content: "\f002";
-    font-family: "Font Awesome 7 Free", "Font Awesome 6 Free";
-    font-weight: 900;
-    font-size: 14px;
-    color: var(--gold-primary);
-  }
-
-  .search-pill::after,
-  .nav-search-container.mobile-search-active .search-pill::after {
-    content: none;
-  }
-
-  .search-pill-input,
-  .nav-search-container.mobile-search-active .search-pill-input {
-    display: block !important;
-    min-width: 0;
-    flex: 1;
-    color: var(--text-primary);
-    font-size: 13px;
-    font-weight: 700;
-  }
-
-  .search-pill-input::placeholder {
-    color: var(--text-muted);
-  }
-
-  .nav-search-container.mobile-search-active .search-pill-clear {
-    display: flex !important;
-  }
-
   .search-pill-icon {
     display: none;
   }
@@ -1839,13 +1785,22 @@ ul {
   .nav-avatar {
     position: relative;
     overflow: visible;
+    width: 92px;
     color: var(--text-secondary);
     background: transparent !important;
     border: 0;
   }
 
+  .nav-avatar::before {
+    content: "\f521";
+    font-family: "Font Awesome 7 Free", "Font Awesome 6 Free";
+    font-weight: 900;
+    font-size: 17px;
+    line-height: 1;
+  }
+
   .nav-avatar::after {
-    content: "Perfil";
+    content: "Minha GOAT";
     font-size: 10px;
     font-weight: 800;
     line-height: 1;
@@ -1853,12 +1808,7 @@ ul {
 
   .nav-avatar img,
   .nav-avatar > span {
-    width: 24px !important;
-    height: 24px !important;
-    border-radius: 50% !important;
-    font-size: 11px !important;
-    flex: 0 0 auto;
-    box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.55);
+    display: none !important;
   }
 
   .user-menu-dropdown {

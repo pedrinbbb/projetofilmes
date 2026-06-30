@@ -256,24 +256,51 @@ function renderTop10() {
   }
 }
 
-function slideTop10Grid(grid) {
+function slideTop10Grid(grid, direction = 1) {
   if (!grid) return;
   const cards = Array.from(grid.querySelectorAll('.top10-card'));
   if (cards.length === 0) return;
 
   const currentIndex = parseInt(grid.dataset.top10Index || '0', 10) || 0;
-  const nextIndex = (currentIndex + 4) % cards.length;
+  const step = direction < 0 ? -4 : 4;
+  const nextIndex = (currentIndex + step + cards.length) % cards.length;
   grid.dataset.top10Index = String(nextIndex);
 
-  cards[nextIndex].scrollIntoView({
-    behavior: 'smooth',
-    block: 'nearest',
-    inline: 'start'
-  });
+  const targetLeft = cards[nextIndex].offsetLeft;
+  animateTop10Scroll(grid, targetLeft);
 }
 
-window.slideTop10ById = function(gridId) {
-  slideTop10Grid($(gridId));
+function animateTop10Scroll(grid, targetLeft) {
+  const startLeft = grid.scrollLeft;
+  const maxLeft = grid.scrollWidth - grid.clientWidth;
+  const endLeft = Math.max(0, Math.min(targetLeft, maxLeft));
+  const distance = endLeft - startLeft;
+  const duration = 720;
+  const startedAt = performance.now();
+
+  if (grid._top10ScrollAnimation) {
+    cancelAnimationFrame(grid._top10ScrollAnimation);
+  }
+
+  const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+
+  const tick = (now) => {
+    const elapsed = now - startedAt;
+    const progress = Math.min(elapsed / duration, 1);
+    grid.scrollLeft = startLeft + distance * easeOutCubic(progress);
+
+    if (progress < 1) {
+      grid._top10ScrollAnimation = requestAnimationFrame(tick);
+    } else {
+      grid._top10ScrollAnimation = null;
+    }
+  };
+
+  grid._top10ScrollAnimation = requestAnimationFrame(tick);
+}
+
+window.slideTop10ById = function(gridId, direction = 1) {
+  slideTop10Grid($(gridId), direction);
 };
 
 function refreshTop10SlideButtons() {

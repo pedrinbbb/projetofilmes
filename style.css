@@ -2753,7 +2753,7 @@ ul {
    ============================================= */
 .top10-scroll-shell {
   position: relative;
-  padding-right: 64px;
+  padding: 0 64px;
 }
 
 .top10-grid {
@@ -2764,7 +2764,7 @@ ul {
   padding: 24px 0;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE/Edge antigo */
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
   overscroll-behavior-x: contain;
 }
 
@@ -2786,7 +2786,6 @@ ul {
 .top10-slide-btn {
   position: absolute;
   top: 50%;
-  right: 8px;
   width: 54px;
   height: 124px;
   transform: translateY(-50%);
@@ -2802,10 +2801,27 @@ ul {
   transition: color var(--transition-fast), background var(--transition-fast), transform var(--transition-fast);
 }
 
+.top10-slide-btn.left {
+  left: 8px;
+  background: linear-gradient(to right, rgba(8, 8, 8, 0.96), rgba(8, 8, 8, 0.58));
+}
+
+.top10-slide-btn.right {
+  right: 8px;
+  background: linear-gradient(to left, rgba(8, 8, 8, 0.96), rgba(8, 8, 8, 0.58));
+}
+
 .top10-slide-btn:hover {
   color: var(--gold-primary);
-  background: linear-gradient(to left, rgba(8, 8, 8, 1), rgba(8, 8, 8, 0.72));
   transform: translateY(-50%) scale(1.04);
+}
+
+.top10-slide-btn.left:hover {
+  background: linear-gradient(to right, rgba(8, 8, 8, 1), rgba(8, 8, 8, 0.72));
+}
+
+.top10-slide-btn.right:hover {
+  background: linear-gradient(to left, rgba(8, 8, 8, 1), rgba(8, 8, 8, 0.72));
 }
 
 .top10-card:hover {

@@ -21,6 +21,8 @@ const https      = require('https');
 const app        = express();
 const PORT       = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'goatcine_dev_secret';
+const DEFAULT_POSTER_URL = 'data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22500%22%20height=%22750%22%3E%3Crect%20width=%22100%25%22%20height=%22100%25%22%20fill=%22%23000000%22/%3E%3C/svg%3E';
+const DEFAULT_BACKDROP_URL = 'data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%221280%22%20height=%22720%22%3E%3Crect%20width=%22100%25%22%20height=%22100%25%22%20fill=%22%23000000%22/%3E%3C/svg%3E';
 
 // URL de conexão do PostgreSQL
 const DATABASE_URL = process.env.DATABASE_URL;
@@ -2202,6 +2204,8 @@ app.get('/api/movies', (req, res) => {
       if (m.videourl !== undefined && m.videoUrl === undefined) {
         m.videoUrl = m.videourl;
       }
+      m.poster = m.poster || DEFAULT_POSTER_URL;
+      m.backdrop = m.backdrop || DEFAULT_BACKDROP_URL;
       return m;
     });
     return res.json({ movies });
@@ -2219,16 +2223,18 @@ app.post('/api/movies', requireAdminAuth, (req, res) => {
     const isSeries = normalizedType === 'series';
     const finalDuration = isSeries ? (duration || 'Serie') : duration;
     const finalVideoUrl = isSeries ? (videoUrl || '') : videoUrl;
-    const parsedRating = parseFloat(rating);
+    const finalPoster = (poster || '').trim() || DEFAULT_POSTER_URL;
+    const finalBackdrop = (backdrop || '').trim() || DEFAULT_BACKDROP_URL;
+    const parsedRating = parseFloat(String(rating).replace(',', '.'));
 
-    if (!title || !year || Number.isNaN(parsedRating) || !genre || !desc || !poster || !backdrop || !director || !cast || !category || (!isSeries && (!finalDuration || !finalVideoUrl))) {
+    if (!title || !year || Number.isNaN(parsedRating) || !genre || !desc || !director || !cast || !category || (!isSeries && (!finalDuration || !finalVideoUrl))) {
       return res.status(400).json({ error: 'Todos os campos obrigatorios devem ser preenchidos' });
     }
 
     const movieId = dbRun(
-      `INSERT INTO movies (title, year, duration, rating, genre, desc, poster, backdrop, director, cast, category, type, videoUrl) 
+      `INSERT INTO movies (title, year, duration, rating, genre, "desc", poster, backdrop, director, "cast", category, type, videoUrl) 
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [title, year, finalDuration, parsedRating, genre, desc, poster, backdrop, director, cast, category, normalizedType, finalVideoUrl]
+      [title, year, finalDuration, parsedRating, genre, desc, finalPoster, finalBackdrop, director, cast, category, normalizedType, finalVideoUrl]
     );
     if (!movieId) {
       return res.status(500).json({ error: 'Nao foi possivel salvar o titulo no banco de dados' });
@@ -2259,16 +2265,18 @@ app.put('/api/movies/:id', requireAdminAuth, (req, res) => {
     const isSeries = normalizedType === 'series';
     const finalDuration = isSeries ? (duration || 'Serie') : duration;
     const finalVideoUrl = isSeries ? (videoUrl || '') : videoUrl;
-    const parsedRating = parseFloat(rating);
+    const finalPoster = (poster || '').trim() || DEFAULT_POSTER_URL;
+    const finalBackdrop = (backdrop || '').trim() || DEFAULT_BACKDROP_URL;
+    const parsedRating = parseFloat(String(rating).replace(',', '.'));
 
-    if (!title || !year || Number.isNaN(parsedRating) || !genre || !desc || !poster || !backdrop || !director || !cast || !category || (!isSeries && (!finalDuration || !finalVideoUrl))) {
+    if (!title || !year || Number.isNaN(parsedRating) || !genre || !desc || !director || !cast || !category || (!isSeries && (!finalDuration || !finalVideoUrl))) {
       return res.status(400).json({ error: 'Todos os campos obrigatorios devem ser preenchidos' });
     }
 
     dbRun(
-      `UPDATE movies SET title=?, year=?, duration=?, rating=?, genre=?, desc=?, poster=?, backdrop=?, director=?, cast=?, category=?, type=?, videoUrl=?
+      `UPDATE movies SET title=?, year=?, duration=?, rating=?, genre=?, "desc"=?, poster=?, backdrop=?, director=?, "cast"=?, category=?, type=?, videoUrl=?
        WHERE id=?`,
-      [title, parseInt(year), finalDuration, parsedRating, genre, desc, poster, backdrop, director, cast, category, normalizedType, finalVideoUrl, id]
+      [title, parseInt(year), finalDuration, parsedRating, genre, desc, finalPoster, finalBackdrop, director, cast, category, normalizedType, finalVideoUrl, id]
     );
 
     console.log(`[ADMIN] 🎬 Titulo atualizado: "${title}" (ID: ${id})`);

@@ -127,6 +127,17 @@ function getMovieType(movie) {
   return movie?.type === 'series' ? 'series' : 'movie';
 }
 
+function resolveImageSrc(src) {
+  const value = String(src || '').trim();
+  if (!value) return '';
+  if (/^(https?:|data:|blob:|\/)/i.test(value)) return value;
+  return '/' + value;
+}
+
+function imageFallbackSrc() {
+  return 'data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22500%22%20height=%22750%22%3E%3Crect%20width=%22100%25%22%20height=%22100%25%22%20fill=%22%23000000%22/%3E%3C/svg%3E';
+}
+
 // ---- LOGIN FORM ----
 loginForm.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -429,7 +440,7 @@ function renderMoviesTable() {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>
-        <img src="${movie.poster.startsWith('http') ? movie.poster : '/' + movie.poster}" alt="Poster" class="poster-thumb">
+        <img src="${resolveImageSrc(movie.poster)}" alt="Poster" class="poster-thumb" onerror="this.onerror=null; this.src='${imageFallbackSrc()}';">
       </td>
       <td><strong>${movie.title}</strong></td>
       <td>${movie.year}</td>
@@ -463,7 +474,7 @@ function renderSeriesTable() {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>
-        <img src="${series.poster.startsWith('http') ? series.poster : '/' + series.poster}" alt="Poster" class="poster-thumb">
+        <img src="${resolveImageSrc(series.poster)}" alt="Poster" class="poster-thumb" onerror="this.onerror=null; this.src='${imageFallbackSrc()}';">
       </td>
       <td><strong>${series.title}</strong></td>
       <td>${series.year}</td>
@@ -599,7 +610,7 @@ movieForm.addEventListener('submit', async (e) => {
     title: $('m-title').value.trim(),
     year: parseInt($('m-year').value),
     duration: isSeries ? ($('m-duration').value.trim() || 'Serie') : $('m-duration').value.trim(),
-    rating: parseFloat($('m-rating').value),
+    rating: parseFloat($('m-rating').value.replace(',', '.')),
     genre: $('m-genre').value.trim(),
     category: $('m-category').value,
     poster: $('m-poster').value.trim(),
@@ -614,10 +625,15 @@ movieForm.addEventListener('submit', async (e) => {
   let formsValid = true;
   Object.keys(payload).forEach(key => {
     if (isSeries && (key === 'duration' || key === 'videoUrl')) return;
+    if (key === 'poster' || key === 'backdrop') return;
     if (!payload[key] && payload[key] !== 0) {
       formsValid = false;
     }
   });
+
+  if (Number.isNaN(payload.rating)) {
+    formsValid = false;
+  }
 
   if (!formsValid) {
     showToast('⚠️ Todos os campos são obrigatórios.');

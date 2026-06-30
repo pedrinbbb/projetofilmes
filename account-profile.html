@@ -13,14 +13,25 @@
   <link rel="stylesheet" href="account-profile.css" />
 </head>
 <body>
-  <button class="top-profile-trigger" id="top-profile-trigger" type="button" aria-haspopup="true" aria-expanded="false">
-    <span class="top-avatar" id="top-avatar"></span>
-    <span class="top-profile-copy">
-      <strong id="top-profile-name">Perfil</strong>
-      <small>Conta</small>
-    </span>
-    <i class="fa-solid fa-chevron-down"></i>
-  </button>
+  <header class="goat-header">
+    <a class="goat-home" href="/" aria-label="Voltar para o inicio">
+      <i class="fa-solid fa-house"></i>
+    </a>
+
+    <div class="goat-title">
+      <span>GOATCINE</span>
+      <h1>Configurações</h1>
+    </div>
+
+    <button class="top-profile-trigger goat-settings-btn" id="top-profile-trigger" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Abrir opcoes">
+      <i class="fa-solid fa-gear"></i>
+      <span class="top-avatar" id="top-avatar"></span>
+      <span class="top-profile-copy">
+        <strong id="top-profile-name">Perfil</strong>
+        <small>Conta</small>
+      </span>
+    </button>
+  </header>
 
   <div class="top-profile-menu" id="top-profile-menu" aria-hidden="true">
     <button type="button" data-menu-target="conta"><i class="fa-regular fa-user"></i> Meu perfil</button>
@@ -228,6 +239,18 @@
   </main>
 
   <div class="toast" id="toast" role="alert" aria-live="polite"></div>
+
+  <nav class="mobile-bottom-nav" aria-label="Navegação principal">
+    <a href="/" class="mobile-bottom-item">
+      <i class="fa-solid fa-house"></i>
+      <span>Início</span>
+    </a>
+    <a href="/my-goat.html" class="mobile-bottom-item active">
+      <i class="fa-solid fa-crown"></i>
+      <span>Minha GOAT</span>
+    </a>
+  </nav>
+
   <script src="profile-account.js"></script>
 </body>
 </html>

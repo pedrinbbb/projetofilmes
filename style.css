@@ -1697,8 +1697,8 @@ ul {
     left: 50%;
     right: auto;
     bottom: calc(10px + env(safe-area-inset-bottom));
-    width: min(420px, calc(100% - 28px));
-    height: 64px;
+    width: min(282px, calc(100% - 56px));
+    height: 60px;
     transform: translateX(-50%);
     border: 1px solid rgba(255, 215, 0, 0.18);
     border-radius: 999px;
@@ -1715,14 +1715,13 @@ ul {
 
   .nav-container {
     justify-content: center;
-    gap: 14px;
-    padding: 0 12px;
+    gap: 6px;
+    padding: 0 6px;
   }
 
   .nav-logo,
   .nav-hamburger,
-  .nav-links li:not(:first-child),
-  .nav-search-container {
+  .nav-links li:not(:first-child) {
     display: none !important;
   }
 
@@ -1735,7 +1734,7 @@ ul {
   .nav-actions {
     flex: 0 0 auto;
     margin-left: 0 !important;
-    gap: 10px !important;
+    gap: 6px !important;
     position: static !important;
   }
 
@@ -1767,6 +1766,67 @@ ul {
 
   #nav-home::before {
     content: "\f015";
+  }
+
+  .nav-search-container {
+    position: fixed !important;
+    top: calc(12px + env(safe-area-inset-top));
+    right: 14px;
+    z-index: 1100;
+    display: flex !important;
+  }
+
+  .search-pill {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    justify-content: center;
+    border: 1px solid rgba(255, 215, 0, 0.32);
+    border-radius: 16px;
+    background: linear-gradient(180deg, rgba(18, 14, 4, 0.97), rgba(7, 7, 7, 0.97));
+    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.46), inset 0 0 0 1px rgba(255, 215, 0, 0.04);
+  }
+
+  .search-pill::before {
+    content: "\f002";
+    font-family: "Font Awesome 7 Free", "Font Awesome 6 Free";
+    font-weight: 900;
+    font-size: 14px;
+    color: var(--gold-primary);
+  }
+
+  .search-pill-input,
+  .search-pill-clear {
+    display: none !important;
+  }
+
+  .nav-search-container.mobile-search-active .search-pill {
+    position: fixed;
+    top: calc(12px + env(safe-area-inset-top));
+    left: 14px;
+    right: 14px;
+    width: auto;
+    height: 44px;
+    padding: 0 14px;
+    justify-content: flex-start;
+    gap: 10px;
+  }
+
+  .nav-search-container.mobile-search-active .search-pill::after {
+    content: none;
+  }
+
+  .nav-search-container.mobile-search-active .search-pill-input {
+    display: block !important;
+    min-width: 0;
+    flex: 1;
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .nav-search-container.mobile-search-active .search-pill-clear {
+    display: flex !important;
   }
 
   .search-pill-icon {

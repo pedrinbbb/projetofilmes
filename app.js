@@ -179,6 +179,8 @@ function createMovieCard(movie) {
   card.setAttribute('role', 'listitem');
   card.setAttribute('aria-label', `${movie.title} (${movie.year}) - Avaliação: ${movie.rating}`);
   card.dataset.id = movie.id;
+  card.dataset.typeLabel = movie.type === 'series' ? 'SERIE' : 'FILME';
+  card.dataset.rating = movie.rating || '';
 
   card.innerHTML = `
     <img class="card-poster" 
@@ -500,6 +502,83 @@ function initNavbar() {
 }
 
 // ---- SEARCH ----
+function isMobileViewport() {
+  return window.matchMedia('(max-width: 600px)').matches;
+}
+
+function setMobileSearchMode(isOpen) {
+  document.body.classList.toggle('mobile-search-mode', Boolean(isOpen));
+  $('nav-search-container')?.classList.toggle('mobile-search-active', Boolean(isOpen));
+}
+
+function getSearchCatalog() {
+  const allMovies = [...MOVIES.trending, ...MOVIES.new, ...MOVIES.action, ...MOVIES.series];
+  return Array.from(new Map(allMovies.map(m => [m.id, m])).values());
+}
+
+function setSearchChrome({ query = '', found = [], showResults = false } = {}) {
+  const resultsTitle = $('search-results-title');
+  const kicker = $('search-results-kicker');
+  const count = $('search-results-count');
+  const pill = $('search-results-pill');
+  const chips = $('search-filter-chips');
+  const total = found.length;
+  const moviesCount = found.filter(m => m.type !== 'series').length;
+  const seriesCount = found.filter(m => m.type === 'series').length;
+
+  if (kicker) kicker.textContent = query ? `BUSCA - "${query.toUpperCase()}"` : 'BUSCA';
+  if (resultsTitle) resultsTitle.textContent = showResults ? 'Resultados' : 'O que voce quer ver?';
+
+  if (count) {
+    count.textContent = showResults
+      ? `${total} ${total === 1 ? 'resultado no catalogo.' : 'resultados no catalogo.'}`
+      : '';
+    count.classList.toggle('hidden', !showResults);
+  }
+
+  if (pill) {
+    pill.textContent = `${total} ${total === 1 ? 'RESULTADO' : 'RESULTADOS'}`;
+    pill.classList.toggle('hidden', !showResults);
+  }
+
+  if (chips) {
+    chips.innerHTML = showResults ? `
+      <span class="search-chip active">Tudo ${total}</span>
+      <span class="search-chip">Filmes ${moviesCount}</span>
+      <span class="search-chip">Series ${seriesCount}</span>
+    ` : '';
+    chips.classList.toggle('hidden', !showResults);
+  }
+}
+
+function renderSearchEmptyState() {
+  const standardContent = $('standard-content');
+  const searchResultsSection = $('search-results-section');
+  const searchResultsGrid = $('search-results-grid');
+  const catalogSection = $('catalog-section');
+  const heroSection = $('hero');
+  const clearBtn = $('search-pill-clear');
+
+  if (clearBtn) clearBtn.classList.add('hidden');
+  if (standardContent) standardContent.classList.add('hidden');
+  if (catalogSection) catalogSection.classList.add('hidden');
+  if (heroSection) heroSection.style.display = 'none';
+  if (searchResultsSection) searchResultsSection.classList.remove('hidden');
+
+  setSearchChrome({ showResults: false });
+
+  if (searchResultsGrid) {
+    searchResultsGrid.innerHTML = `
+      <div class="search-empty-state">
+        <span class="search-empty-icon" aria-hidden="true"></span>
+        <span class="search-empty-kicker">COMO FUNCIONA</span>
+        <strong>Busque por titulo, genero ou termo</strong>
+        <small>Use o campo de busca no topo. Resultados incluem filmes e series.</small>
+      </div>
+    `;
+  }
+}
+
 function performSearch(q) {
   const standardContent = $('standard-content');
   const searchResultsSection = $('search-results-section');
@@ -509,6 +588,11 @@ function performSearch(q) {
   const clearBtn = $('search-pill-clear');
 
   if (!q) {
+    if (document.body.classList.contains('mobile-search-mode') && isMobileViewport()) {
+      renderSearchEmptyState();
+      return;
+    }
+
     if (clearBtn) clearBtn.classList.add('hidden');
     if (searchResultsSection) searchResultsSection.classList.add('hidden');
     if (searchResultsGrid) searchResultsGrid.innerHTML = '';
@@ -519,6 +603,7 @@ function performSearch(q) {
   }
 
   if (clearBtn) clearBtn.classList.remove('hidden');
+  if (isMobileViewport()) setMobileSearchMode(true);
   if (standardContent) standardContent.classList.add('hidden');
   if (catalogSection) catalogSection.classList.add('hidden');
   if (heroSection) heroSection.style.display = 'none';
@@ -542,21 +627,26 @@ function performSearch(q) {
     (m.director && m.director.toLowerCase().includes(q.toLowerCase())) ||
     (m.cast && m.cast.toLowerCase().includes(q.toLowerCase()))
   );
+  if (isMobileViewport()) {
+    setSearchChrome({ query: q, found, showResults: true });
+  }
+
+  if (searchResultsGrid && found.length === 0) {
+    searchResultsGrid.innerHTML = `
+      <div class="search-empty-state">
+        <span class="search-empty-icon" aria-hidden="true"></span>
+        <strong>Nenhum resultado encontrado</strong>
+        <small>Tente buscar por outro titulo, genero ou nome.</small>
+      </div>
+    `;
+    return;
+  }
 
   if (searchResultsGrid) {
     searchResultsGrid.innerHTML = '';
-    if (found.length === 0) {
-      searchResultsGrid.innerHTML = `
-        <div class="search-empty-state" style="grid-column: 1 / -1; text-align: center; padding: 80px 20px; color: var(--text-secondary);">
-          <span style="display: block; font-size: 48px; margin-bottom: 16px;">🍿</span>
-          Nenhum resultado encontrado para "${q}". Tente buscar por outros termos!
-        </div>
-      `;
-    } else {
-      found.forEach(movie => {
-        searchResultsGrid.appendChild(createMovieCard(movie));
-      });
-    }
+    found.forEach(movie => {
+      searchResultsGrid.appendChild(createMovieCard(movie));
+    });
   }
 }
 
@@ -568,16 +658,31 @@ function initSearch() {
 
   if (!searchInput) return;
 
+  function syncSearchPlaceholder() {
+    searchInput.placeholder = isMobileViewport()
+      ? 'Busque filmes, series, animes...'
+      : 'Titulos, gente, generos...';
+  }
+
+  function openMobileSearch() {
+    if (!isMobileViewport()) return false;
+    setMobileSearchMode(true);
+    performSearch(searchInput.value.trim());
+    return true;
+  }
+
+  syncSearchPlaceholder();
+  window.addEventListener('resize', syncSearchPlaceholder);
+
   function closeMobileSearchIfEmpty() {
-    if (window.matchMedia('(max-width: 600px)').matches && !searchInput.value.trim()) {
-      searchContainer?.classList.remove('mobile-search-active');
+    if (isMobileViewport() && !searchInput.value.trim() && !document.body.classList.contains('mobile-search-mode')) {
+      setMobileSearchMode(false);
     }
   }
 
   if (searchPill) {
     searchPill.addEventListener('click', () => {
-      if (!window.matchMedia('(max-width: 600px)').matches) return;
-      searchContainer?.classList.add('mobile-search-active');
+      openMobileSearch();
       setTimeout(() => searchInput.focus(), 30);
     });
   }
@@ -593,7 +698,6 @@ function initSearch() {
       searchInput.value = '';
       performSearch('');
       searchInput.focus();
-      closeMobileSearchIfEmpty();
     });
   }
 
@@ -604,9 +708,9 @@ function initSearch() {
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       searchInput.value = '';
+      setMobileSearchMode(false);
       performSearch('');
       searchInput.blur();
-      closeMobileSearchIfEmpty();
     }
   });
 }
@@ -1952,6 +2056,7 @@ function showSection(viewName) {
 
   // Limpar busca caso mude de página
   if (viewName !== 'search') {
+    setMobileSearchMode(false);
     if (searchInput) searchInput.value = '';
     const clearBtn = $('search-pill-clear');
     if (clearBtn) clearBtn.classList.add('hidden');

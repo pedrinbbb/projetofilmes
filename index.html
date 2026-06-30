@@ -207,9 +207,22 @@
   <main class="main-content" id="main-content">
 
     <!-- Seção de Resultados de Busca Estilo Netflix -->
-    <section class="row-section hidden" id="search-results-section" style="padding: 40px 48px; min-height: 50vh; margin-top: 100px;">
-      <div class="row-header" style="margin-bottom: 24px;">
-        <h2 class="row-title" id="search-results-title" style="font-size: 20px; font-weight: 500; color: var(--text-secondary);"></h2>
+    <section class="row-section search-results-page hidden" id="search-results-section" style="padding: 40px 48px; min-height: 50vh; margin-top: 100px;">
+      <div class="mobile-search-topbar" aria-hidden="true">
+        <div class="mobile-search-brand">
+          <span class="mobile-search-brand-mark">F.</span>
+          <span>Buscar</span>
+        </div>
+        <span class="mobile-search-bell"></span>
+      </div>
+      <div class="row-header search-results-header" style="margin-bottom: 24px;">
+        <span class="search-results-kicker" id="search-results-kicker">BUSCA</span>
+        <div class="search-results-title-row">
+          <h2 class="row-title" id="search-results-title" style="font-size: 20px; font-weight: 500; color: var(--text-secondary);"></h2>
+          <span class="search-results-pill hidden" id="search-results-pill"></span>
+        </div>
+        <p class="search-results-count hidden" id="search-results-count"></p>
+        <div class="search-filter-chips hidden" id="search-filter-chips"></div>
       </div>
       <div class="netflix-search-grid" id="search-results-grid">
         <!-- Preenchido dinamicamente pelo JS -->

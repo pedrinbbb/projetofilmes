@@ -95,9 +95,15 @@ async function initApp() {
     MOVIES.action = movieList.filter(m => m.category === 'action');
     MOVIES.series = seriesList;
 
-    // Gerar Top 10 dinâmico para Filmes e Séries separadamente
-    TOP10_MOVIES = [...movieList].sort((a, b) => b.rating - a.rating).slice(0, 10);
-    TOP10_SERIES = [...seriesList].sort((a, b) => b.rating - a.rating).slice(0, 10);
+    // Gerar Top 10 dinâmico para Filmes e Séries (respeitando ordenação manual se houver)
+    TOP10_MOVIES = movieList.filter(m => m.category === 'top10_movies').sort((a, b) => a.position - b.position);
+    if (TOP10_MOVIES.length === 0) {
+      TOP10_MOVIES = [...movieList].sort((a, b) => b.rating - a.rating).slice(0, 10);
+    }
+    TOP10_SERIES = seriesList.filter(m => m.category === 'top10_series').sort((a, b) => a.position - b.position);
+    if (TOP10_SERIES.length === 0) {
+      TOP10_SERIES = [...seriesList].sort((a, b) => b.rating - a.rating).slice(0, 10);
+    }
 
     // Gerar Hero Slides com filmes e series melhor avaliados
     const candidates = [...movieList, ...seriesList].sort((a, b) => b.rating - a.rating);

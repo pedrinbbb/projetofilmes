@@ -2763,3 +2763,74 @@ ul {
 .reorder-list:hover {
   background-color: rgba(255, 255, 255, 0.01);
 }
+
+/* =============================================
+   NETFLIX STYLE TOP 10
+   ============================================= */
+.top10-grid {
+  display: flex;
+  gap: 32px;
+  overflow-x: auto;
+  padding: 24px 0;
+  scrollbar-width: none; /* Firefox */
+}
+
+.top10-grid::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.top10-card {
+  position: relative;
+  flex: 0 0 200px;
+  width: 200px;
+  height: 180px;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  display: flex;
+  align-items: center;
+}
+
+.top10-card:hover {
+  transform: scale(1.08) translateY(-4px);
+  z-index: 10;
+}
+
+.top10-card:hover .top10-poster {
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.8), 0 0 15px rgba(255, 215, 0, 0.2);
+}
+
+.top10-number {
+  font-size: 190px;
+  font-weight: 900;
+  line-height: 1;
+  color: #080808;
+  -webkit-text-stroke: 4px rgba(128, 128, 128, 0.6);
+  position: absolute;
+  left: -8px;
+  bottom: -22px;
+  z-index: 1;
+  user-select: none;
+  font-family: 'Outfit', 'Inter', sans-serif;
+  letter-spacing: -10px;
+}
+
+/* Number 10 needs to be slightly shifted left to fit */
+.top10-card:nth-child(10) .top10-number {
+  left: -28px;
+}
+
+.top10-poster {
+  width: 120px;
+  height: 180px;
+  border-radius: 6px;
+  object-fit: cover;
+  position: absolute;
+  right: 12px;
+  z-index: 2;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.6);
+  transition: box-shadow 0.3s ease;
+}
+
+.top10-overlay {
+  display: none;
+}

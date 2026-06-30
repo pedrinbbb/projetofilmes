@@ -1546,7 +1546,7 @@ $('search-payments')?.addEventListener('input', renderPaymentsTable);
 //  ABA ORDENAR: REORDER BOARD & DRAG & DROP
 // =============================================
 function renderReorderBoard() {
-  const categories = ['trending', 'new', 'action', 'series'];
+  const categories = ['trending', 'new', 'action', 'series', 'top10_movies', 'top10_series'];
   
   categories.forEach(cat => {
     const listContainer = document.querySelector(`.reorder-list[data-category="${cat}"]`);

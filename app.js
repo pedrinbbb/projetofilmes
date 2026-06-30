@@ -95,16 +95,16 @@ async function initApp() {
     // Gerar Top 10 dinâmico
     TOP10 = [...movieList].sort((a, b) => b.rating - a.rating).slice(0, 10);
 
-    // Gerar Hero Slides com os 3 melhores avaliados
-    const candidates = [...movieList].sort((a, b) => b.rating - a.rating);
-    HERO_SLIDES = candidates.slice(0, 3).map(m => ({
+    // Gerar Hero Slides com filmes e series melhor avaliados
+    const candidates = [...movieList, ...seriesList].sort((a, b) => b.rating - a.rating);
+    HERO_SLIDES = candidates.slice(0, 5).map(m => ({
       title: m.title,
       year: m.year,
-      duration: m.duration,
+      duration: m.type === 'series' ? 'Serie' : m.duration,
       rating: m.rating,
       genre: m.genre,
       desc: m.desc,
-      backdrop: m.backdrop,
+      backdrop: m.backdrop || m.poster,
       movieId: m.id
     }));
 
@@ -251,13 +251,26 @@ function initCarouselArrows() {
 }
 
 // ---- HERO SLIDER ----
+function cssUrl(value) {
+  return String(value || '').replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+}
+
 function updateHeroSlide(idx) {
   const slide = HERO_SLIDES[idx];
+  if (!slide) return;
+  const backdrop = slide.backdrop || '';
 
-  // Update background
-  heroBg.style.background = `
-    linear-gradient(135deg, #1a0e00 0%, #0d0800 30%, #080808 60%, #050505 100%)
-  `;
+  // Update background with the horizontal backdrop from the current title.
+  heroBg.style.backgroundImage = backdrop
+    ? `
+      linear-gradient(to right, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.62) 34%, rgba(0,0,0,0.22) 68%, rgba(0,0,0,0.6) 100%),
+      linear-gradient(to top, #000 0%, rgba(0,0,0,0.72) 13%, rgba(0,0,0,0.16) 45%, rgba(0,0,0,0.22) 100%),
+      url("${cssUrl(backdrop)}")
+    `
+    : 'linear-gradient(135deg, #050505 0%, #101010 55%, #000 100%)';
+  heroBg.style.backgroundSize = 'cover, cover, cover';
+  heroBg.style.backgroundPosition = 'center center, center center, center center';
+  heroBg.style.backgroundRepeat = 'no-repeat';
 
   // Animate content
   const content = document.querySelector('.hero-content');
@@ -265,6 +278,7 @@ function updateHeroSlide(idx) {
   content.style.transform = 'translateY(12px)';
 
   setTimeout(() => {
+    heroBadge.innerHTML = `<span class="badge-icon">•</span> EM DESTAQUE · ${String(idx + 1).padStart(2, '0')} / ${String(HERO_SLIDES.length).padStart(2, '0')}`;
     heroTitle.textContent = slide.title;
     heroMeta.innerHTML = `
       <span class="meta-rating">⭐ ${slide.rating}</span>
@@ -296,6 +310,15 @@ function updateHeroSlide(idx) {
 }
 
 function initHeroSlider() {
+  const indicators = $('hero-indicators');
+  if (indicators) {
+    indicators.innerHTML = HERO_SLIDES.map((_, i) => (
+      `<button class="indicator ${i === 0 ? 'active' : ''}" id="indicator-${i}" aria-label="Slide ${i + 1}" aria-pressed="${i === 0 ? 'true' : 'false'}"></button>`
+    )).join('');
+  }
+
+  updateHeroSlide(0);
+
   document.querySelectorAll('.indicator').forEach((ind, i) => {
     ind.addEventListener('click', () => {
       clearInterval(heroInterval);

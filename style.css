@@ -420,13 +420,11 @@ ul {
 .hero-bg {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    135deg,
-    #1a0e00 0%,
-    #0d0800 30%,
-    #080808 60%,
-    #050505 100%
-  );
+  background: #000;
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  transition: background-image 0.7s ease, background-position 0.7s ease;
 }
 
 /* Animated background */
@@ -477,14 +475,16 @@ ul {
   inset: 0;
   background: linear-gradient(
     to right,
-    rgba(8,8,8,0.95) 0%,
-    rgba(8,8,8,0.7) 50%,
-    rgba(8,8,8,0.2) 100%
+    rgba(8,8,8,0.72) 0%,
+    rgba(8,8,8,0.34) 38%,
+    rgba(8,8,8,0.08) 68%,
+    rgba(8,8,8,0.42) 100%
   ),
   linear-gradient(
     to top,
     rgba(8,8,8,1) 0%,
-    transparent 40%
+    rgba(8,8,8,0.48) 22%,
+    transparent 58%
   );
 }
 

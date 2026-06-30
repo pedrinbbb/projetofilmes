@@ -182,10 +182,10 @@ ul {
 }
 
 .navbar.scrolled {
-  background: rgba(8, 8, 8, 0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 1px 0 var(--border-gold), 0 4px 20px rgba(0,0,0,0.4);
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
 }
 
 .nav-container {

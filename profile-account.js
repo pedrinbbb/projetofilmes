@@ -41,6 +41,8 @@ const form = $('profile-form');
 const preview = $('profile-preview');
 const topAvatar = $('top-avatar');
 const topProfileName = $('top-profile-name');
+const accountPillAvatar = $('account-pill-avatar');
+const accountPillName = $('account-pill-name');
 const profileMenuTrigger = $('top-profile-trigger');
 const profileMenu = $('top-profile-menu');
 const avatarGrid = $('avatar-grid');
@@ -123,8 +125,10 @@ function renderProfile() {
   selectedColor = activeProfile.avatar_color || '#FFD700';
 
   topProfileName.textContent = activeProfile.name || 'Perfil';
+  if (accountPillName) accountPillName.textContent = activeProfile.name || 'Perfil';
   setImage(preview, selectedAvatar, `Avatar de ${activeProfile.name || 'perfil'}`);
   setImage(topAvatar, selectedAvatar, `Avatar de ${activeProfile.name || 'perfil'}`);
+  if (accountPillAvatar) setImage(accountPillAvatar, selectedAvatar, `Avatar de ${activeProfile.name || 'perfil'}`);
   pinStatus.textContent = activeProfile.has_pin ? 'PIN definido' : 'Nenhum PIN definido';
   updateAvatarSelection();
 }

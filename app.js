@@ -20,7 +20,8 @@
 
 // Top 10, Hero Slides e Categoria de Filmes carregadas dinamicamente da API
 let MOVIES = { trending: [], new: [], action: [], series: [] };
-let TOP10 = [];
+let TOP10_MOVIES = [];
+let TOP10_SERIES = [];
 let HERO_SLIDES = [];
 
 // ---- STATE ----
@@ -94,8 +95,9 @@ async function initApp() {
     MOVIES.action = movieList.filter(m => m.category === 'action');
     MOVIES.series = seriesList;
 
-    // Gerar Top 10 dinâmico
-    TOP10 = [...movieList].sort((a, b) => b.rating - a.rating).slice(0, 10);
+    // Gerar Top 10 dinâmico para Filmes e Séries separadamente
+    TOP10_MOVIES = [...movieList].sort((a, b) => b.rating - a.rating).slice(0, 10);
+    TOP10_SERIES = [...seriesList].sort((a, b) => b.rating - a.rating).slice(0, 10);
 
     // Gerar Hero Slides com filmes e series melhor avaliados
     const candidates = [...movieList, ...seriesList].sort((a, b) => b.rating - a.rating);
@@ -205,30 +207,44 @@ function renderCarousel(carouselId, movies) {
 }
 
 // ---- TOP 10 ----
+function createTop10Card(movie, idx) {
+  const card = document.createElement('div');
+  card.className = 'top10-card';
+  card.setAttribute('role', 'listitem');
+  card.setAttribute('aria-label', `#${idx + 1} ${movie.title}`);
+  card.innerHTML = `
+    <div class="top10-number">${idx + 1}</div>
+    <img class="top10-poster" 
+         src="${movie.poster}" 
+         alt="Poster do filme ${movie.title}"
+         loading="lazy"
+         onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22300%22 viewBox=%220 0 200 300%22><rect width=%22200%22 height=%22300%22 fill=%22%23161616%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 fill=%22%23FFD700%22 font-size=%2248%22>🎬</text></svg>'" />
+    <div class="top10-overlay">
+      <div class="top10-title">${movie.title}</div>
+      <div class="top10-rating">⭐ ${movie.rating}</div>
+    </div>
+  `;
+  card.addEventListener('click', () => openModal(movie));
+  return card;
+}
+
 function renderTop10() {
-  const grid = $('top10-grid');
-  if (!grid) return;
-  grid.innerHTML = '';
-  TOP10.forEach((movie, idx) => {
-    const card = document.createElement('div');
-    card.className = 'top10-card';
-    card.setAttribute('role', 'listitem');
-    card.setAttribute('aria-label', `#${idx + 1} ${movie.title}`);
-    card.innerHTML = `
-      <div class="top10-number">${idx + 1}</div>
-      <img class="top10-poster" 
-           src="${movie.poster}" 
-           alt="Poster do filme ${movie.title}"
-           loading="lazy"
-           onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22300%22 viewBox=%220 0 200 300%22><rect width=%22200%22 height=%22300%22 fill=%22%23161616%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 fill=%22%23FFD700%22 font-size=%2248%22>🎬</text></svg>'" />
-      <div class="top10-overlay">
-        <div class="top10-title">${movie.title}</div>
-        <div class="top10-rating">⭐ ${movie.rating}</div>
-      </div>
-    `;
-    card.addEventListener('click', () => openModal(movie));
-    grid.appendChild(card);
-  });
+  const moviesGrid = $('top10-movies-grid');
+  const seriesGrid = $('top10-series-grid');
+
+  if (moviesGrid) {
+    moviesGrid.innerHTML = '';
+    TOP10_MOVIES.forEach((movie, idx) => {
+      moviesGrid.appendChild(createTop10Card(movie, idx));
+    });
+  }
+
+  if (seriesGrid) {
+    seriesGrid.innerHTML = '';
+    TOP10_SERIES.forEach((series, idx) => {
+      seriesGrid.appendChild(createTop10Card(series, idx));
+    });
+  }
 }
 
 // ---- CAROUSEL ARROWS ----

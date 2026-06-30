@@ -412,6 +412,13 @@ body {
   color: var(--color-text-light);
 }
 
+.stat-subline {
+  margin-top: 2px;
+  font-size: 0.75rem;
+  color: var(--color-gold-bright);
+  letter-spacing: 0.2px;
+}
+
 /* TAB NAVIGATION */
 .tab-navigation {
   display: flex;

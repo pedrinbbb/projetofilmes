@@ -113,10 +113,10 @@ ul {
   inset: 0;
   z-index: 9999;
   background: var(--bg-primary);
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
-  transition: opacity 0.6s ease, visibility 0.6s ease;
+  transition: none;
 }
 
 .loading-screen.hidden {
@@ -136,7 +136,7 @@ ul {
   display: flex;
   align-items: center;
   gap: 12px;
-  animation: pulse-logo 1.5s ease-in-out infinite;
+  animation: none;
 }
 
 .loading-icon {

@@ -37,6 +37,8 @@ if (!ADMIN_PASSWORD) {
   ADMIN_PASSWORD = crypto.randomBytes(6).toString('hex'); // 12 caracteres aleatórios hex
 }
 const ADMIN_JWT_SECRET = JWT_SECRET + '_admin';
+const ACTIVE_USER_TTL_MS = 2 * 60 * 1000;
+const activeUsers = new Map();
 
 
 // =============================================
@@ -1062,6 +1064,38 @@ function safeUser(user) {
   return safe;
 }
 
+function cleanupActiveUsers() {
+  const now = Date.now();
+  for (const [key, entry] of activeUsers.entries()) {
+    if (!entry?.lastSeen || now - entry.lastSeen > ACTIVE_USER_TTL_MS) {
+      activeUsers.delete(key);
+    }
+  }
+}
+
+function getActiveUsersSnapshot() {
+  cleanupActiveUsers();
+  const users = Array.from(activeUsers.values())
+    .sort((a, b) => b.lastSeen - a.lastSeen)
+    .map((entry) => ({
+      userId: entry.userId,
+      name: entry.name,
+      email: entry.email,
+      profileId: entry.profileId,
+      profileName: entry.profileName,
+      activity: entry.activity,
+      path: entry.path,
+      lastSeen: new Date(entry.lastSeen).toISOString()
+    }));
+
+  return {
+    count: users.length,
+    watching: users.filter((entry) => entry.activity === 'watching').length,
+    browsing: users.filter((entry) => entry.activity !== 'watching').length,
+    users
+  };
+}
+
 // =============================================
 //  ROUTES — EMAIL AUTH
 // =============================================
@@ -1515,12 +1549,36 @@ app.get('/api/auth/me', requireAuth, (req, res) => {
 
 app.post('/api/auth/logout', requireAuth, (req, res) => {
   dbRun('DELETE FROM sessions WHERE token = ?', [req.token]);
+  activeUsers.delete(String(req.user.id));
   return res.json({ message: 'Logout realizado' });
 });
 
 app.get('/api/auth/verify', requireAuth, (req, res) => {
   const user = dbGet('SELECT * FROM users WHERE id = ?', [req.user.id]);
   return res.json({ valid: true, user: safeUser(user) });
+});
+
+app.post('/api/presence/heartbeat', requireAuth, (req, res) => {
+  const user = dbGet('SELECT id, name, email FROM users WHERE id = ?', [req.user.id]);
+  if (!user) return res.status(404).json({ error: 'Usuario nao encontrado' });
+
+  const activity = req.body?.activity === 'watching' ? 'watching' : 'browsing';
+  const profileId = req.body?.profileId ? String(req.body.profileId).slice(0, 80) : null;
+  const profileName = req.body?.profileName ? String(req.body.profileName).slice(0, 120) : null;
+  const pathName = req.body?.path ? String(req.body.path).slice(0, 180) : null;
+
+  activeUsers.set(String(user.id), {
+    userId: user.id,
+    name: user.name,
+    email: user.email,
+    profileId,
+    profileName,
+    activity,
+    path: pathName,
+    lastSeen: Date.now()
+  });
+
+  return res.json({ ok: true });
 });
 
 // =============================================
@@ -1783,6 +1841,10 @@ app.get('/api/admin/users', requireAdminAuth, (req, res) => {
 });
 
 // Deletar Usuário (Admin)
+app.get('/api/admin/active-users', requireAdminAuth, (req, res) => {
+  return res.json(getActiveUsersSnapshot());
+});
+
 app.delete('/api/admin/users/:id', requireAdminAuth, (req, res) => {
   const { id } = req.params;
   try {
@@ -1790,6 +1852,7 @@ app.delete('/api/admin/users/:id', requireAdminAuth, (req, res) => {
     dbRun('DELETE FROM sessions WHERE user_id = ?', [id]);
     dbRun('DELETE FROM profiles WHERE user_id = ?', [id]);
     dbRun('DELETE FROM users WHERE id = ?', [id]);
+    activeUsers.delete(String(id));
     console.log(`[ADMIN] ❌ Usuário deletado. ID: ${id}`);
     return res.json({ success: true, message: 'Usuário excluído com sucesso.' });
   } catch (err) {

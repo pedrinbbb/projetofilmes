@@ -48,6 +48,7 @@ let movies = [];
 let users = [];
 let plans = [];
 let paymentLogs = [];
+let activeUsersTimer = null;
 
 // Seletores do Plano
 const plansTbody = $('plans-list-tbody');
@@ -94,9 +95,11 @@ function checkAdminAuth() {
     loginScreen.classList.add('hidden');
     adminPanel.classList.remove('hidden');
     loadDashboardData();
+    startActiveUsersMonitor();
   } else {
     loginScreen.classList.remove('hidden');
     adminPanel.classList.add('hidden');
+    stopActiveUsersMonitor();
   }
 }
 
@@ -310,6 +313,47 @@ async function loadDashboardData() {
   } catch (err) {
     console.error('Erro ao carregar pagamentos:', err);
   }
+}
+
+async function loadActiveUsersStats() {
+  const token = getAdminToken();
+  if (!token) return;
+
+  try {
+    const res = await fetch(`${API}/api/admin/active-users`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (res.status === 401) {
+      localStorage.removeItem('goatcine_admin_token');
+      checkAdminAuth();
+      return;
+    }
+
+    if (!res.ok) return;
+
+    const data = await res.json();
+    const activeCount = $('stat-active-users-count');
+    const activeDetail = $('stat-active-users-detail');
+
+    if (activeCount) activeCount.textContent = data.count || 0;
+    if (activeDetail) {
+      activeDetail.textContent = `${data.watching || 0} assistindo · ${data.browsing || 0} navegando`;
+    }
+  } catch (err) {
+    console.error('Erro ao carregar usuarios online:', err);
+  }
+}
+
+function startActiveUsersMonitor() {
+  loadActiveUsersStats();
+  if (activeUsersTimer) return;
+  activeUsersTimer = setInterval(loadActiveUsersStats, 15000);
+}
+
+function stopActiveUsersMonitor() {
+  clearInterval(activeUsersTimer);
+  activeUsersTimer = null;
 }
 
 // =============================================

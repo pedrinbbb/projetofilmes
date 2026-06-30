@@ -35,8 +35,6 @@ let currentCatalogType = 'movies';
 
 // ---- DOM REFS ----
 const $ = (id) => document.getElementById(id);
-const loadingScreen = $('loading-screen');
-const loadingBar = $('loading-bar');
 const navbar = $('navbar');
 const searchBar = $('search-bar');
 const searchBtn = $('nav-search-btn');
@@ -295,25 +293,6 @@ function renderContinueWatching() {
   section.classList.toggle('hidden', entries.length === 0);
   carousel.innerHTML = '';
   entries.forEach(entry => carousel.appendChild(createContinueWatchingCard(entry)));
-}
-
-// ---- LOADING ----
-function simulateLoading() {
-  let progress = 0;
-  const interval = setInterval(() => {
-    progress += Math.random() * 18 + 4;
-    if (progress >= 100) {
-      progress = 100;
-      loadingBar.style.width = '100%';
-      clearInterval(interval);
-      setTimeout(() => {
-        loadingScreen.classList.add('hidden');
-        initApp();
-      }, 400);
-    } else {
-      loadingBar.style.width = progress + '%';
-    }
-  }, 80);
 }
 
 // ---- INIT ----
@@ -2458,5 +2437,5 @@ function renderCatalog(type) {
 document.addEventListener('DOMContentLoaded', () => {
   initUserSession();
   initSubscriptionEvents();
-  simulateLoading();
+  initApp();
 });

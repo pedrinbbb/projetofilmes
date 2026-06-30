@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GOATCINE - Meu perfil</title>
+  <meta name="robots" content="noindex" />
+  <link id="dynamic-favicon" rel="icon" type="image/png" href="/uploads/favicon.png?v=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.3.0/css/all.min.css" />
+  <link rel="stylesheet" href="account-profile.css" />
+</head>
+<body>
+  <main class="account-page">
+    <header class="account-header">
+      <div>
+        <a class="brand-link" href="/">
+          <img src="/uploads/logo.png?v=1" alt="GOATCINE" onerror="this.style.display='none'; document.getElementById('brand-fallback').style.display='inline-flex';" />
+          <span class="brand-fallback" id="brand-fallback"><i class="fa-solid fa-trophy"></i> GOAT<span>CINE</span></span>
+        </a>
+        <h1>Sua conta</h1>
+        <p>Ajuste foto, nome e PIN dessa tela. Mudanças passam a valer assim que você salvar.</p>
+      </div>
+
+      <div class="active-profile-pill" id="active-profile-pill">
+        <div class="pill-avatar" id="pill-avatar"></div>
+        <div>
+          <strong id="pill-name">Perfil</strong>
+          <span>Tela 01 · Aberto</span>
+        </div>
+      </div>
+    </header>
+
+    <form class="profile-form" id="profile-form">
+      <section class="profile-section">
+        <div class="section-head">
+          <span>01 · Retrato</span>
+          <h2>Foto da tela</h2>
+        </div>
+        <div class="avatar-editor">
+          <div class="profile-preview" id="profile-preview"></div>
+          <div class="avatar-actions">
+            <button class="ghost-btn" type="button" id="toggle-avatar-picker">
+              <i class="fa-regular fa-images"></i>
+              Trocar imagem
+            </button>
+            <p>Escolha um dos avatares disponíveis para este perfil.</p>
+            <div class="avatar-grid" id="avatar-grid" hidden></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="profile-section">
+        <div class="section-head">
+          <span>02 · Identidade</span>
+          <h2>Nome do perfil</h2>
+        </div>
+        <label class="field-label" for="profile-name">Como aparece no início</label>
+        <input class="profile-input" id="profile-name" maxlength="24" autocomplete="off" />
+        <small>Até 24 caracteres</small>
+      </section>
+
+      <section class="profile-section">
+        <div class="section-head">
+          <span>03 · PIN</span>
+          <h2>Trava da tela</h2>
+        </div>
+        <div class="pin-tabs" role="group" aria-label="Opções de PIN">
+          <button type="button" class="pin-tab active" data-pin-mode="keep">Manter atual</button>
+          <button type="button" class="pin-tab" data-pin-mode="set">Definir PIN</button>
+          <button type="button" class="pin-tab" data-pin-mode="remove">Remover PIN</button>
+        </div>
+        <p class="pin-status" id="pin-status">Nenhum PIN definido</p>
+        <div class="pin-input-row" id="pin-input-row" hidden>
+          <input class="pin-input" id="profile-pin" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="PIN de 4 dígitos" />
+          <span>4 dígitos</span>
+        </div>
+      </section>
+
+      <section class="save-bar">
+        <span id="save-state"><i class="fa-solid fa-circle"></i> Pronto para salvar</span>
+        <div class="save-actions">
+          <a class="cancel-link" href="/">Cancelar</a>
+          <button class="save-btn" type="submit">
+            Salvar alterações
+            <i class="fa-solid fa-circle-check"></i>
+          </button>
+        </div>
+      </section>
+    </form>
+  </main>
+
+  <div class="toast" id="toast" role="alert" aria-live="polite"></div>
+  <script src="profile-account.js"></script>
+</body>
+</html>

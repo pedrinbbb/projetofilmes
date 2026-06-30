@@ -327,6 +327,7 @@ async function runMigrationsAndSeeds() {
       name         VARCHAR(255) NOT NULL,
       avatar_color VARCHAR(50) NOT NULL DEFAULT '#FFD700',
       avatar_icon  VARCHAR(500) NOT NULL DEFAULT '🎬',
+      pin_hash     VARCHAR(255) DEFAULT NULL,
       is_kid       INTEGER NOT NULL DEFAULT 0,
       created_at   VARCHAR(100) NOT NULL DEFAULT CURRENT_TIMESTAMP
     )`);
@@ -359,6 +360,7 @@ async function runMigrationsAndSeeds() {
     try { db.run("ALTER TABLE movies ADD COLUMN subtitlesUrl TEXT DEFAULT NULL"); } catch (e) {}
     try { db.run("ALTER TABLE episodes ADD COLUMN subtitlesUrl TEXT DEFAULT NULL"); } catch (e) {}
     try { db.run("ALTER TABLE movies ADD COLUMN position INTEGER DEFAULT 0"); } catch (e) {}
+    try { db.run("ALTER TABLE profiles ADD COLUMN pin_hash TEXT DEFAULT NULL"); } catch (e) {}
     try { db.run('ALTER TABLE plans ADD COLUMN duration_days INTEGER DEFAULT 30'); } catch (e) {}
     try { db.run('ALTER TABLE users ADD COLUMN sub_active INTEGER DEFAULT 0'); } catch (e) {}
     try { db.run('ALTER TABLE users ADD COLUMN sub_plan_id INTEGER DEFAULT NULL'); } catch (e) {}
@@ -373,6 +375,7 @@ async function runMigrationsAndSeeds() {
     await dbRunSync("ALTER TABLE episodes ADD COLUMN IF NOT EXISTS subtitlesUrl VARCHAR(500) DEFAULT NULL");
     await dbRunSync("ALTER TABLE movies ADD COLUMN IF NOT EXISTS position INTEGER DEFAULT 0");
     await dbRunSync("ALTER TABLE profiles ALTER COLUMN avatar_icon TYPE VARCHAR(500)");
+    await dbRunSync("ALTER TABLE profiles ADD COLUMN IF NOT EXISTS pin_hash VARCHAR(255) DEFAULT NULL");
   }
 
   await dbRunSync('CREATE INDEX IF NOT EXISTS idx_episodes_movie_season_number ON episodes (movie_id, season, number)');
@@ -1528,10 +1531,17 @@ app.get('/api/auth/verify', requireAuth, (req, res) => {
  * GET /api/profiles
  * Retorna todos os perfis do usuário autenticado.
  */
+function sanitizeProfile(profile) {
+  if (!profile) return profile;
+  const { pin_hash, pinHash, ...safeProfile } = profile;
+  safeProfile.has_pin = Boolean(pin_hash || pinHash);
+  return safeProfile;
+}
+
 app.get('/api/profiles', requireAuth, (req, res) => {
   try {
     const profiles = dbAll('SELECT * FROM profiles WHERE user_id = ? ORDER BY created_at ASC', [req.user.id]);
-    return res.json({ profiles });
+    return res.json({ profiles: profiles.map(sanitizeProfile) });
   } catch (err) {
     console.error('[PROFILES GET ERROR]', err);
     return res.status(500).json({ error: 'Erro ao buscar perfis.' });
@@ -1564,11 +1574,81 @@ app.post('/api/profiles', requireAuth, (req, res) => {
 
     const profile = dbGet('SELECT * FROM profiles WHERE id = ?', [id]);
     console.log(`[PROFILES] ✅ Perfil criado: "${name}" para user_id=${req.user.id}`);
-    return res.status(201).json({ profile });
+    return res.status(201).json({ profile: sanitizeProfile(profile) });
 
   } catch (err) {
     console.error('[PROFILES POST ERROR]', err);
     return res.status(500).json({ error: 'Erro ao criar perfil.' });
+  }
+});
+
+app.put('/api/profiles/:id', requireAuth, (req, res) => {
+  try {
+    const profileId = parseInt(req.params.id, 10);
+    const profile = dbGet('SELECT * FROM profiles WHERE id = ? AND user_id = ?', [profileId, req.user.id]);
+
+    if (!profile)
+      return res.status(404).json({ error: 'Perfil nao encontrado.' });
+
+    const name = String(req.body.name || '').trim();
+    const avatarColor = String(req.body.avatar_color || profile.avatar_color || '#FFD700').trim();
+    const avatarIcon = String(req.body.avatar_icon || profile.avatar_icon || '🎬').trim();
+    const pin = req.body.pin;
+
+    if (!name)
+      return res.status(400).json({ error: 'Nome do perfil e obrigatorio.' });
+    if (name.length > 24)
+      return res.status(400).json({ error: 'Nome do perfil deve ter no maximo 24 caracteres.' });
+    if (!avatarIcon)
+      return res.status(400).json({ error: 'Escolha um avatar para o perfil.' });
+
+    let nextPinHash = profile.pin_hash || null;
+    if (pin !== undefined) {
+      const normalizedPin = String(pin).trim();
+      if (normalizedPin === '') {
+        nextPinHash = null;
+      } else {
+        if (!/^\d{4}$/.test(normalizedPin))
+          return res.status(400).json({ error: 'O PIN deve ter exatamente 4 digitos.' });
+        nextPinHash = bcrypt.hashSync(normalizedPin, 10);
+      }
+    }
+
+    dbRun(
+      'UPDATE profiles SET name = ?, avatar_color = ?, avatar_icon = ?, pin_hash = ? WHERE id = ? AND user_id = ?',
+      [name, avatarColor, avatarIcon, nextPinHash, profileId, req.user.id]
+    );
+
+    const updatedProfile = dbGet('SELECT * FROM profiles WHERE id = ? AND user_id = ?', [profileId, req.user.id]);
+    return res.json({ profile: sanitizeProfile(updatedProfile) });
+  } catch (err) {
+    console.error('[PROFILES UPDATE ERROR]', err);
+    return res.status(500).json({ error: 'Erro ao atualizar perfil.' });
+  }
+});
+
+app.post('/api/profiles/:id/verify-pin', requireAuth, (req, res) => {
+  try {
+    const profileId = parseInt(req.params.id, 10);
+    const profile = dbGet('SELECT * FROM profiles WHERE id = ? AND user_id = ?', [profileId, req.user.id]);
+
+    if (!profile)
+      return res.status(404).json({ error: 'Perfil nao encontrado.' });
+    if (!profile.pin_hash)
+      return res.json({ success: true });
+
+    const pin = String(req.body.pin || '').trim();
+    if (!/^\d{4}$/.test(pin))
+      return res.status(400).json({ error: 'Informe o PIN de 4 digitos.' });
+
+    const valid = bcrypt.compareSync(pin, profile.pin_hash);
+    if (!valid)
+      return res.status(401).json({ error: 'PIN incorreto.' });
+
+    return res.json({ success: true });
+  } catch (err) {
+    console.error('[PROFILES VERIFY PIN ERROR]', err);
+    return res.status(500).json({ error: 'Erro ao verificar PIN.' });
   }
 });
 

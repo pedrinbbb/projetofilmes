@@ -296,6 +296,48 @@
       vertical-align: middle;
     }
 
+    .pin-modal {
+      position: fixed; inset: 0; z-index: 50;
+      display: none; align-items: center; justify-content: center;
+      padding: 20px; background: rgba(0,0,0,0.78);
+      backdrop-filter: blur(12px);
+    }
+    .pin-modal.open { display: flex; }
+    .pin-card {
+      width: min(420px, 100%);
+      border: 1px solid rgba(255,215,0,0.22);
+      border-radius: 18px;
+      background: #0b0b0b;
+      padding: 26px;
+      box-shadow: 0 24px 70px rgba(0,0,0,0.65);
+      text-align: center;
+    }
+    .pin-avatar {
+      width: 76px; height: 76px; margin: 0 auto 14px;
+      overflow: hidden; border-radius: 50%;
+      border: 2px solid rgba(255,215,0,0.35);
+      background: #151515;
+    }
+    .pin-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .pin-card h2 { margin: 0; font-size: 20px; }
+    .pin-card p { margin: 8px 0 20px; color: var(--text-secondary); font-size: 13px; }
+    .pin-field {
+      width: 150px; height: 56px;
+      border: 1.5px solid rgba(255,215,0,0.28);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.05);
+      color: var(--text-primary);
+      outline: none;
+      text-align: center;
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: 0.35em;
+      padding-left: 0.35em;
+    }
+    .pin-field:focus { border-color: var(--gold-primary); box-shadow: 0 0 0 3px rgba(255,215,0,0.12); }
+    .pin-error { min-height: 18px; margin-top: 12px; color: #FF6B6B; font-size: 13px; font-weight: 600; }
+    .pin-actions { display: flex; gap: 10px; margin-top: 18px; }
+
     @media (max-width: 600px) {
       .profile-avatar, .add-profile-avatar { width: 90px; height: 90px; font-size: 36px; border-radius: 12px; }
       .profiles-page { gap: 32px; padding: 32px 16px; }
@@ -361,6 +403,20 @@
       <div class="create-actions">
         <button class="btn-secondary" id="create-cancel-btn" style="display:none;">Cancelar</button>
         <button class="btn-primary" id="create-submit-btn">Criar Perfil</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="pin-modal" id="pin-modal" aria-hidden="true">
+    <div class="pin-card" role="dialog" aria-modal="true" aria-labelledby="pin-title">
+      <div class="pin-avatar" id="pin-avatar"></div>
+      <h2 id="pin-title">Digite o PIN</h2>
+      <p id="pin-profile-name">Perfil bloqueado</p>
+      <input class="pin-field" id="pin-input" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="PIN de 4 dígitos" />
+      <div class="pin-error" id="pin-error"></div>
+      <div class="pin-actions">
+        <button class="btn-secondary" id="pin-cancel-btn" type="button">Cancelar</button>
+        <button class="btn-primary" id="pin-submit-btn" type="button">Entrar</button>
       </div>
     </div>
   </div>

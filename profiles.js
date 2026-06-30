@@ -93,6 +93,14 @@ const colorGrid      = document.getElementById('color-grid');
 const kidToggle      = document.getElementById('kid-toggle');
 const cancelBtn      = document.getElementById('create-cancel-btn');
 const submitBtn      = document.getElementById('create-submit-btn');
+const pinModal       = document.getElementById('pin-modal');
+const pinAvatar      = document.getElementById('pin-avatar');
+const pinProfileName = document.getElementById('pin-profile-name');
+const pinInput       = document.getElementById('pin-input');
+const pinError       = document.getElementById('pin-error');
+const pinCancelBtn   = document.getElementById('pin-cancel-btn');
+const pinSubmitBtn   = document.getElementById('pin-submit-btn');
+let lockedProfile    = null;
 
 function isImageAvatar(value) {
   return /^(https?:\/\/|data:image\/)/i.test(value || '');
@@ -121,6 +129,17 @@ function setAvatarContent(element, avatarValue, color, altText = 'Avatar do perf
   element.textContent = avatarValue;
   element.style.background = color + '22';
   element.style.borderColor = color + '55';
+}
+
+function persistSelectedProfile(profile) {
+  localStorage.setItem('goatcine_profile', JSON.stringify({
+    id:           profile.id,
+    name:         profile.name,
+    avatar_icon:  profile.avatar_icon,
+    avatar_color: profile.avatar_color,
+    is_kid:       profile.is_kid,
+    has_pin:      profile.has_pin,
+  }));
 }
 
 // ---- BUILD PICKERS ----
@@ -219,14 +238,71 @@ function renderProfiles() {
 
 // ---- SELECT PROFILE ----
 function selectProfile(profile) {
-  localStorage.setItem('goatcine_profile', JSON.stringify({
-    id:           profile.id,
-    name:         profile.name,
-    avatar_icon:  profile.avatar_icon,
-    avatar_color: profile.avatar_color,
-    is_kid:       profile.is_kid,
-  }));
+  if (profile.has_pin) {
+    showPinModal(profile);
+    return;
+  }
+
+  persistSelectedProfile(profile);
   window.location.href = '/';
+}
+
+function showPinModal(profile) {
+  lockedProfile = profile;
+  pinError.textContent = '';
+  pinInput.value = '';
+  pinProfileName.textContent = profile.name;
+  setAvatarContent(pinAvatar, profile.avatar_icon, profile.avatar_color, `Avatar de ${profile.name}`);
+  pinModal.classList.add('open');
+  pinModal.setAttribute('aria-hidden', 'false');
+  setTimeout(() => pinInput.focus(), 50);
+}
+
+function hidePinModal() {
+  pinModal.classList.remove('open');
+  pinModal.setAttribute('aria-hidden', 'true');
+  lockedProfile = null;
+  pinInput.value = '';
+  pinError.textContent = '';
+}
+
+async function verifyProfilePin() {
+  if (!lockedProfile) return;
+
+  const pin = pinInput.value.trim();
+  pinError.textContent = '';
+
+  if (!/^\d{4}$/.test(pin)) {
+    pinError.textContent = 'Digite os 4 dígitos do PIN.';
+    pinInput.focus();
+    return;
+  }
+
+  pinSubmitBtn.disabled = true;
+  try {
+    const res = await fetch(`/api/profiles/${lockedProfile.id}/verify-pin`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ pin }),
+    });
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      pinError.textContent = data.error || 'PIN incorreto.';
+      pinInput.select();
+      return;
+    }
+
+    persistSelectedProfile(lockedProfile);
+    window.location.href = '/';
+  } catch (err) {
+    pinError.textContent = 'Erro de conexão ao verificar PIN.';
+  } finally {
+    pinSubmitBtn.disabled = false;
+  }
 }
 
 // ---- DELETE PROFILE ----
@@ -368,6 +444,7 @@ async function createProfile() {
         avatar_icon:  profile.avatar_icon,
         avatar_color: profile.avatar_color,
         is_kid:       profile.is_kid,
+        has_pin:      profile.has_pin,
       }));
       window.location.href = '/';
     } else {
@@ -438,6 +515,20 @@ kidToggle.addEventListener('keydown', (e) => {
     e.preventDefault();
     kidToggle.click();
   }
+});
+
+pinCancelBtn.addEventListener('click', hidePinModal);
+pinSubmitBtn.addEventListener('click', verifyProfilePin);
+pinInput.addEventListener('input', () => {
+  pinInput.value = pinInput.value.replace(/\D/g, '').slice(0, 4);
+  pinError.textContent = '';
+});
+pinInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') verifyProfilePin();
+  if (e.key === 'Escape') hidePinModal();
+});
+pinModal.addEventListener('click', (e) => {
+  if (e.target === pinModal) hidePinModal();
 });
 
 nameInput.addEventListener('input', () => {

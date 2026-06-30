@@ -1629,7 +1629,7 @@ function initUserSession() {
 
     $('menu-btn-profile')?.addEventListener('click', () => {
       dropdown.classList.remove('show');
-      showToast(`👤 Perfil de ${(profile ? profile.name : user.name).split(' ')[0]}!`);
+      window.location.href = '/account-profile.html';
     });
 
     $('menu-btn-settings')?.addEventListener('click', () => {

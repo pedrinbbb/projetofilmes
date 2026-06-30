@@ -8,36 +8,32 @@ const EMOJIS = ['🎬','🎭','🏆','🌟','👑','🦁','🐺','🦊','🐉','
 
 const PROFILE_IMAGE_AVATARS = [
   {
-    url: 'https://i.postimg.cc/50tJ2rnK/image.png',
+    url: 'https://i.postimg.cc/HLpy2Qpv/image.png',
     label: 'Avatar real 1'
   },
   {
-    url: 'https://i.postimg.cc/HLpy2Qpv/image.png',
+    url: 'https://i.postimg.cc/G2ts0dTH/image.png',
     label: 'Avatar real 2'
   },
   {
-    url: 'https://i.postimg.cc/G2ts0dTH/image.png',
+    url: 'https://i.postimg.cc/hv7zjsrf/image.png',
     label: 'Avatar real 3'
   },
   {
-    url: 'https://i.postimg.cc/hv7zjsrf/image.png',
+    url: 'https://i.postimg.cc/3W5yDGSb/image.png',
     label: 'Avatar real 4'
   },
   {
-    url: 'https://i.postimg.cc/3W5yDGSb/image.png',
+    url: 'https://i.postimg.cc/tRLDzm8D/image.png',
     label: 'Avatar real 5'
   },
   {
-    url: 'https://i.postimg.cc/tRLDzm8D/image.png',
+    url: 'https://i.postimg.cc/T3x9z5dp/image.png',
     label: 'Avatar real 6'
   },
   {
-    url: 'https://i.postimg.cc/T3x9z5dp/image.png',
-    label: 'Avatar real 7'
-  },
-  {
     url: 'https://i.postimg.cc/T3QrBkHG/image.png',
-    label: 'Avatar real 8'
+    label: 'Avatar real 7'
   }
 ];
 

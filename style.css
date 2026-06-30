@@ -1900,7 +1900,7 @@ ul {
 .player-subtitles-overlay {
   position: absolute;
   left: 50%;
-  bottom: clamp(150px, 18vh, 230px);
+  bottom: clamp(130px, 16vh, 205px);
   transform: translateX(-50%);
   z-index: 4;
   display: none;
@@ -1920,7 +1920,7 @@ ul {
 
 @media (max-width: 768px) {
   .player-subtitles-overlay {
-    bottom: clamp(88px, 16vh, 150px);
+    bottom: clamp(78px, 14vh, 135px);
     width: min(92vw, 680px);
     font-size: clamp(1rem, 4vw, 1.35rem);
   }

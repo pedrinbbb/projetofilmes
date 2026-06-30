@@ -301,7 +301,8 @@ async function runMigrationsAndSeeds() {
       category    VARCHAR(100) NOT NULL,
       type        VARCHAR(50) NOT NULL DEFAULT 'movie',
       videoUrl    VARCHAR(500) NOT NULL,
-      subtitlesUrl VARCHAR(500) DEFAULT NULL
+      subtitlesUrl VARCHAR(500) DEFAULT NULL,
+      position    INTEGER NOT NULL DEFAULT 0
     )`);
 
   await dbRunSync(`
@@ -357,6 +358,7 @@ async function runMigrationsAndSeeds() {
     try { db.run("ALTER TABLE movies ADD COLUMN type TEXT DEFAULT 'movie'"); } catch (e) {}
     try { db.run("ALTER TABLE movies ADD COLUMN subtitlesUrl TEXT DEFAULT NULL"); } catch (e) {}
     try { db.run("ALTER TABLE episodes ADD COLUMN subtitlesUrl TEXT DEFAULT NULL"); } catch (e) {}
+    try { db.run("ALTER TABLE movies ADD COLUMN position INTEGER DEFAULT 0"); } catch (e) {}
     try { db.run('ALTER TABLE plans ADD COLUMN duration_days INTEGER DEFAULT 30'); } catch (e) {}
     try { db.run('ALTER TABLE users ADD COLUMN sub_active INTEGER DEFAULT 0'); } catch (e) {}
     try { db.run('ALTER TABLE users ADD COLUMN sub_plan_id INTEGER DEFAULT NULL'); } catch (e) {}
@@ -369,6 +371,7 @@ async function runMigrationsAndSeeds() {
     await dbRunSync("ALTER TABLE movies ADD COLUMN IF NOT EXISTS type VARCHAR(50) DEFAULT 'movie'");
     await dbRunSync("ALTER TABLE movies ADD COLUMN IF NOT EXISTS subtitlesUrl VARCHAR(500) DEFAULT NULL");
     await dbRunSync("ALTER TABLE episodes ADD COLUMN IF NOT EXISTS subtitlesUrl VARCHAR(500) DEFAULT NULL");
+    await dbRunSync("ALTER TABLE movies ADD COLUMN IF NOT EXISTS position INTEGER DEFAULT 0");
   }
 
   await dbRunSync('CREATE INDEX IF NOT EXISTS idx_episodes_movie_season_number ON episodes (movie_id, season, number)');
@@ -2205,7 +2208,7 @@ app.all('/api/webhook/pix', (req, res) => {
 // Listar todos os Filmes (Público)
 app.get('/api/movies', (req, res) => {
   try {
-    let movies = dbAll('SELECT * FROM movies ORDER BY id DESC');
+    let movies = dbAll('SELECT * FROM movies ORDER BY position ASC, id DESC');
     movies = movies.map(m => {
       if (m.videourl !== undefined && m.videoUrl === undefined) {
         m.videoUrl = m.videourl;
@@ -2221,6 +2224,29 @@ app.get('/api/movies', (req, res) => {
   } catch (err) {
     console.error('[GET MOVIES ERROR]', err);
     return res.status(500).json({ error: 'Erro ao buscar catálogo de filmes' });
+  }
+});
+
+// Reordenar Filmes (Admin)
+app.post('/api/movies/reorder', requireAdminAuth, (req, res) => {
+  try {
+    const { items } = req.body; // Array de { id, position, category }
+    if (!Array.isArray(items)) {
+      return res.status(400).json({ error: 'Formato inválido. Esperado um array de itens.' });
+    }
+
+    for (const item of items) {
+      const { id, position, category } = item;
+      dbRun(
+        'UPDATE movies SET position = ?, category = ? WHERE id = ?',
+        [Number(position), category, id]
+      );
+    }
+
+    return res.json({ success: true, message: 'Ordenação atualizada com sucesso!' });
+  } catch (err) {
+    console.error('[REORDER MOVIES ERROR]', err);
+    return res.status(500).json({ error: 'Erro ao atualizar a ordenação dos títulos' });
   }
 });
 

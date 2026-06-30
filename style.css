@@ -2745,3 +2745,21 @@ ul {
   color: #ffffff;
   padding: 10px;
 }
+
+/* =============================================
+   REORDER BOARD DRAG & DROP STYLING
+   ============================================= */
+.reorder-item-card.dragging {
+  opacity: 0.4;
+  border-color: var(--gold-primary) !important;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+  transform: scale(0.98);
+}
+
+.reorder-list {
+  transition: background-color 0.2s ease;
+}
+
+.reorder-list:hover {
+  background-color: rgba(255, 255, 255, 0.01);
+}

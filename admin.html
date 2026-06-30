@@ -99,6 +99,7 @@
         <button class="tab-btn" id="tab-plans-btn">Gerenciar Planos</button>
         <button class="tab-btn" id="tab-payments-btn">Cobranças & Logs</button>
         <button class="tab-btn" id="tab-customize-btn">Personalizar Site</button>
+        <button class="tab-btn" id="tab-reorder-btn">Ordenar Homepage</button>
       </nav>
 
       <!-- ABA 1: GERENCIAR FILMES -->
@@ -296,6 +297,54 @@
             
             <button type="button" class="btn-primary" id="btn-save-favicon" disabled style="width: 100%;">Salvar Favicon</button>
           </div>
+        </div>
+      </section>
+
+      <!-- ABA 6: ORDENAR HOMEPAGE -->
+      <section class="panel-tab-content" id="section-reorder">
+        <div class="section-header" style="margin-bottom: 20px;">
+          <h2>Ordenar Homepage via Drag & Drop</h2>
+          <p style="color: var(--color-text-muted); font-size: 0.88rem;">Arraste os títulos entre ou dentro das categorias para mudar sua ordem na tela principal e salve ao terminar.</p>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
+          <button class="btn-primary" id="btn-save-reorder">Salvar Ordenação</button>
+        </div>
+
+        <div class="reorder-board" id="reorder-board" style="display: flex; gap: 20px; overflow-x: auto; padding-bottom: 20px; min-height: 500px;">
+          
+          <!-- Coluna 1: Trending -->
+          <div class="reorder-column" data-category="trending" style="flex: 1; min-width: 250px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+            <h3 style="color: var(--color-gold-bright); font-size: 1rem; border-bottom: 1px solid rgba(255,215,0,0.1); padding-bottom: 8px; margin-bottom: 4px;">🔥 Em Alta</h3>
+            <div class="reorder-list" data-category="trending" style="display: flex; flex-direction: column; gap: 10px; flex-grow: 1; min-height: 400px;">
+              <!-- Cards inseridos dinamicamente -->
+            </div>
+          </div>
+
+          <!-- Coluna 2: New -->
+          <div class="reorder-column" data-category="new" style="flex: 1; min-width: 250px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+            <h3 style="color: var(--color-gold-bright); font-size: 1rem; border-bottom: 1px solid rgba(255,215,0,0.1); padding-bottom: 8px; margin-bottom: 4px;">✨ Novidades</h3>
+            <div class="reorder-list" data-category="new" style="display: flex; flex-direction: column; gap: 10px; flex-grow: 1; min-height: 400px;">
+              <!-- Cards inseridos dinamicamente -->
+            </div>
+          </div>
+
+          <!-- Coluna 3: Action -->
+          <div class="reorder-column" data-category="action" style="flex: 1; min-width: 250px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+            <h3 style="color: var(--color-gold-bright); font-size: 1rem; border-bottom: 1px solid rgba(255,215,0,0.1); padding-bottom: 8px; margin-bottom: 4px;">⚡ Ação</h3>
+            <div class="reorder-list" data-category="action" style="display: flex; flex-direction: column; gap: 10px; flex-grow: 1; min-height: 400px;">
+              <!-- Cards inseridos dinamicamente -->
+            </div>
+          </div>
+
+          <!-- Coluna 4: Series -->
+          <div class="reorder-column" data-category="series" style="flex: 1; min-width: 250px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+            <h3 style="color: var(--color-gold-bright); font-size: 1rem; border-bottom: 1px solid rgba(255,215,0,0.1); padding-bottom: 8px; margin-bottom: 4px;">📺 Séries</h3>
+            <div class="reorder-list" data-category="series" style="display: flex; flex-direction: column; gap: 10px; flex-grow: 1; min-height: 400px;">
+              <!-- Cards inseridos dinamicamente -->
+            </div>
+          </div>
+
         </div>
       </section>
     </main>

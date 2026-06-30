@@ -18,12 +18,14 @@ const tabUsersBtn = $('tab-users-btn');
 const tabPlansBtn = $('tab-plans-btn');
 const tabPaymentsBtn = $('tab-payments-btn');
 const tabCustomizeBtn = $('tab-customize-btn');
+const tabReorderBtn = $('tab-reorder-btn');
 const sectionMovies = $('section-movies');
 const sectionSeries = $('section-series');
 const sectionUsers = $('section-users');
 const sectionPlans = $('section-plans');
 const sectionPayments = $('section-payments');
 const sectionCustomize = $('section-customize');
+const sectionReorder = $('section-reorder');
 
 const moviesTbody = $('movies-list-tbody');
 const seriesTbody = $('series-list-tbody');
@@ -214,6 +216,7 @@ function switchTab(target) {
   tabPlansBtn.classList.toggle('active', target === 'plans');
   tabPaymentsBtn.classList.toggle('active', target === 'payments');
   tabCustomizeBtn.classList.toggle('active', target === 'customize');
+  tabReorderBtn.classList.toggle('active', target === 'reorder');
 
   sectionMovies.classList.toggle('active', target === 'movies');
   sectionSeries.classList.toggle('active', target === 'series');
@@ -221,6 +224,11 @@ function switchTab(target) {
   sectionPlans.classList.toggle('active', target === 'plans');
   sectionPayments.classList.toggle('active', target === 'payments');
   sectionCustomize.classList.toggle('active', target === 'customize');
+  sectionReorder.classList.toggle('active', target === 'reorder');
+
+  if (target === 'reorder') {
+    renderReorderBoard();
+  }
 }
 
 tabMoviesBtn.addEventListener('click', () => switchTab('movies'));
@@ -229,6 +237,7 @@ tabUsersBtn.addEventListener('click', () => switchTab('users'));
 tabPlansBtn.addEventListener('click', () => switchTab('plans'));
 tabPaymentsBtn.addEventListener('click', () => switchTab('payments'));
 tabCustomizeBtn.addEventListener('click', () => switchTab('customize'));
+tabReorderBtn.addEventListener('click', () => switchTab('reorder'));
 
 // =============================================
 //  DASHBOARD LOAD DATA
@@ -1532,3 +1541,164 @@ $('btn-save-favicon')?.addEventListener('click', async function() {
   }
 });
 $('search-payments')?.addEventListener('input', renderPaymentsTable);
+
+// =============================================
+//  ABA ORDENAR: REORDER BOARD & DRAG & DROP
+// =============================================
+function renderReorderBoard() {
+  const categories = ['trending', 'new', 'action', 'series'];
+  
+  categories.forEach(cat => {
+    const listContainer = document.querySelector(`.reorder-list[data-category="${cat}"]`);
+    if (!listContainer) return;
+    
+    listContainer.innerHTML = '';
+    
+    // Filtrar filmes pertencentes a essa categoria
+    const catMovies = movies.filter(m => m.category === cat);
+    
+    if (catMovies.length === 0) {
+      listContainer.innerHTML = `<div class="empty-placeholder" style="border: 2px dashed rgba(255,255,255,0.05); border-radius: 8px; padding: 20px; text-align: center; color: #555; font-size: 0.8rem;">Vazio</div>`;
+    }
+    
+    catMovies.forEach(m => {
+      const card = document.createElement('div');
+      card.className = 'reorder-item-card';
+      card.setAttribute('draggable', 'true');
+      card.dataset.id = m.id;
+      card.style.cssText = `
+        background: #181818;
+        border: 1px solid rgba(255,215,0,0.1);
+        border-radius: 8px;
+        padding: 10px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        cursor: grab;
+        transition: transform 0.2s, border-color 0.2s, background 0.2s;
+        user-select: none;
+      `;
+      card.innerHTML = `
+        <img src="${m.poster}" style="width: 36px; height: 50px; border-radius: 4px; object-fit: cover;" onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2236%22 height=%2250%22><rect width=%2236%22 height=%2250%22 fill=%22%23222%22/></svg>'" />
+        <div style="flex-grow: 1; min-width: 0;">
+          <div style="font-size: 0.82rem; font-weight: 700; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${m.title}</div>
+          <div style="font-size: 0.72rem; color: #777;">⭐ ${m.rating} | ${m.year}</div>
+        </div>
+      `;
+      
+      // Eventos Drag
+      card.addEventListener('dragstart', (e) => {
+        card.classList.add('dragging');
+        card.style.opacity = '0.5';
+        card.style.background = '#222';
+        e.dataTransfer.setData('text/plain', m.id);
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      
+      card.addEventListener('dragend', () => {
+        card.classList.remove('dragging');
+        card.style.opacity = '1';
+        card.style.background = '#181818';
+        // Remover placeholders vazios
+        document.querySelectorAll('.reorder-list').forEach(list => {
+          const cards = list.querySelectorAll('.reorder-item-card');
+          const placeholder = list.querySelector('.empty-placeholder');
+          if (cards.length > 0 && placeholder) {
+            placeholder.remove();
+          } else if (cards.length === 0 && !placeholder) {
+            list.innerHTML = `<div class="empty-placeholder" style="border: 2px dashed rgba(255,255,255,0.05); border-radius: 8px; padding: 20px; text-align: center; color: #555; font-size: 0.8rem;">Vazio</div>`;
+          }
+        });
+      });
+      
+      listContainer.appendChild(card);
+    });
+  });
+  
+  // Registrar eventos nos contêineres de lista
+  document.querySelectorAll('.reorder-list').forEach(list => {
+    list.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      
+      const draggingCard = document.querySelector('.dragging');
+      if (!draggingCard) return;
+      
+      const afterElement = getDragAfterElement(list, e.clientY);
+      if (afterElement == null) {
+        list.appendChild(draggingCard);
+      } else {
+        list.insertBefore(draggingCard, afterElement);
+      }
+      
+      // Remover placeholder temporariamente ao arrastar para dentro
+      const placeholder = list.querySelector('.empty-placeholder');
+      if (placeholder) placeholder.remove();
+    });
+  });
+}
+
+// Determinar posição do drag inserido entre cards
+function getDragAfterElement(container, y) {
+  const draggableElements = [...container.querySelectorAll('.reorder-item-card:not(.dragging)')];
+  
+  return draggableElements.reduce((closest, child) => {
+    const box = child.getBoundingClientRect();
+    const offset = y - box.top - box.height / 2;
+    if (offset < 0 && offset > closest.offset) {
+      return { offset: offset, element: child };
+    } else {
+      return closest;
+    }
+  }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+// Salvar a nova ordenação
+$('btn-save-reorder')?.addEventListener('click', async () => {
+  const token = getAdminToken();
+  if (!token) return;
+
+  const btn = $('btn-save-reorder');
+  btn.disabled = true;
+  btn.textContent = 'Salvando...';
+
+  const items = [];
+  
+  document.querySelectorAll('.reorder-list').forEach(list => {
+    const category = list.dataset.category;
+    const cards = list.querySelectorAll('.reorder-item-card');
+    cards.forEach((card, index) => {
+      items.push({
+        id: Number(card.dataset.id),
+        position: index,
+        category: category
+      });
+    });
+  });
+
+  try {
+    const res = await fetch(`${API}/api/movies/reorder`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ items })
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      showToast('✓ Ordenação salva com sucesso na Homepage!');
+      
+      // Recarregar os dados locais para manter atualizado
+      await loadDashboardData();
+    } else {
+      showToast(data.error || 'Erro ao salvar ordenação.');
+    }
+  } catch (err) {
+    showToast('Erro de rede ao salvar ordenação.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Salvar Ordenação';
+  }
+});

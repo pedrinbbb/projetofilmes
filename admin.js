@@ -590,6 +590,7 @@ window.openEditModal = function(id) {
   $('m-director').value = movie.director;
   $('m-cast').value = movie.cast;
   $('m-videoUrl').value = movie.videoUrl || movie.videourl || '';
+  $('m-subtitlesUrl').value = movie.subtitlesUrl || movie.subtitlesurl || '';
   $('m-desc').value = movie.desc;
   updateMovieTypeFields();
 
@@ -618,6 +619,7 @@ movieForm.addEventListener('submit', async (e) => {
     director: $('m-director').value.trim(),
     cast: $('m-cast').value.trim(),
     videoUrl: isSeries ? '' : $('m-videoUrl').value.trim(),
+    subtitlesUrl: $('m-subtitlesUrl').value.trim(),
     desc: $('m-desc').value.trim(),
   };
 
@@ -625,7 +627,7 @@ movieForm.addEventListener('submit', async (e) => {
   let formsValid = true;
   Object.keys(payload).forEach(key => {
     if (isSeries && (key === 'duration' || key === 'videoUrl')) return;
-    if (key === 'poster' || key === 'backdrop') return;
+    if (key === 'poster' || key === 'backdrop' || key === 'subtitlesUrl') return;
     if (!payload[key] && payload[key] !== 0) {
       formsValid = false;
     }
@@ -702,6 +704,7 @@ function resetEpisodeForm(season = 1) {
   $('episode-id').value = '';
   $('e-season').value = season;
   $('e-number').value = '';
+  $('e-subtitlesUrl').value = '';
   $('btn-save-episode').textContent = 'Salvar Episodio';
 }
 
@@ -786,6 +789,7 @@ window.editEpisode = function(episodeId) {
   $('e-title').value = ep.title;
   $('e-duration').value = ep.duration;
   $('e-videoUrl').value = ep.videoUrl || ep.videourl || '';
+  $('e-subtitlesUrl').value = ep.subtitlesUrl || ep.subtitlesurl || '';
   $('e-desc').value = ep.desc || '';
   $('btn-save-episode').textContent = 'Atualizar Episodio';
 };
@@ -822,6 +826,7 @@ episodeForm?.addEventListener('submit', async (e) => {
     title: $('e-title').value.trim(),
     duration: $('e-duration').value.trim(),
     videoUrl: $('e-videoUrl').value.trim(),
+    subtitlesUrl: $('e-subtitlesUrl').value.trim(),
     desc: $('e-desc').value.trim()
   };
 

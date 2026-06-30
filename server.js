@@ -300,7 +300,8 @@ async function runMigrationsAndSeeds() {
       "cast"      TEXT NOT NULL,
       category    VARCHAR(100) NOT NULL,
       type        VARCHAR(50) NOT NULL DEFAULT 'movie',
-      videoUrl    VARCHAR(500) NOT NULL
+      videoUrl    VARCHAR(500) NOT NULL,
+      subtitlesUrl VARCHAR(500) DEFAULT NULL
     )`);
 
   await dbRunSync(`
@@ -312,6 +313,7 @@ async function runMigrationsAndSeeds() {
       title       VARCHAR(255) NOT NULL,
       duration    VARCHAR(100) NOT NULL,
       videoUrl    VARCHAR(500) NOT NULL,
+      subtitlesUrl VARCHAR(500) DEFAULT NULL,
       "desc"      TEXT DEFAULT '',
       created_at  VARCHAR(100) NOT NULL DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (movie_id) REFERENCES movies(id) ON DELETE CASCADE
@@ -353,6 +355,8 @@ async function runMigrationsAndSeeds() {
   // Caso estejamos em SQLite, garantimos rodando:
   if (!IS_POSTGRES) {
     try { db.run("ALTER TABLE movies ADD COLUMN type TEXT DEFAULT 'movie'"); } catch (e) {}
+    try { db.run("ALTER TABLE movies ADD COLUMN subtitlesUrl TEXT DEFAULT NULL"); } catch (e) {}
+    try { db.run("ALTER TABLE episodes ADD COLUMN subtitlesUrl TEXT DEFAULT NULL"); } catch (e) {}
     try { db.run('ALTER TABLE plans ADD COLUMN duration_days INTEGER DEFAULT 30'); } catch (e) {}
     try { db.run('ALTER TABLE users ADD COLUMN sub_active INTEGER DEFAULT 0'); } catch (e) {}
     try { db.run('ALTER TABLE users ADD COLUMN sub_plan_id INTEGER DEFAULT NULL'); } catch (e) {}
@@ -363,6 +367,8 @@ async function runMigrationsAndSeeds() {
     try { db.run('ALTER TABLE users ADD COLUMN has_used_trial INTEGER DEFAULT 0'); } catch (e) {}
   } else {
     await dbRunSync("ALTER TABLE movies ADD COLUMN IF NOT EXISTS type VARCHAR(50) DEFAULT 'movie'");
+    await dbRunSync("ALTER TABLE movies ADD COLUMN IF NOT EXISTS subtitlesUrl VARCHAR(500) DEFAULT NULL");
+    await dbRunSync("ALTER TABLE episodes ADD COLUMN IF NOT EXISTS subtitlesUrl VARCHAR(500) DEFAULT NULL");
   }
 
   await dbRunSync('CREATE INDEX IF NOT EXISTS idx_episodes_movie_season_number ON episodes (movie_id, season, number)');
@@ -2204,6 +2210,9 @@ app.get('/api/movies', (req, res) => {
       if (m.videourl !== undefined && m.videoUrl === undefined) {
         m.videoUrl = m.videourl;
       }
+      if (m.subtitlesurl !== undefined && m.subtitlesUrl === undefined) {
+        m.subtitlesUrl = m.subtitlesurl;
+      }
       m.poster = m.poster || DEFAULT_POSTER_URL;
       m.backdrop = m.backdrop || DEFAULT_BACKDROP_URL;
       return m;
@@ -2218,7 +2227,7 @@ app.get('/api/movies', (req, res) => {
 // Adicionar Filme (Admin)
 app.post('/api/movies', requireAdminAuth, (req, res) => {
   try {
-    const { title, year, duration, rating, genre, desc, poster, backdrop, director, cast, category, videoUrl, type } = req.body;
+    const { title, year, duration, rating, genre, desc, poster, backdrop, director, cast, category, videoUrl, type, subtitlesUrl } = req.body;
     const normalizedType = type === 'series' ? 'series' : 'movie';
     const isSeries = normalizedType === 'series';
     const finalDuration = isSeries ? (duration || 'Serie') : duration;
@@ -2226,15 +2235,16 @@ app.post('/api/movies', requireAdminAuth, (req, res) => {
     const finalPoster = (poster || '').trim() || DEFAULT_POSTER_URL;
     const finalBackdrop = (backdrop || '').trim() || DEFAULT_BACKDROP_URL;
     const parsedRating = parseFloat(String(rating).replace(',', '.'));
+    const finalSubtitlesUrl = (subtitlesUrl || '').trim() || null;
 
     if (!title || !year || Number.isNaN(parsedRating) || !genre || !desc || !director || !cast || !category || (!isSeries && (!finalDuration || !finalVideoUrl))) {
       return res.status(400).json({ error: 'Todos os campos obrigatorios devem ser preenchidos' });
     }
 
     const movieId = dbRun(
-      `INSERT INTO movies (title, year, duration, rating, genre, "desc", poster, backdrop, director, "cast", category, type, videoUrl) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [title, year, finalDuration, parsedRating, genre, desc, finalPoster, finalBackdrop, director, cast, category, normalizedType, finalVideoUrl]
+      `INSERT INTO movies (title, year, duration, rating, genre, "desc", poster, backdrop, director, "cast", category, type, videoUrl, subtitlesUrl) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [title, year, finalDuration, parsedRating, genre, desc, finalPoster, finalBackdrop, director, cast, category, normalizedType, finalVideoUrl, finalSubtitlesUrl]
     );
     if (!movieId) {
       return res.status(500).json({ error: 'Nao foi possivel salvar o titulo no banco de dados' });
@@ -2246,6 +2256,9 @@ app.post('/api/movies', requireAdminAuth, (req, res) => {
     }
     if (savedMovie.videourl !== undefined && savedMovie.videoUrl === undefined) {
       savedMovie.videoUrl = savedMovie.videourl;
+    }
+    if (savedMovie.subtitlesurl !== undefined && savedMovie.subtitlesUrl === undefined) {
+      savedMovie.subtitlesUrl = savedMovie.subtitlesurl;
     }
 
     console.log(`[ADMIN] 🎬 Novo titulo adicionado: "${title}" (ID: ${movieId})`);
@@ -2260,7 +2273,7 @@ app.post('/api/movies', requireAdminAuth, (req, res) => {
 app.put('/api/movies/:id', requireAdminAuth, (req, res) => {
   const { id } = req.params;
   try {
-    const { title, year, duration, rating, genre, desc, poster, backdrop, director, cast, category, videoUrl, type } = req.body;
+    const { title, year, duration, rating, genre, desc, poster, backdrop, director, cast, category, videoUrl, type, subtitlesUrl } = req.body;
     const normalizedType = type === 'series' ? 'series' : 'movie';
     const isSeries = normalizedType === 'series';
     const finalDuration = isSeries ? (duration || 'Serie') : duration;
@@ -2268,15 +2281,16 @@ app.put('/api/movies/:id', requireAdminAuth, (req, res) => {
     const finalPoster = (poster || '').trim() || DEFAULT_POSTER_URL;
     const finalBackdrop = (backdrop || '').trim() || DEFAULT_BACKDROP_URL;
     const parsedRating = parseFloat(String(rating).replace(',', '.'));
+    const finalSubtitlesUrl = (subtitlesUrl || '').trim() || null;
 
     if (!title || !year || Number.isNaN(parsedRating) || !genre || !desc || !director || !cast || !category || (!isSeries && (!finalDuration || !finalVideoUrl))) {
       return res.status(400).json({ error: 'Todos os campos obrigatorios devem ser preenchidos' });
     }
 
     dbRun(
-      `UPDATE movies SET title=?, year=?, duration=?, rating=?, genre=?, "desc"=?, poster=?, backdrop=?, director=?, "cast"=?, category=?, type=?, videoUrl=?
+      `UPDATE movies SET title=?, year=?, duration=?, rating=?, genre=?, "desc"=?, poster=?, backdrop=?, director=?, "cast"=?, category=?, type=?, videoUrl=?, subtitlesUrl=?
        WHERE id=?`,
-      [title, parseInt(year), finalDuration, parsedRating, genre, desc, finalPoster, finalBackdrop, director, cast, category, normalizedType, finalVideoUrl, id]
+      [title, parseInt(year), finalDuration, parsedRating, genre, desc, finalPoster, finalBackdrop, director, cast, category, normalizedType, finalVideoUrl, finalSubtitlesUrl, id]
     );
 
     console.log(`[ADMIN] 🎬 Titulo atualizado: "${title}" (ID: ${id})`);
@@ -2311,7 +2325,13 @@ app.get('/api/movies/:id/episodes', (req, res) => {
       return res.status(404).json({ error: 'Titulo nao encontrado' });
     }
 
-    const episodes = dbAll('SELECT * FROM episodes WHERE movie_id = ? ORDER BY season ASC, number ASC, id ASC', [id]);
+    let episodes = dbAll('SELECT * FROM episodes WHERE movie_id = ? ORDER BY season ASC, number ASC, id ASC', [id]);
+    episodes = episodes.map(ep => {
+      if (ep.subtitlesurl !== undefined && ep.subtitlesUrl === undefined) {
+        ep.subtitlesUrl = ep.subtitlesurl;
+      }
+      return ep;
+    });
     return res.json({ episodes, seasons: groupEpisodesBySeason(episodes) });
   } catch (err) {
     console.error('[GET EPISODES ERROR]', err);
@@ -2331,15 +2351,17 @@ app.post('/api/movies/:id/episodes', requireAdminAuth, (req, res) => {
       return res.status(400).json({ error: 'Episodios so podem ser cadastrados em series' });
     }
 
-    const { season, number, title, duration, videoUrl, desc } = req.body;
+    const { season, number, title, duration, videoUrl, desc, subtitlesUrl } = req.body;
     if (!season || !number || !title || !duration || !videoUrl) {
       return res.status(400).json({ error: 'Temporada, numero, titulo, duracao e video sao obrigatorios' });
     }
 
+    const finalSubtitlesUrl = (subtitlesUrl || '').trim() || null;
+
     const episodeId = dbRun(
-      `INSERT INTO episodes (movie_id, season, number, title, duration, videoUrl, desc)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [id, parseInt(season), parseInt(number), title, duration, videoUrl, desc || '']
+      `INSERT INTO episodes (movie_id, season, number, title, duration, videoUrl, subtitlesUrl, desc)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, parseInt(season), parseInt(number), title, duration, videoUrl, finalSubtitlesUrl, desc || '']
     );
 
     return res.status(201).json({ success: true, id: episodeId, message: 'Episodio adicionado com sucesso!' });
@@ -2353,14 +2375,16 @@ app.post('/api/movies/:id/episodes', requireAdminAuth, (req, res) => {
 app.put('/api/episodes/:id', requireAdminAuth, (req, res) => {
   const { id } = req.params;
   try {
-    const { season, number, title, duration, videoUrl, desc } = req.body;
+    const { season, number, title, duration, videoUrl, desc, subtitlesUrl } = req.body;
     if (!season || !number || !title || !duration || !videoUrl) {
       return res.status(400).json({ error: 'Temporada, numero, titulo, duracao e video sao obrigatorios' });
     }
 
+    const finalSubtitlesUrl = (subtitlesUrl || '').trim() || null;
+
     dbRun(
-      `UPDATE episodes SET season=?, number=?, title=?, duration=?, videoUrl=?, desc=? WHERE id=?`,
-      [parseInt(season), parseInt(number), title, duration, videoUrl, desc || '', id]
+      `UPDATE episodes SET season=?, number=?, title=?, duration=?, videoUrl=?, subtitlesUrl=?, desc=? WHERE id=?`,
+      [parseInt(season), parseInt(number), title, duration, videoUrl, finalSubtitlesUrl, desc || '', id]
     );
 
     return res.json({ success: true, message: 'Episodio atualizado com sucesso!' });

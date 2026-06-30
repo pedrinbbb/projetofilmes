@@ -560,7 +560,8 @@ function renderSeason(seasonGroup, movie) {
         title: `${movie.title} - T${ep.season}:E${ep.number} ${ep.title}`,
         duration: ep.duration,
         desc: ep.desc || movie.desc,
-        videoUrl: ep.videoUrl || ep.videourl
+        videoUrl: ep.videoUrl || ep.videourl,
+        subtitlesUrl: ep.subtitlesUrl || ep.subtitlesurl
       });
     });
   });
@@ -805,6 +806,7 @@ function initVideoPlayer() {
     const cleanUrl = url.toLowerCase().split('?')[0];
     const isDirectVideo = cleanUrl.endsWith('.mp4') || 
                           cleanUrl.endsWith('.webm') || 
+                          cleanUrl.endsWith('.mkv') || 
                           cleanUrl.endsWith('.m4v') || 
                           cleanUrl.endsWith('.ogv') || 
                           cleanUrl.endsWith('.m3u8') ||
@@ -845,6 +847,19 @@ function initVideoPlayer() {
       if (window.hlsPlayer) {
         window.hlsPlayer.destroy();
         window.hlsPlayer = null;
+      }
+
+      // Limpar tracks de legendas anteriores
+      video.querySelectorAll('track').forEach(t => t.remove());
+
+      if (movie.subtitlesUrl) {
+        const track = document.createElement('track');
+        track.kind = 'subtitles';
+        track.label = 'Português';
+        track.srclang = 'pt';
+        track.src = movie.subtitlesUrl;
+        track.default = true;
+        video.appendChild(track);
       }
       
       if (url.includes('.m3u8')) {

@@ -2689,4 +2689,15 @@ ul {
   50% { transform: scale(1.2); opacity: 0.5; box-shadow: 0 0 0 8px rgba(255, 215, 0, 0); }
 }
 
-
+/* =============================================
+   PREMIUM SUBTITLES (::cue) STYLING
+   ============================================= */
+.video-element::cue {
+  background: rgba(0, 0, 0, 0.75);
+  color: #ffffff;
+  font-family: 'Outfit', 'Inter', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 500;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  border-radius: 4px;
+}

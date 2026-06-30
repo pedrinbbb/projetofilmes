@@ -252,7 +252,7 @@ function createContinueWatchingCard(entry) {
   card.dataset.rating = entry.rating || '';
 
   card.innerHTML = `
-    <div class="continue-poster-wrap">
+    <div class="card-poster-wrapper continue-poster-wrap">
       <img class="card-poster"
            src="${entry.poster || entry.backdrop || ''}"
            alt="Poster de ${escapeHtml(title)}"
@@ -261,15 +261,15 @@ function createContinueWatchingCard(entry) {
       <div class="continue-progress-track" aria-hidden="true">
         <span style="width: ${progressPct}%"></span>
       </div>
-    </div>
-    <div class="card-overlay">
-      <div class="card-play-btn" aria-hidden="true">
-        <svg width="14" height="14" viewBox="0 0 24 24">
-          <polygon points="5,3 19,12 5,21" fill="#000"/>
-        </svg>
+      <div class="card-overlay">
+        <div class="card-play-btn" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 24 24">
+            <polygon points="5,3 19,12 5,21" fill="#000"/>
+          </svg>
+        </div>
+        <div class="card-title">${escapeHtml(title)}</div>
+        <div class="card-rating">${formatProgressTime(entry.currentTime)} assistidos</div>
       </div>
-      <div class="card-title">${escapeHtml(title)}</div>
-      <div class="card-rating">${formatProgressTime(entry.currentTime)} assistidos</div>
     </div>
     <div class="card-info">
       <div class="card-name">${escapeHtml(title)}</div>
@@ -409,19 +409,21 @@ function createMovieCard(movie) {
   card.dataset.rating = movie.rating || '';
 
   card.innerHTML = `
-    <img class="card-poster" 
-         src="${movie.poster}" 
-         alt="Poster do filme ${movie.title}"
-         loading="lazy"
-         onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22180%22 height=%22270%22 viewBox=%220 0 180 270%22><rect width=%22180%22 height=%22270%22 fill=%22%23161616%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 fill=%22%23FFD700%22 font-size=%2240%22>🎬</text></svg>'" />
-    <div class="card-overlay">
-      <div class="card-play-btn" aria-hidden="true">
-        <svg width="14" height="14" viewBox="0 0 24 24">
-          <polygon points="5,3 19,12 5,21" fill="#000"/>
-        </svg>
+    <div class="card-poster-wrapper">
+      <img class="card-poster" 
+           src="${movie.poster}" 
+           alt="Poster do filme ${movie.title}"
+           loading="lazy"
+           onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22180%22 height=%22270%22 viewBox=%220 0 180 270%22><rect width=%22180%22 height=%22270%22 fill=%22%23161616%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 fill=%22%23FFD700%22 font-size=%2240%22>🎬</text></svg>'" />
+      <div class="card-overlay">
+        <div class="card-play-btn" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 24 24">
+            <polygon points="5,3 19,12 5,21" fill="#000"/>
+          </svg>
+        </div>
+        <div class="card-title">${movie.title}</div>
+        <div class="card-rating">⭐ ${movie.rating}</div>
       </div>
-      <div class="card-title">${movie.title}</div>
-      <div class="card-rating">⭐ ${movie.rating}</div>
     </div>
     <div class="card-info">
       <div class="card-name">${movie.title}</div>

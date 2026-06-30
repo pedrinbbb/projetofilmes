@@ -939,8 +939,15 @@ ul {
   cursor: pointer;
   position: relative;
   border-radius: var(--radius-md);
-  overflow: hidden;
   transition: transform var(--transition-normal);
+}
+
+.card-poster-wrapper {
+  position: relative;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  aspect-ratio: 2/3;
+  width: 100%;
 }
 
 .movie-card:hover {
@@ -1022,6 +1029,11 @@ ul {
 
 .card-info {
   padding: 10px 4px 0;
+  transition: opacity var(--transition-normal);
+}
+
+.movie-card:hover .card-info {
+  opacity: 0;
 }
 
 .card-name {
@@ -1040,7 +1052,7 @@ ul {
 }
 
 /* Gold border on hover */
-.movie-card::after {
+.card-poster-wrapper::after {
   content: '';
   position: absolute;
   inset: 0;
@@ -1048,9 +1060,10 @@ ul {
   border: 2px solid transparent;
   transition: border-color var(--transition-normal);
   pointer-events: none;
+  z-index: 3;
 }
 
-.movie-card:hover::after {
+.movie-card:hover .card-poster-wrapper::after {
   border-color: var(--gold-dark);
 }
 
@@ -1083,6 +1096,10 @@ ul {
 
 .continue-card .card-year {
   min-height: 16px;
+}
+
+.continue-card .card-overlay {
+  padding-bottom: 24px;
 }
 
 /* =============================================

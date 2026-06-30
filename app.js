@@ -577,9 +577,11 @@ function performSearch(q) {
   const catalogSection = $('catalog-section');
   const heroSection = $('hero');
   const clearBtn = $('search-pill-clear');
+  const mobileSearchInput = $('mobile-search-input');
 
   if (!q) {
     if (clearBtn) clearBtn.classList.add('hidden');
+    if (mobileSearchInput) mobileSearchInput.value = '';
     if (searchResultsSection) searchResultsSection.classList.add('hidden');
     if (searchResultsGrid) searchResultsGrid.innerHTML = '';
     
@@ -634,16 +636,19 @@ function performSearch(q) {
 
 function initSearch() {
   const searchInput = $('search-input');
+  const mobileSearchInput = $('mobile-search-input');
   const clearBtn = $('search-pill-clear');
   const searchContainer = $('nav-search-container');
   const searchPill = searchContainer?.querySelector('.search-pill');
 
-  if (!searchInput) return;
+  if (!searchInput && !mobileSearchInput) return;
 
   function syncSearchPlaceholder() {
-    searchInput.placeholder = isMobileViewport()
-      ? 'Busque filmes, series, animes...'
-      : 'Titulos, gente, generos...';
+    if (searchInput) {
+      searchInput.placeholder = isMobileViewport()
+        ? 'Busque filmes, series, animes...'
+        : 'Titulos, gente, generos...';
+    }
   }
 
   syncSearchPlaceholder();
@@ -651,29 +656,47 @@ function initSearch() {
 
   if (searchPill) {
     searchPill.addEventListener('click', () => {
-      setTimeout(() => searchInput.focus(), 30);
+      setTimeout(() => searchInput?.focus(), 30);
     });
   }
 
-  searchInput.addEventListener('input', debounce((e) => {
-    const q = e.target.value.trim();
-    performSearch(q);
+  function runSearchFrom(input, value) {
+    if (input !== searchInput && searchInput) searchInput.value = value;
+    if (input !== mobileSearchInput && mobileSearchInput) mobileSearchInput.value = value;
+    performSearch(value.trim());
+  }
+
+  searchInput?.addEventListener('input', debounce((e) => {
+    runSearchFrom(searchInput, e.target.value);
   }, 300));
+
+  mobileSearchInput?.addEventListener('input', debounce((e) => {
+    runSearchFrom(mobileSearchInput, e.target.value);
+  }, 300));
+
+  $('mobile-home-search-form')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    runSearchFrom(mobileSearchInput, mobileSearchInput?.value || '');
+    mobileSearchInput?.blur();
+  });
 
   // Limpar busca
   if (clearBtn) {
     clearBtn.addEventListener('click', () => {
-      searchInput.value = '';
+      if (searchInput) searchInput.value = '';
+      if (mobileSearchInput) mobileSearchInput.value = '';
       performSearch('');
-      searchInput.focus();
+      searchInput?.focus();
     });
   }
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-      searchInput.value = '';
+      if (searchInput) searchInput.value = '';
+      if (mobileSearchInput) mobileSearchInput.value = '';
       performSearch('');
-      searchInput.blur();
+      searchInput?.blur();
+      mobileSearchInput?.blur();
     }
   });
 }
@@ -681,10 +704,12 @@ function initSearch() {
 function applyPendingSearch() {
   const pendingSearch = localStorage.getItem('goatcine_pending_search');
   const searchInput = $('search-input');
-  if (!pendingSearch || !searchInput) return;
+  const mobileSearchInput = $('mobile-search-input');
+  if (!pendingSearch || (!searchInput && !mobileSearchInput)) return;
 
   localStorage.removeItem('goatcine_pending_search');
-  searchInput.value = pendingSearch;
+  if (searchInput) searchInput.value = pendingSearch;
+  if (mobileSearchInput) mobileSearchInput.value = pendingSearch;
   performSearch(pendingSearch);
 }
 
@@ -2047,12 +2072,14 @@ function showSection(viewName) {
   const catalogSection = $('catalog-section');
   const heroSection = $('hero');
   const searchInput = $('search-input');
+  const mobileSearchInput = $('mobile-search-input');
 
   activeView = viewName;
 
   // Limpar busca caso mude de página
   if (viewName !== 'search') {
     if (searchInput) searchInput.value = '';
+    if (mobileSearchInput) mobileSearchInput.value = '';
     const clearBtn = $('search-pill-clear');
     if (clearBtn) clearBtn.classList.add('hidden');
     if (searchResultsSection) searchResultsSection.classList.add('hidden');

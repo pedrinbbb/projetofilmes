@@ -101,6 +101,10 @@ ul {
   list-style: none;
 }
 
+.mobile-home-header {
+  display: none;
+}
+
 /* =============================================
    LOADING SCREEN
    ============================================= */
@@ -1755,6 +1759,78 @@ ul {
     padding-bottom: calc(82px + env(safe-area-inset-bottom));
   }
 
+  .mobile-home-header {
+    position: fixed;
+    top: calc(10px + env(safe-area-inset-top));
+    left: 14px;
+    right: 14px;
+    z-index: 1100;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    min-height: 52px;
+    padding: 8px 10px 8px 14px;
+    border: 1px solid rgba(255, 215, 0, 0.18);
+    border-radius: 18px;
+    background: rgba(8, 8, 8, 0.86);
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.44);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  .mobile-home-brand,
+  .mobile-home-brand-fallback {
+    display: inline-flex;
+    min-width: 0;
+    align-items: center;
+    gap: 9px;
+  }
+
+  .mobile-home-brand img {
+    max-height: 30px;
+  }
+
+  .mobile-home-brand-fallback {
+    display: none;
+  }
+
+  .mobile-home-brand .logo-icon {
+    font-size: 18px;
+  }
+
+  .mobile-home-brand .logo-text {
+    font-size: 17px;
+  }
+
+  .mobile-home-search {
+    display: flex;
+    min-width: 0;
+    height: 40px;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px;
+    border: 1px solid rgba(255, 215, 0, 0.28);
+    border-radius: 14px;
+    color: var(--gold-primary);
+    background: linear-gradient(180deg, rgba(18, 14, 4, 0.94), rgba(7, 7, 7, 0.94));
+  }
+
+  .mobile-home-search input {
+    min-width: 0;
+    width: 100%;
+    border: 0;
+    outline: 0;
+    color: var(--text-primary);
+    background: transparent;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .mobile-home-search input::placeholder {
+    color: var(--text-muted);
+  }
+
   .navbar {
     top: auto;
     left: 50%;
@@ -1832,11 +1908,7 @@ ul {
   }
 
   .nav-search-container {
-    position: fixed !important;
-    top: calc(12px + env(safe-area-inset-top));
-    right: 14px;
-    z-index: 1100;
-    display: flex !important;
+    display: none !important;
   }
 
   .search-pill {

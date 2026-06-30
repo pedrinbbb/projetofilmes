@@ -44,6 +44,20 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <header class="mobile-home-header" aria-label="Cabeçalho da página inicial">
+    <a class="mobile-home-brand" href="#" aria-label="GOATCINE - Página inicial">
+      <img src="/uploads/logo.png?v=1" alt="GOATCINE" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';" />
+      <span class="mobile-home-brand-fallback">
+        <span class="logo-icon">🏆</span>
+        <span class="logo-text">GOAT<span class="logo-accent">CINE</span></span>
+      </span>
+    </a>
+
+    <form class="mobile-home-search" id="mobile-home-search-form" role="search">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input id="mobile-search-input" type="search" placeholder="Buscar..." autocomplete="off" />
+    </form>
+  </header>
 
   <!-- ========== NAVBAR ========== -->
   <nav class="navbar" id="navbar" role="navigation" aria-label="Navegação principal">

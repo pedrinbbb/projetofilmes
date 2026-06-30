@@ -2771,29 +2771,30 @@ ul {
   display: flex;
   gap: 32px;
   overflow-x: auto;
+  overflow-y: hidden;
   padding: 24px 0;
-  scrollbar-width: thin; /* Firefox */
-  scrollbar-color: rgba(255, 215, 0, 0.3) transparent;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge antigo */
+  cursor: grab;
+  user-select: none;
+  touch-action: pan-y;
+  overscroll-behavior-x: contain;
 }
 
 .top10-grid::-webkit-scrollbar {
-  height: 6px;
+  display: none; /* Chrome, Safari, Opera */
 }
 
-.top10-grid::-webkit-scrollbar-track {
-  background: transparent;
+.top10-grid.dragging {
+  cursor: grabbing;
+  scroll-behavior: auto;
 }
 
-.top10-grid::-webkit-scrollbar-thumb {
-  background: rgba(255, 215, 0, 0.3);
-  border-radius: 3px;
+.top10-grid.dragging .top10-card {
+  pointer-events: none;
 }
 
-.top10-grid::-webkit-scrollbar-thumb:hover {
-  background: var(--gold-primary);
-}
-
-.top10-card {
+.top10-grid .top10-card {
   position: relative;
   flex: 0 0 250px;
   width: 250px;
@@ -2843,6 +2844,8 @@ ul {
   z-index: 2;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.6);
   transition: box-shadow 0.3s ease;
+  -webkit-user-drag: none;
+  user-select: none;
 }
 
 .top10-overlay {

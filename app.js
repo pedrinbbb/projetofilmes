@@ -141,6 +141,10 @@ async function initApp() {
   renderCarousel('carousel-action', MOVIES.action);
   renderCarousel('carousel-series', MOVIES.series);
   renderTop10();
+  const mGrid = $('top10-movies-grid');
+  const sGrid = $('top10-series-grid');
+  if (mGrid) makeDragScroll(mGrid);
+  if (sGrid) makeDragScroll(sGrid);
   initCarouselArrows();
   initHeroSlider();
   initNavbar();
@@ -253,6 +257,60 @@ function renderTop10() {
   }
 }
 
+// Lógica de arrastar para rolar horizontalmente (drag-to-scroll)
+function makeDragScroll(slider) {
+  if (!slider) return;
+
+  let isDown = false;
+  let startX = 0;
+  let scrollLeft = 0;
+  let hasMoved = false;
+  let pointerId = null;
+
+  slider.addEventListener('pointerdown', (e) => {
+    if (e.button !== undefined && e.button !== 0) return;
+    isDown = true;
+    pointerId = e.pointerId;
+    startX = e.clientX;
+    scrollLeft = slider.scrollLeft;
+    hasMoved = false;
+    slider.classList.add('dragging');
+    slider.setPointerCapture?.(pointerId);
+  });
+
+  const stopDrag = () => {
+    if (!isDown) return;
+    isDown = false;
+    slider.classList.remove('dragging');
+    if (pointerId !== null) {
+      slider.releasePointerCapture?.(pointerId);
+      pointerId = null;
+    }
+  };
+
+  slider.addEventListener('pointerup', stopDrag);
+  slider.addEventListener('pointercancel', stopDrag);
+  slider.addEventListener('pointerleave', stopDrag);
+
+  slider.addEventListener('pointermove', (e) => {
+    if (!isDown) return;
+    e.preventDefault();
+    const walk = (e.clientX - startX) * 1.45;
+    if (Math.abs(walk) > 5) {
+      hasMoved = true;
+    }
+    slider.scrollLeft = scrollLeft - walk;
+  });
+
+  // Evita abrir o modal se o usuario arrastou para rolar.
+  slider.addEventListener('click', (e) => {
+    if (hasMoved) {
+      e.preventDefault();
+      e.stopPropagation();
+      hasMoved = false;
+    }
+  }, true);
+}
 // ---- CAROUSEL ARROWS ----
 function initCarouselArrows() {
   const pairs = [

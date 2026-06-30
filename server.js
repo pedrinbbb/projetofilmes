@@ -2262,6 +2262,59 @@ app.get('/auth-callback', (req, res) => {
   res.sendFile(path.join(__dirname, 'auth-callback.html'));
 });
 
+// HLS Proxy para ignorar bloqueio CORS e Referer do Cloudflare
+app.options('/api/hls-proxy/:host/*', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.sendStatus(200);
+});
+
+app.get('/api/hls-proxy/:host/*', (req, res) => {
+  const https = require('https');
+  const targetHost = req.params.host;
+  const targetPath = req.params[0];
+
+  // Restrição de Segurança: Apenas domínios autorizados
+  const allowedDomains = ['telabrasil.shop', 'axplay.shop', 'r2.dev'];
+  const isAllowed = allowedDomains.some(domain => targetHost.endsWith(domain));
+  if (!isAllowed) {
+    return res.status(403).json({ error: 'Domínio não permitido no proxy HLS' });
+  }
+
+  const queryString = req.url.includes('?') ? req.url.substring(req.url.indexOf('?')) : '';
+  const targetUrl = `https://${targetHost}/${targetPath}${queryString}`;
+
+  const options = {
+    method: 'GET',
+    headers: {
+      'Referer': 'https://www.axplay.shop/',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    }
+  };
+
+  const proxyReq = https.request(targetUrl, options, (proxyRes) => {
+    res.status(proxyRes.statusCode);
+    
+    if (proxyRes.headers['content-type']) {
+      res.setHeader('content-type', proxyRes.headers['content-type']);
+    }
+    
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Headers', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+
+    proxyRes.pipe(res);
+  });
+
+  proxyReq.on('error', (err) => {
+    console.error('[HLS PROXY ERROR]', err.message);
+    res.status(500).json({ error: 'Erro no proxy HLS' });
+  });
+
+  proxyReq.end();
+});
+
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });

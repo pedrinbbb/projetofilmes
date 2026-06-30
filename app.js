@@ -614,6 +614,20 @@ function initVideoPlayer() {
     return url;
   }
 
+  function getPlayableUrl(url) {
+    if (!url) return '';
+    let targetUrl = extractVideoUrl(url);
+    if (targetUrl.includes('.m3u8') && targetUrl.startsWith('http')) {
+      try {
+        const urlObj = new URL(targetUrl);
+        return `/api/hls-proxy/${urlObj.hostname}${urlObj.pathname}${urlObj.search}`;
+      } catch (e) {
+        console.error('Erro ao mapear link HLS para o Proxy:', e);
+      }
+    }
+    return targetUrl;
+  }
+
   // Global open function
   window.openVideoPlayer = async function(movie) {
     const allowed = await checkSubscriptionAndScreens();
@@ -626,7 +640,7 @@ function initVideoPlayer() {
 
     // Determinar se o link é Iframe (YouTube/Vimeo/Google Drive/Axplay) ou vídeo direto (.mp4, .webm, .m3u8)
     const rawUrl = movie.videoUrl || movie.videourl || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
-    const url = extractVideoUrl(rawUrl);
+    const url = getPlayableUrl(rawUrl);
     
     const cleanUrl = url.toLowerCase().split('?')[0];
     const isDirectVideo = cleanUrl.endsWith('.mp4') || 

@@ -2772,18 +2772,32 @@ ul {
   gap: 32px;
   overflow-x: auto;
   padding: 24px 0;
-  scrollbar-width: none; /* Firefox */
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: rgba(255, 215, 0, 0.3) transparent;
 }
 
 .top10-grid::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
+  height: 6px;
+}
+
+.top10-grid::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.top10-grid::-webkit-scrollbar-thumb {
+  background: rgba(255, 215, 0, 0.3);
+  border-radius: 3px;
+}
+
+.top10-grid::-webkit-scrollbar-thumb:hover {
+  background: var(--gold-primary);
 }
 
 .top10-card {
   position: relative;
-  flex: 0 0 200px;
-  width: 200px;
-  height: 180px;
+  flex: 0 0 250px;
+  width: 250px;
+  height: 220px;
   cursor: pointer;
   transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   display: flex;
@@ -2796,32 +2810,32 @@ ul {
 }
 
 .top10-card:hover .top10-poster {
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.8), 0 0 15px rgba(255, 215, 0, 0.2);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.8), 0 0 15px rgba(255, 215, 0, 0.3);
 }
 
 .top10-number {
-  font-size: 190px;
+  font-size: 240px;
   font-weight: 900;
   line-height: 1;
   color: #080808;
-  -webkit-text-stroke: 4px rgba(128, 128, 128, 0.6);
+  -webkit-text-stroke: 4px rgba(255, 215, 0, 0.8);
   position: absolute;
   left: -8px;
-  bottom: -22px;
+  bottom: -32px;
   z-index: 1;
   user-select: none;
   font-family: 'Outfit', 'Inter', sans-serif;
-  letter-spacing: -10px;
+  letter-spacing: -14px;
 }
 
 /* Number 10 needs to be slightly shifted left to fit */
 .top10-card:nth-child(10) .top10-number {
-  left: -28px;
+  left: -32px;
 }
 
 .top10-poster {
-  width: 120px;
-  height: 180px;
+  width: 150px;
+  height: 220px;
   border-radius: 6px;
   object-fit: cover;
   position: absolute;

@@ -1463,6 +1463,108 @@ ul {
   color: var(--text-secondary);
 }
 
+.modal-episodes {
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 28px;
+  margin-bottom: 34px;
+}
+
+.episodes-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.season-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.season-tab {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.season-tab.active,
+.season-tab:hover {
+  border-color: var(--gold-primary);
+  color: var(--gold-primary);
+  background: rgba(255, 215, 0, 0.1);
+}
+
+.episode-list-user {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.episode-card-user {
+  display: grid;
+  grid-template-columns: 54px 1fr auto;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.035);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.episode-card-user:hover {
+  border-color: rgba(255, 215, 0, 0.32);
+  background: rgba(255, 215, 0, 0.07);
+  transform: translateX(3px);
+}
+
+.episode-number-user {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 215, 0, 0.12);
+  color: var(--gold-primary);
+  font-weight: 900;
+}
+
+.episode-name-user {
+  display: block;
+  color: var(--text-primary);
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.episode-desc-user {
+  display: block;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.episode-duration-user {
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 .modal-similar {
   border-top: 1px solid var(--border-subtle);
   padding-top: 32px;
@@ -1587,6 +1689,12 @@ ul {
   .modal-info-grid {
     grid-template-columns: 1fr;
     gap: 24px;
+  }
+  .episode-card-user {
+    grid-template-columns: 42px 1fr;
+  }
+  .episode-duration-user {
+    grid-column: 2;
   }
 }
 

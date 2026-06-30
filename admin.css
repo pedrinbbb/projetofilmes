@@ -670,6 +670,94 @@ body {
   grid-column: span 2;
 }
 
+.form-group.is-hidden {
+  display: none;
+}
+
+.type-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.type-badge.movie {
+  color: var(--color-text-light);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.type-badge.series {
+  color: var(--color-gold-bright);
+  background: rgba(212, 175, 55, 0.12);
+  border-color: rgba(212, 175, 55, 0.24);
+}
+
+.episodes-toolbar {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.episode-form {
+  display: grid;
+  grid-template-columns: 110px 110px 1fr 130px;
+  gap: 16px;
+  padding: 18px;
+  margin-bottom: 22px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+}
+
+.episode-form .span-2 {
+  grid-column: span 2;
+}
+
+.episodes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.episode-row {
+  display: grid;
+  grid-template-columns: 70px 1fr 92px 100px;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+}
+
+.episode-index {
+  font-weight: 800;
+  color: var(--color-gold-bright);
+}
+
+.episode-title {
+  font-weight: 700;
+  color: var(--color-text-light);
+  margin-bottom: 4px;
+}
+
+.episode-desc {
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.episode-duration {
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+}
+
 .modal-footer {
   display: flex;
   justify-content: flex-end;
@@ -716,6 +804,13 @@ body {
     grid-template-columns: 1fr;
   }
   .form-group.span-2 {
+    grid-column: span 1;
+  }
+  .episode-form,
+  .episode-row {
+    grid-template-columns: 1fr;
+  }
+  .episode-form .span-2 {
     grid-column: span 1;
   }
   .modal-footer {
@@ -772,4 +867,3 @@ body {
   color: var(--color-text-muted);
   margin-top: 2px;
 }
-

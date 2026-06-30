@@ -63,6 +63,18 @@ const modalTitle = $('modal-title');
 const btnAddMovie = $('btn-add-movie');
 const btnCancelMovie = $('btn-cancel-movie');
 const modalCloseBtn = $('modal-close-btn');
+const episodesModal = $('episodes-modal');
+const episodesModalTitle = $('episodes-modal-title');
+const episodesModalCloseBtn = $('episodes-modal-close-btn');
+const episodeForm = $('episode-form');
+const episodeSeasonFilter = $('episode-season-filter');
+const episodesList = $('episodes-list');
+const btnNewSeason = $('btn-new-season');
+const btnClearEpisode = $('btn-clear-episode');
+
+let currentSeriesId = null;
+let currentSeriesTitle = '';
+let currentEpisodes = [];
 
 // ---- AUTH UTILS ----
 function getAdminToken() {
@@ -94,6 +106,20 @@ function showToast(message) {
     toast.classList.remove('show');
     toast.setAttribute('aria-hidden', 'true');
   }, 4000);
+}
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[char]));
+}
+
+function getMovieType(movie) {
+  return movie?.type === 'series' ? 'series' : 'movie';
 }
 
 // ---- LOGIN FORM ----
@@ -377,29 +403,37 @@ function renderMoviesTable() {
            movie.director.toLowerCase().includes(query) ||
            movie.cast.toLowerCase().includes(query) ||
            movie.category.toLowerCase().includes(query) ||
+           getMovieType(movie).includes(query) ||
            String(movie.year) === query;
   });
 
   if (filteredMovies.length === 0) {
-    moviesTbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--color-text-muted);">Nenhum filme correspondente encontrado.</td></tr>`;
+    moviesTbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--color-text-muted);">Nenhum filme correspondente encontrado.</td></tr>`;
     return;
   }
 
   filteredMovies.forEach(movie => {
+    const type = getMovieType(movie);
+    const typeLabel = type === 'series' ? 'Serie' : 'Filme';
+    const manageEpisodesBtn = type === 'series'
+      ? `<button class="btn-icon" title="Gerenciar Episodios" onclick="openEpisodesModal(${movie.id})">Eps</button>`
+      : '';
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>
         <img src="${movie.poster.startsWith('http') ? movie.poster : '/' + movie.poster}" alt="Poster" class="poster-thumb">
       </td>
       <td><strong>${movie.title}</strong></td>
+      <td><span class="type-badge ${type}">${typeLabel}</span></td>
       <td>${movie.year}</td>
-      <td>${movie.duration}</td>
+      <td>${type === 'series' ? '-' : movie.duration}</td>
       <td>⭐ ${movie.rating.toFixed(1)}</td>
       <td><span style="color: var(--color-gold-bright); font-weight: 500;">${movie.category}</span></td>
       <td>
         <div class="actions-cell">
+          ${manageEpisodesBtn}
           <button class="btn-icon" title="Editar Filme" onclick="openEditModal(${movie.id})">✏️</button>
-          <button class="btn-icon delete" title="Excluir Filme" onclick="deleteMovie(${movie.id}, '${movie.title}')">🗑️</button>
+          <button class="btn-icon delete" title="Excluir Filme" onclick="deleteMovie(${movie.id})">🗑️</button>
         </div>
       </td>
     `;
@@ -409,6 +443,7 @@ function renderMoviesTable() {
 
 // DELETAR FILME
 window.deleteMovie = async function(id, title) {
+  title = title || movies.find(m => m.id === id)?.title || 'titulo';
   if (!confirm(`Excluir o filme "${title}" do catálogo?`)) return;
 
   const token = getAdminToken();
@@ -442,6 +477,8 @@ function openMovieModal(isEdit = false) {
     modalTitle.textContent = 'Cadastrar Novo Filme';
     movieForm.reset();
     $('movie-id').value = '';
+    $('m-type').value = 'movie';
+    updateMovieTypeFields();
   }
 }
 
@@ -458,6 +495,23 @@ movieModal.addEventListener('click', (e) => {
   if (e.target === movieModal) closeMovieModal();
 });
 
+function updateMovieTypeFields() {
+  const isSeries = $('m-type').value === 'series';
+  const durationGroup = $('movie-duration-group');
+  const videoGroup = $('movie-video-group');
+  durationGroup?.classList.toggle('is-hidden', isSeries);
+  videoGroup?.classList.toggle('is-hidden', isSeries);
+  $('m-duration').required = !isSeries;
+  $('m-videoUrl').required = !isSeries;
+  if (isSeries) {
+    $('m-duration').value = $('m-duration').value || 'Serie';
+    $('m-videoUrl').value = '';
+  }
+  $('btn-save-movie').textContent = isSeries ? 'Salvar Serie' : 'Salvar Filme';
+}
+
+$('m-type')?.addEventListener('change', updateMovieTypeFields);
+
 // EDIT MOVIE - PRE-FILL FORM
 window.openEditModal = function(id) {
   const movie = movies.find(m => m.id === id);
@@ -466,6 +520,7 @@ window.openEditModal = function(id) {
   modalTitle.textContent = 'Editar Dados do Filme';
   
   $('movie-id').value = movie.id;
+  $('m-type').value = getMovieType(movie);
   $('m-title').value = movie.title;
   $('m-year').value = movie.year;
   $('m-duration').value = movie.duration;
@@ -478,6 +533,7 @@ window.openEditModal = function(id) {
   $('m-cast').value = movie.cast;
   $('m-videoUrl').value = movie.videoUrl || movie.videourl || '';
   $('m-desc').value = movie.desc;
+  updateMovieTypeFields();
 
   openMovieModal(true);
 };
@@ -488,11 +544,14 @@ movieForm.addEventListener('submit', async (e) => {
 
   const id = $('movie-id').value;
   const token = getAdminToken();
+  const type = $('m-type').value === 'series' ? 'series' : 'movie';
+  const isSeries = type === 'series';
 
   const payload = {
+    type,
     title: $('m-title').value.trim(),
     year: parseInt($('m-year').value),
-    duration: $('m-duration').value.trim(),
+    duration: isSeries ? ($('m-duration').value.trim() || 'Serie') : $('m-duration').value.trim(),
     rating: parseFloat($('m-rating').value),
     genre: $('m-genre').value.trim(),
     category: $('m-category').value,
@@ -500,13 +559,14 @@ movieForm.addEventListener('submit', async (e) => {
     backdrop: $('m-backdrop').value.trim(),
     director: $('m-director').value.trim(),
     cast: $('m-cast').value.trim(),
-    videoUrl: $('m-videoUrl').value.trim(),
+    videoUrl: isSeries ? '' : $('m-videoUrl').value.trim(),
     desc: $('m-desc').value.trim(),
   };
 
   // Validar se todos os campos estão preenchidos
   let formsValid = true;
   Object.keys(payload).forEach(key => {
+    if (isSeries && (key === 'duration' || key === 'videoUrl')) return;
     if (!payload[key] && payload[key] !== 0) {
       formsValid = false;
     }
@@ -542,6 +602,198 @@ movieForm.addEventListener('submit', async (e) => {
   } catch {
     showToast('Erro de rede ao salvar filme');
   }
+});
+
+// =============================================
+//  MODAL EPISODIOS
+// =============================================
+function closeEpisodesModal() {
+  episodesModal.classList.remove('open');
+  episodesModal.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+  currentSeriesId = null;
+  currentSeriesTitle = '';
+  currentEpisodes = [];
+}
+
+function resetEpisodeForm(season = 1) {
+  episodeForm.reset();
+  $('episode-id').value = '';
+  $('e-season').value = season;
+  $('e-number').value = '';
+  $('btn-save-episode').textContent = 'Salvar Episodio';
+}
+
+function updateEpisodeSeasonFilter() {
+  const seasons = [...new Set(currentEpisodes.map(ep => Number(ep.season)))].sort((a, b) => a - b);
+  const formSeason = Number($('e-season').value) || 1;
+  if (!seasons.includes(formSeason)) seasons.push(formSeason);
+  seasons.sort((a, b) => a - b);
+
+  const currentValue = Number(episodeSeasonFilter.value) || seasons[0];
+  episodeSeasonFilter.innerHTML = seasons
+    .map(season => `<option value="${season}">Temporada ${season}</option>`)
+    .join('');
+  episodeSeasonFilter.value = seasons.includes(currentValue) ? currentValue : seasons[0];
+}
+
+function renderEpisodesList() {
+  updateEpisodeSeasonFilter();
+  const selectedSeason = Number(episodeSeasonFilter.value) || 1;
+  const episodes = currentEpisodes.filter(ep => Number(ep.season) === selectedSeason);
+
+  if (episodes.length === 0) {
+    episodesList.innerHTML = `<div style="text-align: center; color: var(--color-text-muted); padding: 20px;">Nenhum episodio cadastrado nesta temporada.</div>`;
+    return;
+  }
+
+  episodesList.innerHTML = episodes.map(ep => `
+    <div class="episode-row">
+      <div class="episode-index">E${ep.number}</div>
+      <div>
+        <div class="episode-title">${escapeHtml(ep.title)}</div>
+        <div class="episode-desc">${escapeHtml(ep.desc || 'Sem descricao.')}</div>
+      </div>
+      <div class="episode-duration">${escapeHtml(ep.duration)}</div>
+      <div class="actions-cell">
+        <button class="btn-icon" title="Editar Episodio" onclick="editEpisode(${ep.id})">✏️</button>
+        <button class="btn-icon delete" title="Excluir Episodio" onclick="deleteEpisode(${ep.id})">🗑️</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function loadEpisodes() {
+  if (!currentSeriesId) return;
+  episodesList.innerHTML = `<div style="text-align: center; color: var(--color-text-muted); padding: 20px;">Carregando episodios...</div>`;
+
+  try {
+    const res = await fetch(`${API}/api/movies/${currentSeriesId}/episodes`);
+    const data = await res.json();
+    if (!res.ok) {
+      showToast(data.error || 'Erro ao carregar episodios');
+      return;
+    }
+    currentEpisodes = data.episodes || [];
+    renderEpisodesList();
+  } catch {
+    showToast('Erro de rede ao carregar episodios');
+  }
+}
+
+window.openEpisodesModal = async function(movieId) {
+  const movie = movies.find(m => m.id === movieId);
+  if (!movie || getMovieType(movie) !== 'series') return;
+
+  currentSeriesId = movieId;
+  currentSeriesTitle = movie.title;
+  episodesModalTitle.textContent = `Episodios: ${movie.title}`;
+  episodesModal.classList.add('open');
+  episodesModal.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+  resetEpisodeForm(1);
+  await loadEpisodes();
+};
+
+window.editEpisode = function(episodeId) {
+  const ep = currentEpisodes.find(item => item.id === episodeId);
+  if (!ep) return;
+
+  $('episode-id').value = ep.id;
+  $('e-season').value = ep.season;
+  $('e-number').value = ep.number;
+  $('e-title').value = ep.title;
+  $('e-duration').value = ep.duration;
+  $('e-videoUrl').value = ep.videoUrl || ep.videourl || '';
+  $('e-desc').value = ep.desc || '';
+  $('btn-save-episode').textContent = 'Atualizar Episodio';
+};
+
+window.deleteEpisode = async function(episodeId, title) {
+  title = title || currentEpisodes.find(ep => ep.id === episodeId)?.title || 'episodio';
+  if (!confirm(`Excluir o episodio "${title}"?`)) return;
+
+  try {
+    const res = await fetch(`${API}/api/episodes/${episodeId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${getAdminToken()}` }
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      showToast(data.error || 'Erro ao excluir episodio');
+      return;
+    }
+    showToast('Episodio excluido com sucesso.');
+    await loadEpisodes();
+  } catch {
+    showToast('Erro de rede ao excluir episodio');
+  }
+};
+
+episodeForm?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!currentSeriesId) return;
+
+  const episodeId = $('episode-id').value;
+  const payload = {
+    season: parseInt($('e-season').value),
+    number: parseInt($('e-number').value),
+    title: $('e-title').value.trim(),
+    duration: $('e-duration').value.trim(),
+    videoUrl: $('e-videoUrl').value.trim(),
+    desc: $('e-desc').value.trim()
+  };
+
+  if (!payload.season || !payload.number || !payload.title || !payload.duration || !payload.videoUrl) {
+    showToast('Preencha temporada, numero, titulo, duracao e video.');
+    return;
+  }
+
+  const isEdit = !!episodeId;
+  const url = isEdit ? `${API}/api/episodes/${episodeId}` : `${API}/api/movies/${currentSeriesId}/episodes`;
+  const method = isEdit ? 'PUT' : 'POST';
+
+  try {
+    const res = await fetch(url, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${getAdminToken()}`
+      },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      showToast(data.error || 'Erro ao salvar episodio');
+      return;
+    }
+    showToast(isEdit ? 'Episodio atualizado.' : 'Episodio cadastrado.');
+    resetEpisodeForm(payload.season);
+    episodeSeasonFilter.value = payload.season;
+    await loadEpisodes();
+  } catch {
+    showToast('Erro de rede ao salvar episodio');
+  }
+});
+
+episodeSeasonFilter?.addEventListener('change', () => {
+  $('e-season').value = episodeSeasonFilter.value;
+  renderEpisodesList();
+});
+
+btnNewSeason?.addEventListener('click', () => {
+  const seasons = currentEpisodes.map(ep => Number(ep.season));
+  const nextSeason = seasons.length ? Math.max(...seasons) + 1 : 1;
+  resetEpisodeForm(nextSeason);
+  episodeSeasonFilter.innerHTML += `<option value="${nextSeason}">Temporada ${nextSeason}</option>`;
+  episodeSeasonFilter.value = nextSeason;
+  renderEpisodesList();
+});
+
+btnClearEpisode?.addEventListener('click', () => resetEpisodeForm(Number(episodeSeasonFilter.value) || 1));
+episodesModalCloseBtn?.addEventListener('click', closeEpisodesModal);
+episodesModal?.addEventListener('click', (e) => {
+  if (e.target === episodesModal) closeEpisodesModal();
 });
 
 // =============================================

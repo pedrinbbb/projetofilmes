@@ -116,6 +116,7 @@
               <tr>
                 <th>Pôster</th>
                 <th>Título</th>
+                <th>Tipo</th>
                 <th>Ano</th>
                 <th>Duração</th>
                 <th>Nota</th>
@@ -335,11 +336,19 @@
         </div>
 
         <div class="form-group">
+          <label for="m-type">Tipo</label>
+          <select id="m-type" required>
+            <option value="movie">Filme</option>
+            <option value="series">Serie</option>
+          </select>
+        </div>
+
+        <div class="form-group">
           <label for="m-year">Ano de Lançamento</label>
           <input type="number" id="m-year" required placeholder="Ex: 2026" min="1900" max="2100">
         </div>
 
-        <div class="form-group">
+        <div class="form-group" id="movie-duration-group">
           <label for="m-duration">Duração</label>
           <input type="text" id="m-duration" required placeholder="Ex: 2h 13min">
         </div>
@@ -383,7 +392,7 @@
           <input type="text" id="m-cast" required placeholder="Ex: Michael B. Jordan, Sylvester Stallone">
         </div>
 
-        <div class="form-group span-2">
+        <div class="form-group span-2" id="movie-video-group">
           <label for="m-videoUrl">Link do Vídeo Hospedado (MP4, YouTube ou Drive proxy)</label>
           <input type="text" id="m-videoUrl" required placeholder="Ex: https://pub-...r2.dev/filme.mp4 ou /api/video/stream?id=...">
         </div>
@@ -398,6 +407,65 @@
           <button type="submit" class="btn-primary" id="btn-save-movie">Salvar Filme</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- =============================================
+       MODAL: GERENCIAR EPISODIOS
+       ============================================= -->
+  <div class="modal-overlay" id="episodes-modal" aria-hidden="true">
+    <div class="modal" role="dialog" style="max-width: 920px;">
+      <button class="modal-close" id="episodes-modal-close-btn" aria-label="Fechar Modal">&times;</button>
+      <h2 id="episodes-modal-title">Gerenciar Episodios</h2>
+
+      <div class="episodes-toolbar">
+        <div class="form-group">
+          <label for="episode-season-filter">Temporada</label>
+          <select id="episode-season-filter"></select>
+        </div>
+        <button type="button" id="btn-new-season" class="btn-secondary">+ Nova Temporada</button>
+      </div>
+
+      <form id="episode-form" class="episode-form" novalidate>
+        <input type="hidden" id="episode-id">
+
+        <div class="form-group">
+          <label for="e-season">Temporada</label>
+          <input type="number" id="e-season" required min="1" value="1">
+        </div>
+
+        <div class="form-group">
+          <label for="e-number">Numero</label>
+          <input type="number" id="e-number" required min="1" placeholder="Ex: 1">
+        </div>
+
+        <div class="form-group">
+          <label for="e-title">Titulo do Episodio</label>
+          <input type="text" id="e-title" required placeholder="Ex: Piloto">
+        </div>
+
+        <div class="form-group">
+          <label for="e-duration">Duracao</label>
+          <input type="text" id="e-duration" required placeholder="Ex: 47min">
+        </div>
+
+        <div class="form-group span-2">
+          <label for="e-videoUrl">Link do Video</label>
+          <input type="text" id="e-videoUrl" required placeholder="MP4, HLS, YouTube, Vimeo ou Drive">
+        </div>
+
+        <div class="form-group span-2">
+          <label for="e-desc">Descricao</label>
+          <textarea id="e-desc" rows="2" placeholder="Resumo breve do episodio"></textarea>
+        </div>
+
+        <div class="modal-footer span-2">
+          <button type="button" id="btn-clear-episode" class="btn-secondary">Limpar</button>
+          <button type="submit" id="btn-save-episode" class="btn-primary">Salvar Episodio</button>
+        </div>
+      </form>
+
+      <div class="episodes-list" id="episodes-list"></div>
     </div>
   </div>
 

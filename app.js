@@ -28,6 +28,7 @@ let currentHeroSlide = 0;
 let heroInterval = null;
 let myList = new Set();
 let isSearchOpen = false;
+let currentModalMovie = null;
 
 // ---- DOM REFS ----
 const $ = (id) => document.getElementById(id);
@@ -76,7 +77,11 @@ async function initApp() {
     const res = await fetch('/api/movies');
     if (!res.ok) throw new Error('Erro ao carregar catálogo');
     const data = await res.json();
-    const list = data.movies || [];
+    const list = (data.movies || []).map(m => ({
+      ...m,
+      type: m.type === 'series' ? 'series' : 'movie',
+      videoUrl: m.videoUrl || m.videourl || ''
+    }));
 
     // Organizar por categorias
     MOVIES.trending = list.filter(m => m.category === 'trending');
@@ -308,7 +313,12 @@ function initHeroButtons() {
   if (watchBtn) {
     watchBtn.addEventListener('click', () => {
       const movie = findMovieById(HERO_SLIDES[currentHeroSlide].movieId);
-      if (movie) openVideoPlayer(movie);
+      if (!movie) return;
+      if (movie.type === 'series') {
+        openModal(movie);
+      } else {
+        openVideoPlayer(movie);
+      }
     });
   }
 
@@ -467,7 +477,112 @@ function findMovieById(id) {
   return allMovies.find(m => m.id === id);
 }
 
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[char]));
+}
+
+function getSeasonLabel(season) {
+  return `Temporada ${season}`;
+}
+
+function groupEpisodesBySeason(episodes) {
+  const map = new Map();
+  episodes.forEach(ep => {
+    const season = Number(ep.season) || 1;
+    if (!map.has(season)) map.set(season, []);
+    map.get(season).push(ep);
+  });
+  return Array.from(map.entries())
+    .sort((a, b) => a[0] - b[0])
+    .map(([season, items]) => ({
+      season,
+      episodes: items.sort((a, b) => Number(a.number) - Number(b.number))
+    }));
+}
+
+function renderSeason(seasonGroup, movie) {
+  const episodeList = $('episode-list-user');
+  if (!episodeList || !seasonGroup) return;
+
+  episodeList.innerHTML = seasonGroup.episodes.map(ep => `
+    <button class="episode-card-user" type="button" data-episode-id="${ep.id}">
+      <span class="episode-number-user">${ep.number}</span>
+      <span>
+        <span class="episode-name-user">${escapeHtml(ep.title)}</span>
+        <span class="episode-desc-user">${escapeHtml(ep.desc || 'Sem descricao disponivel.')}</span>
+      </span>
+      <span class="episode-duration-user">${escapeHtml(ep.duration)}</span>
+    </button>
+  `).join('');
+
+  episodeList.querySelectorAll('.episode-card-user').forEach(card => {
+    card.addEventListener('click', () => {
+      const ep = seasonGroup.episodes.find(item => String(item.id) === card.dataset.episodeId);
+      if (!ep) return;
+      closeModal();
+      openVideoPlayer({
+        ...movie,
+        title: `${movie.title} - T${ep.season}:E${ep.number} ${ep.title}`,
+        duration: ep.duration,
+        desc: ep.desc || movie.desc,
+        videoUrl: ep.videoUrl || ep.videourl
+      });
+    });
+  });
+}
+
+async function loadSeriesEpisodes(movie) {
+  const episodesSection = $('modal-episodes');
+  const seasonTabs = $('season-tabs');
+  const episodeList = $('episode-list-user');
+  if (!episodesSection || !seasonTabs || !episodeList) return;
+
+  episodesSection.hidden = false;
+  seasonTabs.innerHTML = '';
+  episodeList.innerHTML = '<div class="episode-desc-user">Carregando episodios...</div>';
+
+  try {
+    const res = await fetch(`/api/movies/${movie.id}/episodes`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erro ao carregar episodios');
+    if (currentModalMovie?.id !== movie.id) return;
+
+    const seasons = data.seasons || groupEpisodesBySeason(data.episodes || []);
+    if (seasons.length === 0) {
+      episodeList.innerHTML = '<div class="episode-desc-user">Nenhum episodio cadastrado ainda.</div>';
+      return;
+    }
+
+    seasonTabs.innerHTML = seasons.map((group, index) => `
+      <button class="season-tab ${index === 0 ? 'active' : ''}" type="button" data-season="${group.season}">
+        ${getSeasonLabel(group.season)}
+      </button>
+    `).join('');
+
+    seasonTabs.querySelectorAll('.season-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        seasonTabs.querySelectorAll('.season-tab').forEach(item => item.classList.remove('active'));
+        tab.classList.add('active');
+        const selected = seasons.find(group => String(group.season) === tab.dataset.season);
+        renderSeason(selected, movie);
+      });
+    });
+
+    renderSeason(seasons[0], movie);
+  } catch (err) {
+    console.error('[SERIES EPISODES ERROR]', err);
+    episodeList.innerHTML = '<div class="episode-desc-user">Nao foi possivel carregar os episodios.</div>';
+  }
+}
+
 function openModal(movie) {
+  currentModalMovie = movie;
   const modalTitle = $('modal-title');
   const modalDesc = $('modal-desc');
   const modalMeta = $('modal-meta');
@@ -476,6 +591,14 @@ function openModal(movie) {
   const modalSimilarGrid = $('modal-similar-grid');
   const modalWatchBtn = $('modal-watch-btn');
   const modalListBtn = $('modal-list-btn');
+  const modalEpisodes = $('modal-episodes');
+  const seasonTabs = $('season-tabs');
+  const episodeList = $('episode-list-user');
+  const isSeries = movie.type === 'series';
+
+  if (modalEpisodes) modalEpisodes.hidden = true;
+  if (seasonTabs) seasonTabs.innerHTML = '';
+  if (episodeList) episodeList.innerHTML = '';
 
   // Set content
   modalTitle.textContent = movie.title;
@@ -488,7 +611,7 @@ function openModal(movie) {
     <span class="meta-sep">·</span>
     <span class="meta-year">${movie.year}</span>
     <span class="meta-sep">·</span>
-    <span class="meta-duration">${movie.duration}</span>
+    ${isSeries ? '<span class="meta-duration">Serie</span>' : `<span class="meta-duration">${movie.duration}</span>`}
     <span class="meta-sep">·</span>
     <span class="meta-genre">${movie.genre}</span>
   `;
@@ -511,8 +634,8 @@ function openModal(movie) {
       <span class="detail-value">${movie.year}</span>
     </div>
     <div class="detail-item">
-      <span class="detail-label">Duração</span>
-      <span class="detail-value">${movie.duration}</span>
+      <span class="detail-label">${isSeries ? 'Tipo' : 'Duração'}</span>
+      <span class="detail-value">${isSeries ? 'Serie' : movie.duration}</span>
     </div>
   `;
 
@@ -537,10 +660,13 @@ function openModal(movie) {
   });
 
   // Watch & List buttons
-  modalWatchBtn.onclick = () => {
-    closeModal();
-    openVideoPlayer(movie);
-  };
+  modalWatchBtn.style.display = isSeries ? 'none' : 'inline-flex';
+  if (!isSeries) {
+    modalWatchBtn.onclick = () => {
+      closeModal();
+      openVideoPlayer(movie);
+    };
+  }
 
   modalListBtn.onclick = () => {
     if (myList.has(movie.id)) {
@@ -557,12 +683,17 @@ function openModal(movie) {
   modalOverlay.setAttribute('aria-hidden', 'false');
   document.body.style.overflow = 'hidden';
   modal.scrollTop = 0;
+
+  if (isSeries) {
+    loadSeriesEpisodes(movie);
+  }
 }
 
 function closeModal() {
   modalOverlay.classList.remove('open');
   modalOverlay.setAttribute('aria-hidden', 'true');
   document.body.style.overflow = '';
+  currentModalMovie = null;
 }
 
 // =============================================

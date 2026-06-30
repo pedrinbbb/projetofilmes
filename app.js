@@ -95,6 +95,208 @@ function toggleMyListItem(movie) {
   return true;
 }
 
+const WATCH_PROGRESS_PREFIX = 'goatcine_watch_progress_';
+let continueWatchingRenderTimer = null;
+
+function getWatchProgressKey() {
+  return `${WATCH_PROGRESS_PREFIX}${getActiveProfileId()}`;
+}
+
+function readWatchProgress() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(getWatchProgressKey()) || '{}');
+    return saved && typeof saved === 'object' ? saved : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeWatchProgress(progress) {
+  localStorage.setItem(getWatchProgressKey(), JSON.stringify(progress));
+}
+
+function getProgressId(item) {
+  if (!item) return '';
+  if (item.progressId) return String(item.progressId);
+  if (item.episodeId) return `episode:${item.episodeId}`;
+  const id = item.movieId || item.seriesId || item.id;
+  return id ? `movie:${id}` : '';
+}
+
+function scheduleContinueWatchingRender() {
+  clearTimeout(continueWatchingRenderTimer);
+  continueWatchingRenderTimer = setTimeout(renderContinueWatching, 350);
+}
+
+function saveWatchProgress(item, currentTime, durationSeconds) {
+  const progressId = getProgressId(item);
+  const totalSeconds = Number(durationSeconds) || 0;
+  const watchedSeconds = Number(currentTime) || 0;
+
+  if (!progressId || !totalSeconds || watchedSeconds < 5) return;
+
+  const progress = readWatchProgress();
+  const isAlmostFinished = watchedSeconds >= totalSeconds - 20 || watchedSeconds / totalSeconds >= 0.95;
+
+  if (isAlmostFinished) {
+    if (progress[progressId]) {
+      delete progress[progressId];
+      writeWatchProgress(progress);
+      scheduleContinueWatchingRender();
+    }
+    return;
+  }
+
+  const movieId = item.seriesId || item.movieId || item.id;
+  const isEpisode = Boolean(item.episodeId);
+  const episodeLabel = isEpisode
+    ? `T${item.season || 1}:E${item.episodeNumber || item.number || 1} ${item.episodeTitle || ''}`.trim()
+    : '';
+
+  progress[progressId] = {
+    id: progressId,
+    type: isEpisode ? 'episode' : (item.type === 'series' ? 'series' : 'movie'),
+    movieId,
+    episodeId: item.episodeId || null,
+    season: item.season || null,
+    episodeNumber: item.episodeNumber || item.number || null,
+    episodeTitle: item.episodeTitle || '',
+    seriesTitle: item.seriesTitle || '',
+    title: isEpisode ? (item.seriesTitle || item.title) : item.title,
+    playbackTitle: item.title,
+    subtitle: isEpisode ? episodeLabel : [item.year, item.genre].filter(Boolean).join(' · '),
+    poster: item.parentPoster || item.poster || '',
+    backdrop: item.parentBackdrop || item.backdrop || '',
+    rating: item.rating || '',
+    year: item.year || '',
+    genre: item.genre || '',
+    desc: item.desc || '',
+    videoUrl: item.videoUrl || item.videourl || '',
+    subtitlesUrl: item.subtitlesUrl || item.subtitlesurl || '',
+    durationLabel: item.duration || '',
+    durationSeconds: totalSeconds,
+    currentTime: watchedSeconds,
+    updatedAt: Date.now()
+  };
+
+  const limitedProgress = Object.fromEntries(
+    Object.entries(progress)
+      .sort((a, b) => (b[1].updatedAt || 0) - (a[1].updatedAt || 0))
+      .slice(0, 24)
+  );
+
+  writeWatchProgress(limitedProgress);
+  scheduleContinueWatchingRender();
+}
+
+function clearWatchProgress(item) {
+  const progressId = getProgressId(item);
+  if (!progressId) return;
+
+  const progress = readWatchProgress();
+  if (!progress[progressId]) return;
+
+  delete progress[progressId];
+  writeWatchProgress(progress);
+  scheduleContinueWatchingRender();
+}
+
+function getSavedWatchProgress(item) {
+  const progressId = getProgressId(item);
+  if (!progressId) return null;
+  return readWatchProgress()[progressId] || null;
+}
+
+function formatProgressTime(seconds) {
+  const value = Math.max(0, Math.floor(Number(seconds) || 0));
+  const hours = Math.floor(value / 3600);
+  const minutes = Math.floor((value % 3600) / 60);
+  if (hours > 0) return `${hours}h ${String(minutes).padStart(2, '0')}min`;
+  return `${minutes}min`;
+}
+
+function buildPlaybackItemFromProgress(entry) {
+  return {
+    id: entry.movieId,
+    movieId: entry.movieId,
+    type: entry.type === 'episode' ? 'series' : entry.type,
+    title: entry.playbackTitle || entry.title,
+    year: entry.year,
+    rating: entry.rating,
+    genre: entry.genre,
+    duration: entry.durationLabel,
+    desc: entry.desc,
+    poster: entry.poster,
+    backdrop: entry.backdrop,
+    videoUrl: entry.videoUrl,
+    subtitlesUrl: entry.subtitlesUrl,
+    progressId: entry.id,
+    episodeId: entry.episodeId,
+    season: entry.season,
+    episodeNumber: entry.episodeNumber,
+    episodeTitle: entry.episodeTitle,
+    seriesTitle: entry.seriesTitle || entry.title,
+    parentPoster: entry.poster,
+    parentBackdrop: entry.backdrop
+  };
+}
+
+function createContinueWatchingCard(entry) {
+  const card = document.createElement('div');
+  const progressPct = Math.max(3, Math.min(100, ((entry.currentTime || 0) / (entry.durationSeconds || 1)) * 100));
+  const title = entry.title || entry.playbackTitle || 'Continuar';
+  const subtitle = entry.subtitle || '';
+
+  card.className = 'movie-card continue-card fade-in';
+  card.setAttribute('role', 'listitem');
+  card.setAttribute('aria-label', `Continuar assistindo ${title}`);
+  card.dataset.typeLabel = entry.type === 'episode' ? 'EPISODIO' : (entry.type === 'series' ? 'SERIE' : 'FILME');
+  card.dataset.rating = entry.rating || '';
+
+  card.innerHTML = `
+    <div class="continue-poster-wrap">
+      <img class="card-poster"
+           src="${entry.poster || entry.backdrop || ''}"
+           alt="Poster de ${escapeHtml(title)}"
+           loading="lazy"
+           onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22180%22 height=%22270%22 viewBox=%220 0 180 270%22><rect width=%22180%22 height=%22270%22 fill=%22%23161616%22/></svg>'" />
+      <div class="continue-progress-track" aria-hidden="true">
+        <span style="width: ${progressPct}%"></span>
+      </div>
+    </div>
+    <div class="card-overlay">
+      <div class="card-play-btn" aria-hidden="true">
+        <svg width="14" height="14" viewBox="0 0 24 24">
+          <polygon points="5,3 19,12 5,21" fill="#000"/>
+        </svg>
+      </div>
+      <div class="card-title">${escapeHtml(title)}</div>
+      <div class="card-rating">${formatProgressTime(entry.currentTime)} assistidos</div>
+    </div>
+    <div class="card-info">
+      <div class="card-name">${escapeHtml(title)}</div>
+      <div class="card-year">${escapeHtml(subtitle)}</div>
+    </div>
+  `;
+
+  card.addEventListener('click', () => openVideoPlayer(buildPlaybackItemFromProgress(entry)));
+  return card;
+}
+
+function renderContinueWatching() {
+  const section = $('continue-watching-section');
+  const carousel = $('continue-watching-carousel');
+  if (!section || !carousel) return;
+
+  const entries = Object.values(readWatchProgress())
+    .filter(entry => entry?.videoUrl && entry.currentTime > 5 && entry.durationSeconds > 0)
+    .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+
+  section.classList.toggle('hidden', entries.length === 0);
+  carousel.innerHTML = '';
+  entries.forEach(entry => carousel.appendChild(createContinueWatchingCard(entry)));
+}
+
 // ---- LOADING ----
 function simulateLoading() {
   let progress = 0;
@@ -184,6 +386,7 @@ async function initApp() {
   renderCarousel('carousel-action', MOVIES.action);
   renderCarousel('carousel-series', MOVIES.series);
   renderTop10();
+  renderContinueWatching();
   refreshTop10SlideButtons();
   initCarouselArrows();
   initHeroSlider();
@@ -359,6 +562,7 @@ function refreshTop10SlideButtons() {
 // ---- CAROUSEL ARROWS ----
 function initCarouselArrows() {
   const pairs = [
+    ['arrow-left-continue', 'arrow-right-continue', 'continue-watching-carousel'],
     ['arrow-left-0', 'arrow-right-0', 'carousel-trending'],
     ['arrow-left-1', 'arrow-right-1', 'carousel-new'],
     ['arrow-left-2', 'arrow-right-2', 'carousel-action'],
@@ -799,6 +1003,15 @@ function renderSeason(seasonGroup, movie) {
       openVideoPlayer({
         ...movie,
         title: `${movie.title} - T${ep.season}:E${ep.number} ${ep.title}`,
+        type: 'series',
+        seriesId: movie.id,
+        seriesTitle: movie.title,
+        episodeId: ep.id,
+        season: ep.season || seasonGroup.season,
+        episodeNumber: ep.number,
+        episodeTitle: ep.title,
+        parentPoster: movie.poster,
+        parentBackdrop: movie.backdrop,
         duration: ep.duration,
         desc: ep.desc || movie.desc,
         videoUrl: ep.videoUrl || ep.videourl,
@@ -991,6 +1204,8 @@ function initVideoPlayer() {
   let subtitleCues = [];
   let subtitlesEnabled = false;
   let subtitlesLoadToken = 0;
+  let currentPlaybackItem = null;
+  let lastProgressSaveAt = 0;
 
   if (!playerOverlay) return;
 
@@ -1152,6 +1367,44 @@ function initVideoPlayer() {
     }
   }
 
+  function shouldResumeProgress(entry) {
+    if (!entry) return false;
+    const durationSeconds = Number(entry.durationSeconds) || 0;
+    const currentTime = Number(entry.currentTime) || 0;
+    return currentTime > 5 && durationSeconds > 0 && currentTime < durationSeconds - 20;
+  }
+
+  function resumeNativePlayback(seconds) {
+    const resumeAt = Number(seconds) || 0;
+    if (resumeAt <= 5) return;
+
+    let applied = false;
+    const applyResume = () => {
+      if (applied || !video.duration) return;
+      applied = true;
+      video.currentTime = Math.min(resumeAt, Math.max(0, video.duration - 10));
+      showToast(`Continuando de ${formatProgressTime(resumeAt)}`);
+    };
+
+    if (video.readyState >= 1) {
+      applyResume();
+      return;
+    }
+
+    video.addEventListener('loadedmetadata', applyResume, { once: true });
+    video.addEventListener('canplay', applyResume, { once: true });
+  }
+
+  function trackPlaybackProgress(force = false) {
+    if (!currentPlaybackItem || !video.duration || video.paused && !force) return;
+
+    const now = Date.now();
+    if (!force && now - lastProgressSaveAt < 5000) return;
+
+    lastProgressSaveAt = now;
+    saveWatchProgress(currentPlaybackItem, video.currentTime, video.duration);
+  }
+
   // Global open function
   window.openVideoPlayer = async function(movie) {
     const allowed = await checkSubscriptionAndScreens();
@@ -1165,6 +1418,8 @@ function initVideoPlayer() {
     // Determinar se o link é Iframe (YouTube/Vimeo/Google Drive/Axplay) ou vídeo direto (.mp4, .webm, .m3u8)
     const rawUrl = movie.videoUrl || movie.videourl || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
     const url = getPlayableUrl(rawUrl);
+    currentPlaybackItem = { ...movie, videoUrl: rawUrl };
+    lastProgressSaveAt = 0;
     
     const cleanUrl = url.toLowerCase().split('?')[0];
     const isDirectVideo = cleanUrl.endsWith('.mp4') || 
@@ -1179,6 +1434,7 @@ function initVideoPlayer() {
     resetCustomSubtitles();
 
     if (!isDirectVideo || url.includes('youtube.com') || url.includes('youtu.be') || url.includes('vimeo.com') || url.includes('drive.google.com')) {
+      currentPlaybackItem = null;
       // Configurar modo Iframe
       video.style.display = 'none';
       iframeWrapper.classList.add('active');
@@ -1221,6 +1477,9 @@ function initVideoPlayer() {
       if (subtitlesUrl) {
         loadCustomSubtitles(subtitlesUrl);
       }
+
+      const savedProgress = getSavedWatchProgress(currentPlaybackItem);
+      const resumeTime = shouldResumeProgress(savedProgress) ? savedProgress.currentTime : 0;
       
       if (url.includes('.m3u8')) {
         if (typeof Hls !== 'undefined' && Hls.isSupported()) {
@@ -1244,6 +1503,7 @@ function initVideoPlayer() {
         video.load();
         video.play().catch(() => {});
       }
+      resumeNativePlayback(resumeTime);
       updatePlayPauseIcon(true);
     }
 
@@ -1359,6 +1619,8 @@ function initVideoPlayer() {
 
   // Close player function
   window.closeVideoPlayer = function() {
+    trackPlaybackProgress(true);
+    currentPlaybackItem = null;
     playerOverlay.classList.remove('show');
     playerOverlay.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
@@ -1447,6 +1709,7 @@ function initVideoPlayer() {
   video.addEventListener('timeupdate', () => {
     updateCustomSubtitles();
     if (!video.duration) return;
+    trackPlaybackProgress();
     const pct = (video.currentTime / video.duration) * 100;
     progressFill.style.width = `${pct}%`;
     progressHandle.style.left = `${pct}%`;
@@ -1456,6 +1719,11 @@ function initVideoPlayer() {
   // Load duration when metadata is ready
   video.addEventListener('loadedmetadata', () => {
     timeDuration.textContent = formatTime(video.duration);
+  });
+
+  video.addEventListener('ended', () => {
+    clearWatchProgress(currentPlaybackItem);
+    currentPlaybackItem = null;
   });
 
   // Scrubbing/Seeking on click / touch
@@ -1644,6 +1912,7 @@ function initVideoPlayer() {
 
   video.addEventListener('play', resetControlsTimer);
   video.addEventListener('pause', () => {
+    trackPlaybackProgress(true);
     playerOverlay.classList.remove('controls-hidden');
     clearTimeout(controlsTimeout);
   });

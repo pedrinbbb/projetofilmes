@@ -1746,3 +1746,94 @@ $('btn-save-reorder')?.addEventListener('click', async () => {
     btn.textContent = 'Salvar Ordenação';
   }
 });
+
+// ---- UPLOAD DE LEGENDAS (VTT E SRT) ----
+function setupSubtitleUpload(btnId, fileInputId, urlInputId) {
+  const btn = $(btnId);
+  const fileInput = $(fileInputId);
+  const urlInput = $(urlInputId);
+
+  if (!btn || !fileInput || !urlInput) return;
+
+  // Trigger file selection when clicking the button
+  btn.addEventListener('click', () => fileInput.click());
+
+  // Handle file selection
+  fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) handleSubtitleFileUpload(file, urlInput, btn);
+  });
+
+  // Drag and drop events on the text input field
+  urlInput.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    urlInput.style.borderColor = 'var(--color-gold-bright)';
+    urlInput.style.background = 'rgba(255, 215, 0, 0.08)';
+  });
+
+  urlInput.addEventListener('dragleave', () => {
+    urlInput.style.borderColor = '';
+    urlInput.style.background = '';
+  });
+
+  urlInput.addEventListener('drop', (e) => {
+    e.preventDefault();
+    urlInput.style.borderColor = '';
+    urlInput.style.background = '';
+
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      const ext = file.name.split('.').pop().toLowerCase();
+      if (ext === 'vtt' || ext === 'srt') {
+        handleSubtitleFileUpload(file, urlInput, btn);
+      } else {
+        showToast('Erro: Apenas arquivos .vtt ou .srt são aceitos.');
+      }
+    }
+  });
+}
+
+async function handleSubtitleFileUpload(file, urlInput, btn) {
+  const originalText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const fileData = e.target.result;
+    const token = getAdminToken();
+
+    try {
+      const res = await fetch(`${API}/api/admin/subtitles/upload`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          fileName: file.name,
+          fileData: fileData
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        urlInput.value = data.subtitlesUrl;
+        showToast('✓ Legenda enviada com sucesso!');
+      } else {
+        showToast(data.error || 'Erro ao salvar legenda.');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Erro de conexão ao enviar legenda.');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+// Inicializar uploads de legendas
+setupSubtitleUpload('m-uploadSubBtn', 'm-subtitlesFile', 'm-subtitlesUrl');
+setupSubtitleUpload('e-uploadSubBtn', 'e-subtitlesFile', 'e-subtitlesUrl');

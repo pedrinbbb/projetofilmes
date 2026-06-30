@@ -502,7 +502,11 @@
 
         <div class="form-group span-2" id="movie-subtitles-group">
           <label for="m-subtitlesUrl">Link da Legenda (Opcional - Formato .vtt ou .srt)</label>
-          <input type="text" id="m-subtitlesUrl" placeholder="Ex: /legendas/filme.pt.vtt, /legendas/filme.srt ou https://pub-.../legenda.srt">
+          <div class="input-with-button">
+            <input type="text" id="m-subtitlesUrl" placeholder="Ex: /legendas/filme.pt.vtt, /legendas/filme.srt ou https://pub-.../legenda.srt">
+            <button type="button" class="btn-secondary" id="m-uploadSubBtn">Subir Legenda</button>
+            <input type="file" id="m-subtitlesFile" accept=".vtt,.srt" style="display:none">
+          </div>
         </div>
 
         <div class="form-group span-2">
@@ -564,7 +568,11 @@
 
         <div class="form-group span-2">
           <label for="e-subtitlesUrl">Link da Legenda (Opcional - Formato .vtt ou .srt)</label>
-          <input type="text" id="e-subtitlesUrl" placeholder="Ex: /legendas/episodio.pt.vtt, /legendas/episodio.srt ou https://pub-.../legenda.srt">
+          <div class="input-with-button">
+            <input type="text" id="e-subtitlesUrl" placeholder="Ex: /legendas/episodio.pt.vtt, /legendas/episodio.srt ou https://pub-.../legenda.srt">
+            <button type="button" class="btn-secondary" id="e-uploadSubBtn">Subir Legenda</button>
+            <input type="file" id="e-subtitlesFile" accept=".vtt,.srt" style="display:none">
+          </div>
         </div>
 
         <div class="form-group span-2">

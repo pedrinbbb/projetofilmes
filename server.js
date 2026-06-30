@@ -2116,6 +2116,40 @@ app.post('/api/admin/settings/upload', requireAdminAuth, (req, res) => {
   }
 });
 
+// Upload de Legendas (.vtt ou .srt)
+app.post('/api/admin/subtitles/upload', requireAdminAuth, (req, res) => {
+  try {
+    const { fileName, fileData } = req.body; // fileName: 'legenda.pt.vtt' ou 'legenda.srt', fileData: base64 string
+
+    if (!fileName || !fileData) {
+      return res.status(400).json({ error: 'Parâmetros inválidos. É necessário informar fileName e fileData.' });
+    }
+
+    const ext = path.extname(fileName).toLowerCase();
+    if (ext !== '.vtt' && ext !== '.srt') {
+      return res.status(400).json({ error: 'Formato de arquivo inválido. Apenas .vtt ou .srt são permitidos.' });
+    }
+
+    // Limpar o prefixo data:...;base64, se existir
+    const base64Data = fileData.replace(/^data:[\w/.-]+;base64,/, "");
+    const buffer = Buffer.from(base64Data, 'base64');
+
+    // Sanitizar nome do arquivo para evitar Path Traversal
+    const safeName = path.basename(fileName);
+    const filePath = path.join(subtitlesDir, safeName);
+
+    fs.writeFileSync(filePath, buffer);
+    console.log(`[SUBTITLES] 📂 Legenda salva com sucesso em: ${filePath}`);
+
+    // Retornar o caminho relativo para ser inserido no input
+    const relativeUrl = `/legendas/${safeName}`;
+    return res.json({ success: true, subtitlesUrl: relativeUrl, message: 'Legenda salva com sucesso!' });
+  } catch (err) {
+    console.error('[ADMIN UPLOAD SUBTITLES ERROR]', err);
+    return res.status(500).json({ error: 'Erro ao salvar a legenda.' });
+  }
+});
+
 // --- USER SUBSCRIPTION API ENDPOINTS (requireAuth) ---
 
 // Obter Assinatura do Usuário Logado

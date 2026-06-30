@@ -21,6 +21,21 @@ let pinMode = 'keep';
 let toastTimer = null;
 let subscriptionCache = null;
 
+const SETTINGS_ROUTES = {
+  conta: '/conta',
+  assinatura: '/assinatura',
+  cobranca: '/cobranca',
+  dispositivos: '/dispositivos'
+};
+
+const SECTION_BY_PATH = {
+  '/account-profile.html': 'conta',
+  '/conta': 'conta',
+  '/assinatura': 'assinatura',
+  '/cobranca': 'cobranca',
+  '/dispositivos': 'dispositivos'
+};
+
 const $ = (id) => document.getElementById(id);
 const form = $('profile-form');
 const preview = $('profile-preview');
@@ -158,6 +173,15 @@ function setPinMode(mode) {
   }
 }
 
+function getSectionFromLocation() {
+  const pathname = window.location.pathname.replace(/\/$/, '') || '/';
+  const hashSection = (window.location.hash || '').replace('#', '');
+
+  if (SECTION_BY_PATH[pathname]) return SECTION_BY_PATH[pathname];
+  if (['conta', 'assinatura', 'cobranca', 'dispositivos'].includes(hashSection)) return hashSection;
+  return 'conta';
+}
+
 function setActiveSection(sectionName, updateHash = true) {
   const safeSection = ['conta', 'assinatura', 'cobranca', 'dispositivos'].includes(sectionName)
     ? sectionName
@@ -172,7 +196,7 @@ function setActiveSection(sectionName, updateHash = true) {
   });
 
   if (updateHash) {
-    history.replaceState(null, '', `#${safeSection}`);
+    history.pushState({ section: safeSection }, '', SETTINGS_ROUTES[safeSection]);
   }
 
   if (safeSection === 'assinatura') loadSubscription();
@@ -482,7 +506,7 @@ if (guardSession()) {
   renderProfile();
   loadFreshProfile().catch(() => showToast('Nao foi possivel atualizar os dados do perfil.'));
 
-  const initialSection = (window.location.hash || '#conta').replace('#', '');
+  const initialSection = getSectionFromLocation();
   setActiveSection(initialSection, false);
 
   toggleAvatarPicker.addEventListener('click', () => {
@@ -495,6 +519,10 @@ if (guardSession()) {
 
   document.querySelectorAll('[data-section-jump]').forEach((btn) => {
     btn.addEventListener('click', () => setActiveSection(btn.dataset.sectionJump));
+  });
+
+  window.addEventListener('popstate', () => {
+    setActiveSection(getSectionFromLocation(), false);
   });
 
   document.querySelectorAll('.pin-tab').forEach((btn) => {

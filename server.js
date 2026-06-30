@@ -2597,6 +2597,14 @@ app.get('/auth-callback', (req, res) => {
   res.sendFile(path.join(__dirname, 'auth-callback.html'));
 });
 
+app.get('/gerenciar-perfis', (req, res) => {
+  res.sendFile(path.join(__dirname, 'profiles.html'));
+});
+
+app.get(['/conta', '/assinatura', '/cobranca', '/dispositivos'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'account-profile.html'));
+});
+
 // HLS Proxy para ignorar bloqueio CORS e Referer do Cloudflare
 app.options('/api/hls-proxy/:host/*', (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');

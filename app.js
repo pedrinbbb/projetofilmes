@@ -1715,8 +1715,8 @@ function initSubscriptionEvents() {
 
 // ---- CATALOG & ROUTING ----
 function showSection(viewName) {
-  // Resetar scroll instantaneamente antes da transição para evitar bugs de pulo
-  window.scrollTo(0, 0);
+  // Rolar suavemente para o topo ao trocar de seção
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 
   const standardContent = $('standard-content');
   const searchResultsSection = $('search-results-section');

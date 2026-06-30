@@ -2701,3 +2701,8 @@ ul {
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
   border-radius: 4px;
 }
+
+.control-btn.active {
+  color: var(--gold-primary) !important;
+  filter: drop-shadow(0 0 4px var(--gold-primary));
+}

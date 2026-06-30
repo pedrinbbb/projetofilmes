@@ -750,6 +750,7 @@ function initVideoPlayer() {
   const speedBtn = $('ctrl-speed');
   const speedMenu = $('speed-menu');
   const fullscreenBtn = $('ctrl-fullscreen');
+  const subtitlesBtn = $('ctrl-subtitles');
   const backBtn = $('player-back-btn');
 
   if (!playerOverlay) return;
@@ -852,6 +853,7 @@ function initVideoPlayer() {
       // Limpar tracks de legendas anteriores
       video.querySelectorAll('track').forEach(t => t.remove());
 
+      const subtitlesBtn = $('ctrl-subtitles');
       if (movie.subtitlesUrl) {
         const track = document.createElement('track');
         track.kind = 'subtitles';
@@ -860,6 +862,15 @@ function initVideoPlayer() {
         track.src = movie.subtitlesUrl;
         track.default = true;
         video.appendChild(track);
+
+        if (subtitlesBtn) {
+          subtitlesBtn.style.display = 'inline-flex';
+          subtitlesBtn.classList.add('active');
+        }
+      } else {
+        if (subtitlesBtn) {
+          subtitlesBtn.style.display = 'none';
+        }
       }
       
       if (url.includes('.m3u8')) {
@@ -1210,6 +1221,23 @@ function initVideoPlayer() {
 
   fullscreenBtn.addEventListener('click', toggleFullscreen);
   video.addEventListener('dblclick', toggleFullscreen);
+
+  if (subtitlesBtn) {
+    subtitlesBtn.addEventListener('click', () => {
+      const track = video.textTracks[0];
+      if (track) {
+        if (track.mode === 'showing') {
+          track.mode = 'hidden';
+          subtitlesBtn.classList.remove('active');
+          showToast('Legendas desativadas');
+        } else {
+          track.mode = 'showing';
+          subtitlesBtn.classList.add('active');
+          showToast('Legendas ativadas');
+        }
+      }
+    });
+  }
 
   // Keyboard Shortcuts
   document.addEventListener('keydown', (e) => {

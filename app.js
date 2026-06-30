@@ -1318,16 +1318,29 @@ function initVideoPlayer() {
     subtitlesOverlay.style.display = 'block';
   }
 
+  function normalizeSubtitleUrl(subtitlesUrl) {
+    const value = String(subtitlesUrl || '').trim().replace(/\\/g, '/');
+    if (!value) return '';
+    if (/^(https?:|data:|blob:|\/)/i.test(value)) return encodeURI(value);
+    return encodeURI(`/${value.replace(/^\/+/, '')}`);
+  }
+
   async function loadCustomSubtitles(subtitlesUrl) {
     const loadToken = ++subtitlesLoadToken;
+    const normalizedUrl = normalizeSubtitleUrl(subtitlesUrl);
+    if (!normalizedUrl) return;
 
     try {
-      const res = await fetch(subtitlesUrl);
+      const res = await fetch(normalizedUrl, { cache: 'no-store' });
       if (!res.ok) throw new Error('Nao foi possivel carregar a legenda');
 
       const text = await res.text();
       const cues = parseVtt(text);
       if (loadToken !== subtitlesLoadToken) return;
+
+      if (cues.length === 0) {
+        throw new Error('A legenda foi encontrada, mas nao tem falas validas em formato VTT');
+      }
 
       subtitleCues = cues;
       subtitlesEnabled = cues.length > 0;

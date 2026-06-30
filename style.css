@@ -2627,39 +2627,58 @@ ul {
 /* User Menu Dropdown */
 .user-menu-dropdown {
   position: absolute;
-  top: calc(100% + 12px);
+  top: calc(100% + 14px);
   right: 0;
-  width: 280px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-gold);
-  border-radius: var(--radius-md);
-  padding: 16px;
+  width: 292px;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255, 215, 0, 0.12), transparent 34%),
+    linear-gradient(180deg, rgba(20, 20, 20, 0.98), rgba(7, 7, 7, 0.98));
+  border: 1px solid rgba(255, 215, 0, 0.34);
+  border-radius: 10px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), inset 0 0 20px rgba(255, 215, 0, 0.02);
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, 0.76),
+    0 0 0 1px rgba(255, 255, 255, 0.035) inset,
+    0 0 34px rgba(255, 215, 0, 0.06);
   z-index: 1000;
   opacity: 0;
   visibility: hidden;
-  transform: translateY(-10px);
+  transform: translateY(-8px) scale(0.985);
   transition: opacity var(--transition-normal), transform var(--transition-normal), visibility var(--transition-normal);
+}
+
+.user-menu-dropdown::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  right: 18px;
+  width: 10px;
+  height: 10px;
+  border-left: 1px solid rgba(255, 215, 0, 0.34);
+  border-top: 1px solid rgba(255, 215, 0, 0.34);
+  background: #11100c;
+  transform: rotate(45deg);
 }
 
 .user-menu-dropdown.show {
   opacity: 1;
   visibility: visible;
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
 }
 
 .user-menu-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 4px 0 12px 0;
+  gap: 13px;
+  min-width: 0;
+  padding: 8px 8px 14px;
 }
 
 .user-menu-avatar {
-  width: 48px;
-  height: 48px;
+  width: 54px;
+  height: 54px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--gold-dark), var(--gold-primary));
   display: flex;
@@ -2668,7 +2687,8 @@ ul {
   font-size: 18px;
   font-weight: 800;
   color: #000;
-  box-shadow: 0 0 0 2px var(--gold-muted);
+  border: 2px solid rgba(255, 215, 0, 0.86);
+  box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.08), 0 0 24px rgba(255, 215, 0, 0.2);
   flex-shrink: 0;
   overflow: hidden;
 }
@@ -2682,17 +2702,19 @@ ul {
 .user-menu-info {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   overflow: hidden;
   text-align: left;
 }
 
 .user-menu-name {
-  font-size: 15px;
-  font-weight: 700;
+  font-size: 16px;
+  font-weight: 900;
   color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  letter-spacing: -0.2px;
 }
 
 .user-menu-email {
@@ -2701,13 +2723,14 @@ ul {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-top: 2px;
+  margin-top: 3px;
+  font-weight: 600;
 }
 
 .user-menu-divider {
   height: 1px;
-  background: var(--border-subtle);
-  margin: 8px 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.22), transparent);
+  margin: 8px 6px;
 }
 
 .user-menu-list {
@@ -2716,31 +2739,35 @@ ul {
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
 }
 
 .user-menu-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  border-radius: var(--radius-sm);
+  gap: 11px;
+  min-height: 44px;
+  padding: 10px 11px;
+  border: 1px solid transparent;
+  border-radius: 8px;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 800;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: color var(--transition-fast), background var(--transition-fast);
+  transition: color var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
   text-align: left;
 }
 
 .user-menu-item:hover {
   color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.06);
+  background: linear-gradient(180deg, rgba(255, 215, 0, 0.1), rgba(255, 255, 255, 0.045));
+  border-color: rgba(255, 215, 0, 0.2);
+  transform: translateX(2px);
 }
 
 .menu-icon {
-  width: 18px;
-  height: 18px;
+  width: 19px;
+  height: 19px;
   color: var(--text-secondary);
   transition: color var(--transition-fast);
   flex-shrink: 0;
@@ -2753,19 +2780,23 @@ ul {
 .user-menu-logout {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  border-radius: var(--radius-sm);
+  gap: 11px;
+  min-height: 44px;
+  padding: 10px 11px;
+  border: 1px solid transparent;
+  border-radius: 8px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 900;
   color: #FF6B6B;
   cursor: pointer;
-  transition: background var(--transition-fast);
+  transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
   text-align: left;
 }
 
 .user-menu-logout:hover {
-  background: rgba(255, 107, 107, 0.08);
+  background: rgba(255, 107, 107, 0.1);
+  border-color: rgba(255, 107, 107, 0.24);
+  transform: translateX(2px);
 }
 
 .logout-icon {

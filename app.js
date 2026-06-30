@@ -1738,20 +1738,20 @@ function showSection(viewName) {
   
   if (viewName === 'home') {
     $('nav-home')?.classList.add('active');
-    standardContent?.classList.remove('hidden');
-    heroSection?.style.display = 'block';
-    catalogSection?.classList.add('hidden');
+    if (standardContent) standardContent.classList.remove('hidden');
+    if (heroSection) heroSection.style.display = 'block';
+    if (catalogSection) catalogSection.classList.add('hidden');
   } else if (viewName === 'movies') {
     $('nav-movies')?.classList.add('active');
-    standardContent?.classList.add('hidden');
-    heroSection?.style.display = 'none';
-    catalogSection?.classList.remove('hidden');
+    if (standardContent) standardContent.classList.add('hidden');
+    if (heroSection) heroSection.style.display = 'none';
+    if (catalogSection) catalogSection.classList.remove('hidden');
     renderCatalog('movies');
   } else if (viewName === 'series') {
     $('nav-series')?.classList.add('active');
-    standardContent?.classList.add('hidden');
-    heroSection?.style.display = 'none';
-    catalogSection?.classList.remove('hidden');
+    if (standardContent) standardContent.classList.add('hidden');
+    if (heroSection) heroSection.style.display = 'none';
+    if (catalogSection) catalogSection.classList.remove('hidden');
     renderCatalog('series');
   }
 }

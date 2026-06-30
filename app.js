@@ -1331,7 +1331,7 @@ function initVideoPlayer() {
       if (loadToken !== subtitlesLoadToken) return;
 
       if (cues.length === 0) {
-        throw new Error('A legenda foi encontrada, mas nao tem falas validas em formato VTT');
+        throw new Error('A legenda foi encontrada, mas nao tem falas validas em formato VTT ou SRT');
       }
 
       subtitleCues = cues;

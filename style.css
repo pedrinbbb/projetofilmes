@@ -989,29 +989,6 @@ ul {
   opacity: 1;
 }
 
-.card-play-btn {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--gold-accent), var(--gold-primary));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  align-self: center;
-  margin-bottom: 12px;
-  box-shadow: 0 4px 16px rgba(255,215,0,0.4);
-  transform: scale(0.8);
-  transition: transform var(--transition-normal);
-}
-
-.movie-card:hover .card-play-btn {
-  transform: scale(1);
-}
-
-.card-play-btn svg {
-  fill: #000;
-  margin-left: 2px;
-}
 
 .card-title {
   font-size: 13px;

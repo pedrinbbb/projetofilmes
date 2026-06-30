@@ -1014,8 +1014,12 @@ if (!fs.existsSync(subtitlesDir)) {
 // Servir a pasta raiz do projeto e a pasta de uploads persistente
 app.use('/legendas', express.static(subtitlesDir, {
   setHeaders(res, filePath) {
-    if (path.extname(filePath).toLowerCase() === '.vtt') {
+    const ext = path.extname(filePath).toLowerCase();
+    if (ext === '.vtt') {
       res.setHeader('Content-Type', 'text/vtt; charset=utf-8');
+      res.setHeader('Cache-Control', 'no-cache');
+    } else if (ext === '.srt') {
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
       res.setHeader('Cache-Control', 'no-cache');
     }
   }

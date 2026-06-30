@@ -607,24 +607,45 @@ a { color: inherit; text-decoration: none; }
 }
 
 .pin-input-row {
-  display: flex;
-  align-items: center;
-  gap: 14px;
+  display: grid;
+  gap: 12px;
   padding: 0 28px 28px;
 }
 
 .pin-input {
-  width: 150px;
-  padding: 16px 18px;
-  font-size: 1.35rem;
-  letter-spacing: 0.35em;
+  display: none;
+}
+
+.pin-boxes {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pin-box {
+  width: 54px;
+  height: 58px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  outline: none;
+  color: var(--text);
+  background: linear-gradient(180deg, rgba(22, 18, 6, 0.9), rgba(8, 8, 8, 0.94));
+  font-size: 1.5rem;
+  font-weight: 900;
   text-align: center;
+}
+
+.pin-box:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.12);
 }
 
 .pin-input-row span {
   color: var(--muted);
   font-size: 0.82rem;
   font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
 }
 
 .save-bar {

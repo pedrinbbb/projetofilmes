@@ -49,10 +49,6 @@
 
   <div class="top-profile-menu" id="top-profile-menu" aria-hidden="true">
     <a href="/gerenciar-perfis"><i class="fa-solid fa-users-gear"></i> Gerenciar perfis</a>
-    <a href="/conta"><i class="fa-regular fa-user"></i> Conta</a>
-    <a href="/assinatura"><i class="fa-regular fa-credit-card"></i> Assinatura</a>
-    <a href="/cobranca"><i class="fa-regular fa-rectangle-list"></i> Cobrança</a>
-    <a href="/dispositivos"><i class="fa-solid fa-display"></i> Dispositivos</a>
     <button type="button" id="menu-logout-btn"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sair da conta</button>
   </div>
 
@@ -138,12 +134,18 @@
             <div class="pin-tabs" role="group" aria-label="Opções de PIN">
               <button type="button" class="pin-tab active" data-pin-mode="keep">Manter atual</button>
               <button type="button" class="pin-tab" data-pin-mode="set">Definir PIN</button>
-              <button type="button" class="pin-tab" data-pin-mode="remove">Remover PIN</button>
+              <button type="button" class="pin-tab" id="remove-pin-tab" data-pin-mode="remove">Remover PIN</button>
             </div>
             <p class="pin-status" id="pin-status">Nenhum PIN definido</p>
             <div class="pin-input-row" id="pin-input-row" hidden>
-              <input class="pin-input" id="profile-pin" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="PIN de 4 dígitos" />
-              <span>4 dígitos</span>
+              <div class="pin-boxes" id="pin-boxes" aria-label="PIN de 4 digitos">
+                <input class="pin-box" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="Primeiro digito do PIN" />
+                <input class="pin-box" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="Segundo digito do PIN" />
+                <input class="pin-box" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="Terceiro digito do PIN" />
+                <input class="pin-box" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="Quarto digito do PIN" />
+              </div>
+              <input class="pin-input" id="profile-pin" type="hidden" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="PIN de 4 digitos" />
+              <span>Quatro digitos numericos</span>
             </div>
           </section>
 

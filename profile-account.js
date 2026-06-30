@@ -51,6 +51,8 @@ const nameInput = $('profile-name');
 const pinStatus = $('pin-status');
 const pinInputRow = $('pin-input-row');
 const pinInput = $('profile-pin');
+const removePinTab = $('remove-pin-tab');
+const pinBoxes = Array.from(document.querySelectorAll('.pin-box'));
 const saveBtn = form.querySelector('.save-btn');
 const saveState = $('save-state');
 const toast = $('toast');
@@ -130,6 +132,8 @@ function renderProfile() {
   setImage(topAvatar, selectedAvatar, `Avatar de ${activeProfile.name || 'perfil'}`);
   if (accountPillAvatar) setImage(accountPillAvatar, selectedAvatar, `Avatar de ${activeProfile.name || 'perfil'}`);
   pinStatus.textContent = activeProfile.has_pin ? 'PIN definido' : 'Nenhum PIN definido';
+  if (removePinTab) removePinTab.hidden = !activeProfile.has_pin;
+  if (!activeProfile.has_pin && pinMode === 'remove') setPinMode('keep');
   updateAvatarSelection();
 }
 
@@ -158,20 +162,31 @@ function updateAvatarSelection() {
   });
 }
 
+function clearPinBoxes() {
+  pinInput.value = '';
+  pinBoxes.forEach((box) => {
+    box.value = '';
+  });
+}
+
+function syncPinFromBoxes() {
+  pinInput.value = pinBoxes.map((box) => box.value).join('').replace(/\D/g, '').slice(0, 4);
+}
+
 function setPinMode(mode) {
   pinMode = mode;
   document.querySelectorAll('.pin-tab').forEach((btn) => {
     btn.classList.toggle('active', btn.dataset.pinMode === mode);
   });
 
-  pinInput.value = '';
+  clearPinBoxes();
   pinInputRow.hidden = mode !== 'set';
 
   if (mode === 'keep') {
     pinStatus.textContent = activeProfile.has_pin ? 'PIN definido' : 'Nenhum PIN definido';
   } else if (mode === 'set') {
     pinStatus.textContent = 'Novo PIN sera solicitado ao entrar neste perfil';
-    pinInput.focus();
+    pinBoxes[0]?.focus();
   } else {
     pinStatus.textContent = 'O PIN sera removido ao salvar';
   }
@@ -247,7 +262,7 @@ async function saveProfile(event) {
 
   if (pinMode === 'set' && !/^\d{4}$/.test(pinInput.value.trim())) {
     showToast('O PIN precisa ter exatamente 4 digitos.');
-    pinInput.focus();
+    pinBoxes.find((box) => !box.value)?.focus();
     return;
   }
 
@@ -530,7 +545,10 @@ if (guardSession()) {
   });
 
   document.querySelectorAll('.pin-tab').forEach((btn) => {
-    btn.addEventListener('click', () => setPinMode(btn.dataset.pinMode));
+    btn.addEventListener('click', () => {
+      if (btn.dataset.pinMode === 'remove' && !activeProfile.has_pin) return;
+      setPinMode(btn.dataset.pinMode);
+    });
   });
 
   document.querySelectorAll('[data-menu-target]').forEach((btn) => {
@@ -544,6 +562,32 @@ if (guardSession()) {
 
   pinInput.addEventListener('input', () => {
     pinInput.value = pinInput.value.replace(/\D/g, '').slice(0, 4);
+  });
+
+  pinBoxes.forEach((box, index) => {
+    box.addEventListener('input', () => {
+      box.value = box.value.replace(/\D/g, '').slice(0, 1);
+      syncPinFromBoxes();
+      if (box.value && index < pinBoxes.length - 1) {
+        pinBoxes[index + 1].focus();
+      }
+    });
+
+    box.addEventListener('keydown', (event) => {
+      if (event.key === 'Backspace' && !box.value && index > 0) {
+        pinBoxes[index - 1].focus();
+      }
+    });
+
+    box.addEventListener('paste', (event) => {
+      event.preventDefault();
+      const pasted = event.clipboardData.getData('text').replace(/\D/g, '').slice(0, 4);
+      pinBoxes.forEach((target, targetIndex) => {
+        target.value = pasted[targetIndex] || '';
+      });
+      syncPinFromBoxes();
+      pinBoxes[Math.min(pasted.length, pinBoxes.length - 1)]?.focus();
+    });
   });
 
   form.addEventListener('submit', saveProfile);

@@ -1868,6 +1868,7 @@ ul {
     right: 18px;
     bottom: calc(88px + env(safe-area-inset-bottom));
     width: min(300px, calc(100vw - 36px));
+    z-index: 1200;
   }
 
   .logo-text {
@@ -2666,11 +2667,11 @@ ul {
 
 .search-results-pill {
   flex: 0 0 auto;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 215, 0, 0.28);
   border-radius: 999px;
   padding: 9px 13px;
-  color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.08);
+  color: var(--gold-primary);
+  background: rgba(255, 215, 0, 0.08);
   font-size: 11px;
   font-weight: 900;
   letter-spacing: 1.5px;
@@ -2700,9 +2701,9 @@ ul {
 }
 
 .search-chip.active {
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.26);
-  background: rgba(255, 255, 255, 0.14);
+  color: #000;
+  border-color: rgba(255, 215, 0, 0.78);
+  background: linear-gradient(135deg, var(--gold-dark), var(--gold-primary));
 }
 
 .search-empty-state {
@@ -2769,56 +2770,39 @@ ul {
     position: fixed;
     z-index: 1001;
     top: calc(10px + env(safe-area-inset-top));
-    left: 10px;
-    right: 10px;
+    left: 14px;
+    right: 14px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    height: 42px;
-    padding: 5px 8px;
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    border-radius: 999px;
-    background: linear-gradient(180deg, rgba(31, 31, 31, 0.96), rgba(12, 12, 12, 0.96));
-    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45);
+    justify-content: flex-start;
+    height: 44px;
+    padding: 0 4px;
+    border-bottom: 1px solid rgba(255, 215, 0, 0.18);
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.98), rgba(0, 0, 0, 0.82));
   }
 
   .mobile-search-brand {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     color: var(--text-primary);
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 900;
+    letter-spacing: 0.3px;
   }
 
   .mobile-search-brand-mark {
     display: grid;
-    width: 28px;
-    height: 28px;
+    width: 42px;
+    height: 22px;
     place-items: center;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.08);
-    color: #fff;
-    font-size: 13px;
+    border: 1px solid rgba(255, 215, 0, 0.55);
+    border-radius: 999px;
+    background: rgba(255, 215, 0, 0.1);
+    color: var(--gold-primary);
+    font-size: 9px;
     font-weight: 900;
-  }
-
-  .mobile-search-bell {
-    display: grid;
-    width: 30px;
-    height: 30px;
-    place-items: center;
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.06);
-  }
-
-  .mobile-search-bell::before {
-    content: "\f0f3";
-    font-family: "Font Awesome 7 Free", "Font Awesome 6 Free";
-    font-weight: 400;
-    color: var(--text-secondary);
-    font-size: 12px;
+    letter-spacing: 0.8px;
   }
 
   body.mobile-search-mode .nav-search-container.mobile-search-active {
@@ -2850,21 +2834,21 @@ ul {
   }
 
   body.mobile-search-mode .nav-search-container.mobile-search-active .search-pill {
-    top: calc(66px + env(safe-area-inset-top));
+    top: calc(64px + env(safe-area-inset-top));
     bottom: auto;
     left: 14px;
     right: 14px;
-    height: 36px;
-    padding: 0 12px;
-    border-color: rgba(255, 255, 255, 0.12);
-    border-radius: 9px;
-    background: linear-gradient(180deg, rgba(19, 19, 19, 0.98), rgba(8, 8, 8, 0.98));
-    box-shadow: none;
+    height: 42px;
+    padding: 0 14px;
+    border-color: rgba(255, 215, 0, 0.34);
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(18, 14, 4, 0.98), rgba(7, 7, 7, 0.98));
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.42), inset 0 0 0 1px rgba(255, 215, 0, 0.04);
   }
 
   body.mobile-search-mode .nav-search-container.mobile-search-active .search-pill::before {
-    color: var(--text-muted);
-    font-size: 13px;
+    color: var(--gold-primary);
+    font-size: 14px;
   }
 
   body.mobile-search-mode .nav-search-container.mobile-search-active .search-pill-input {
@@ -2887,7 +2871,7 @@ ul {
   body.mobile-search-mode #search-results-section.search-results-page {
     min-height: 100vh !important;
     margin-top: 0 !important;
-    padding: calc(118px + env(safe-area-inset-top)) 13px calc(98px + env(safe-area-inset-bottom)) !important;
+    padding: calc(126px + env(safe-area-inset-top)) 14px calc(98px + env(safe-area-inset-bottom)) !important;
   }
 
   body.mobile-search-mode .search-results-header {

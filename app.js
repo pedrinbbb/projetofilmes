@@ -527,7 +527,7 @@ function setSearchChrome({ query = '', found = [], showResults = false } = {}) {
   const seriesCount = found.filter(m => m.type === 'series').length;
 
   if (kicker) kicker.textContent = query ? `BUSCA - "${query.toUpperCase()}"` : 'BUSCA';
-  if (resultsTitle) resultsTitle.textContent = showResults ? 'Resultados' : 'O que voce quer ver?';
+  if (resultsTitle) resultsTitle.textContent = showResults ? 'Resultados' : 'Encontre seu proximo titulo';
 
   if (count) {
     count.textContent = showResults
@@ -572,8 +572,8 @@ function renderSearchEmptyState() {
       <div class="search-empty-state">
         <span class="search-empty-icon" aria-hidden="true"></span>
         <span class="search-empty-kicker">COMO FUNCIONA</span>
-        <strong>Busque por titulo, genero ou termo</strong>
-        <small>Use o campo de busca no topo. Resultados incluem filmes e series.</small>
+        <strong>Digite um titulo, genero ou artista</strong>
+        <small>A GOATCINE busca no catalogo de filmes e series.</small>
       </div>
     `;
   }
@@ -1735,15 +1735,21 @@ function initUserSession() {
     if (navAvatar && dropdown) {
       navAvatar.addEventListener('click', (e) => {
         e.stopPropagation();
+        setMobileSearchMode(false);
         dropdown.classList.toggle('show');
+        dropdown.setAttribute('aria-hidden', dropdown.classList.contains('show') ? 'false' : 'true');
       });
       document.addEventListener('click', (e) => {
-        if (!dropdown.contains(e.target) && e.target !== navAvatar) {
+        if (!dropdown.contains(e.target) && !e.target.closest('#nav-avatar')) {
           dropdown.classList.remove('show');
+          dropdown.setAttribute('aria-hidden', 'true');
         }
       });
       document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') dropdown.classList.remove('show');
+        if (e.key === 'Escape') {
+          dropdown.classList.remove('show');
+          dropdown.setAttribute('aria-hidden', 'true');
+        }
       });
     }
 

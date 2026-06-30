@@ -715,7 +715,112 @@ function initVideoPlayer() {
     // Iniciar monitoramento do mouse para ocultar os controles
     resetControlsTimer();
     document.addEventListener('mousemove', resetControlsTimer);
+
+    // Iniciar verificação de orientação para mobile
+    rotationHintDismissed = false;
+    initRotationHint();
+    checkOrientation();
   };
+
+  // Funções para Notificação de Orientação
+  let rotationHintDismissed = false;
+
+  function initRotationHint() {
+    if (document.getElementById('rotation-hint')) return;
+
+    const hint = document.createElement('div');
+    hint.id = 'rotation-hint';
+    hint.setAttribute('role', 'alert');
+    hint.style.cssText = `
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(10, 10, 10, 0.98);
+      z-index: 100000;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      text-align: center;
+      font-family: sans-serif;
+      padding: 30px;
+      box-sizing: border-box;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    `;
+
+    hint.innerHTML = `
+      <div style="font-size: 4.5rem; margin-bottom: 24px; animation: rotateDeviceAnimation 2s infinite ease-in-out; display: inline-block;">🔄</div>
+      <h2 style="color: #ffd700; margin: 0 0 12px; font-family: sans-serif; font-size: 1.6rem; font-weight: 700; letter-spacing: 0.5px;">Vire sua Tela</h2>
+      <p style="color: #b3b3b3; font-size: 1rem; max-width: 320px; margin: 0 0 28px; line-height: 1.6; font-weight: 300;">Para aproveitar a melhor experiência de cinema em tela cheia, gire o seu celular para a horizontal.</p>
+      <button id="btn-dismiss-rotation" style="background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.25); color: #fff; padding: 10px 24px; border-radius: 50px; font-size: 0.9rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; outline: none;">Continuar em Pé</button>
+      <style>
+        @keyframes rotateDeviceAnimation {
+          0% { transform: rotate(0deg); }
+          50% { transform: rotate(-90deg); }
+          100% { transform: rotate(0deg); }
+        }
+        #btn-dismiss-rotation:hover {
+          background: rgba(255, 255, 255, 0.2);
+          border-color: rgba(255, 255, 255, 0.4);
+        }
+      </style>
+    `;
+
+    document.body.appendChild(hint);
+
+    hint.querySelector('#btn-dismiss-rotation').addEventListener('click', () => {
+      hideHint(true);
+    });
+  }
+
+  function checkOrientation() {
+    const hint = document.getElementById('rotation-hint');
+    if (!hint) return;
+
+    const playerOpen = playerOverlay.classList.contains('show');
+    if (!playerOpen) {
+      hideHint();
+      return;
+    }
+
+    const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+    const isPortrait = window.innerHeight > window.innerWidth;
+
+    if (isTouch && isPortrait && !rotationHintDismissed) {
+      showHint();
+    } else {
+      hideHint();
+    }
+  }
+
+  function showHint() {
+    const hint = document.getElementById('rotation-hint');
+    if (!hint) return;
+    hint.style.display = 'flex';
+    hint.offsetHeight; // trigger reflow
+    hint.style.opacity = '1';
+  }
+
+  function hideHint(manual = false) {
+    const hint = document.getElementById('rotation-hint');
+    if (!hint) return;
+    if (manual) {
+      rotationHintDismissed = true;
+    }
+    hint.style.opacity = '0';
+    setTimeout(() => {
+      if (hint.style.opacity === '0') {
+        hint.style.display = 'none';
+      }
+    }, 400);
+  }
+
+  window.addEventListener('resize', checkOrientation);
+  window.addEventListener('orientationchange', checkOrientation);
 
   // Close player function
   window.closeVideoPlayer = function() {
@@ -732,6 +837,8 @@ function initVideoPlayer() {
       window.hlsPlayer.destroy();
       window.hlsPlayer = null;
     }
+
+    hideHint();
     
     document.removeEventListener('mousemove', resetControlsTimer);
     clearTimeout(controlsTimeout);

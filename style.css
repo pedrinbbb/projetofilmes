@@ -1688,8 +1688,186 @@ ul {
     --section-pad: 28px;
   }
 
+  body {
+    padding-bottom: calc(82px + env(safe-area-inset-bottom));
+  }
+
+  .navbar {
+    top: auto;
+    left: 50%;
+    right: auto;
+    bottom: calc(10px + env(safe-area-inset-bottom));
+    width: min(420px, calc(100% - 28px));
+    height: 64px;
+    transform: translateX(-50%);
+    border: 1px solid rgba(255, 215, 0, 0.18);
+    border-radius: 999px;
+    background: rgba(13, 13, 13, 0.88);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    box-shadow: 0 16px 42px rgba(0, 0, 0, 0.55), 0 0 24px rgba(255, 215, 0, 0.1);
+  }
+
+  .navbar.scrolled {
+    background: rgba(13, 13, 13, 0.9);
+    box-shadow: 0 16px 42px rgba(0, 0, 0, 0.55), 0 0 24px rgba(255, 215, 0, 0.1);
+  }
+
   .nav-container {
-    padding: 0 16px;
+    justify-content: center;
+    gap: 14px;
+    padding: 0 12px;
+  }
+
+  .nav-logo,
+  .nav-hamburger,
+  .nav-links li:not(:first-child),
+  .search-pill-input,
+  .search-pill-clear {
+    display: none !important;
+  }
+
+  .nav-links {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 0;
+  }
+
+  .nav-actions {
+    flex: 0 0 auto;
+    margin-left: 0 !important;
+    gap: 10px !important;
+    position: static !important;
+  }
+
+  .nav-link,
+  .search-pill,
+  .nav-avatar {
+    width: 58px;
+    height: 52px;
+    padding: 0;
+    border-radius: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: var(--text-secondary);
+    background: transparent;
+    box-shadow: none;
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .nav-link::before,
+  .search-pill::before {
+    font-family: "Font Awesome 7 Free", "Font Awesome 6 Free";
+    font-weight: 900;
+    font-size: 17px;
+    line-height: 1;
+  }
+
+  #nav-home::before {
+    content: "\f015";
+  }
+
+  .search-pill::before {
+    content: "\f002";
+  }
+
+  .search-pill::after {
+    content: "Buscar";
+    font-size: 10px;
+    font-weight: 800;
+  }
+
+  .search-pill {
+    border: 0;
+  }
+
+  .nav-search-container.mobile-search-active .search-pill {
+    position: fixed;
+    left: 16px;
+    right: 16px;
+    bottom: calc(84px + env(safe-area-inset-bottom));
+    z-index: 1002;
+    width: auto;
+    height: 50px;
+    padding: 0 14px;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 10px;
+    border: 1px solid var(--border-gold-active);
+    border-radius: 999px;
+    background: rgba(15, 15, 15, 0.96);
+    box-shadow: 0 12px 38px rgba(0, 0, 0, 0.55), 0 0 24px rgba(255, 215, 0, 0.16);
+  }
+
+  .nav-search-container.mobile-search-active .search-pill::before {
+    content: "\f002";
+    color: var(--gold-primary);
+  }
+
+  .nav-search-container.mobile-search-active .search-pill::after {
+    content: none;
+  }
+
+  .nav-search-container.mobile-search-active .search-pill-input {
+    display: block !important;
+    min-width: 0;
+    flex: 1;
+    font-size: 14px;
+  }
+
+  .nav-search-container.mobile-search-active .search-pill-clear {
+    display: flex !important;
+  }
+
+  .search-pill-icon {
+    display: none;
+  }
+
+  .nav-link.active,
+  .nav-link:hover,
+  .nav-search-container:focus-within .search-pill,
+  .nav-avatar:hover {
+    color: var(--gold-primary);
+    background: rgba(255, 215, 0, 0.08);
+    transform: none;
+  }
+
+  .nav-avatar {
+    position: relative;
+    overflow: visible;
+    color: var(--text-secondary);
+    background: transparent !important;
+    border: 0;
+  }
+
+  .nav-avatar::after {
+    content: "Perfil";
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .nav-avatar img,
+  .nav-avatar > span {
+    width: 24px !important;
+    height: 24px !important;
+    border-radius: 50% !important;
+    font-size: 11px !important;
+    flex: 0 0 auto;
+    box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.55);
+  }
+
+  .user-menu-dropdown {
+    position: fixed;
+    top: auto;
+    right: 18px;
+    bottom: calc(88px + env(safe-area-inset-bottom));
+    width: min(300px, calc(100vw - 36px));
   }
 
   .logo-text {
@@ -1900,7 +2078,7 @@ ul {
 .player-subtitles-overlay {
   position: absolute;
   left: 50%;
-  bottom: clamp(130px, 16vh, 205px);
+  bottom: clamp(82px, 10vh, 145px);
   transform: translateX(-50%);
   z-index: 4;
   display: none;
@@ -1920,7 +2098,7 @@ ul {
 
 @media (max-width: 768px) {
   .player-subtitles-overlay {
-    bottom: clamp(78px, 14vh, 135px);
+    bottom: clamp(54px, 10vh, 96px);
     width: min(92vw, 680px);
     font-size: clamp(1rem, 4vw, 1.35rem);
   }

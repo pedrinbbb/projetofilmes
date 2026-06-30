@@ -563,8 +563,24 @@ function performSearch(q) {
 function initSearch() {
   const searchInput = $('search-input');
   const clearBtn = $('search-pill-clear');
+  const searchContainer = $('nav-search-container');
+  const searchPill = searchContainer?.querySelector('.search-pill');
 
   if (!searchInput) return;
+
+  function closeMobileSearchIfEmpty() {
+    if (window.matchMedia('(max-width: 600px)').matches && !searchInput.value.trim()) {
+      searchContainer?.classList.remove('mobile-search-active');
+    }
+  }
+
+  if (searchPill) {
+    searchPill.addEventListener('click', () => {
+      if (!window.matchMedia('(max-width: 600px)').matches) return;
+      searchContainer?.classList.add('mobile-search-active');
+      setTimeout(() => searchInput.focus(), 30);
+    });
+  }
 
   searchInput.addEventListener('input', debounce((e) => {
     const q = e.target.value.trim();
@@ -577,14 +593,20 @@ function initSearch() {
       searchInput.value = '';
       performSearch('');
       searchInput.focus();
+      closeMobileSearchIfEmpty();
     });
   }
+
+  searchInput.addEventListener('blur', () => {
+    setTimeout(closeMobileSearchIfEmpty, 120);
+  });
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       searchInput.value = '';
       performSearch('');
       searchInput.blur();
+      closeMobileSearchIfEmpty();
     }
   });
 }

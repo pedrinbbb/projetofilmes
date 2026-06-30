@@ -1637,14 +1637,6 @@ ul {
    RESPONSIVE
    ============================================= */
 @media (max-width: 1100px) {
-  .top10-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-
-  .top10-card:last-child {
-    display: none;
-  }
-
   .modal-similar-grid {
     grid-template-columns: repeat(3, 1fr);
   }
@@ -1676,14 +1668,6 @@ ul {
   .originals-visual {
     width: 100%;
     height: 140px;
-  }
-
-  .top10-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .top10-card:nth-child(n+4):not(:nth-child(1)):not(:nth-child(2)):not(:nth-child(3)) {
-    display: none;
   }
 
   .modal-info-grid {
@@ -2767,6 +2751,11 @@ ul {
 /* =============================================
    NETFLIX STYLE TOP 10
    ============================================= */
+.top10-scroll-shell {
+  position: relative;
+  padding-right: 64px;
+}
+
 .top10-grid {
   display: flex;
   gap: 32px;
@@ -2775,23 +2764,12 @@ ul {
   padding: 24px 0;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE/Edge antigo */
-  cursor: grab;
-  user-select: none;
-  touch-action: pan-y;
+  scroll-behavior: smooth;
   overscroll-behavior-x: contain;
 }
 
 .top10-grid::-webkit-scrollbar {
   display: none; /* Chrome, Safari, Opera */
-}
-
-.top10-grid.dragging {
-  cursor: grabbing;
-  scroll-behavior: auto;
-}
-
-.top10-grid.dragging .top10-card {
-  pointer-events: none;
 }
 
 .top10-grid .top10-card {
@@ -2803,6 +2781,31 @@ ul {
   transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   display: flex;
   align-items: center;
+}
+
+.top10-slide-btn {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  width: 54px;
+  height: 124px;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 10px;
+  color: #fff;
+  background: linear-gradient(to left, rgba(8, 8, 8, 0.96), rgba(8, 8, 8, 0.58));
+  cursor: pointer;
+  z-index: 20;
+  transition: color var(--transition-fast), background var(--transition-fast), transform var(--transition-fast);
+}
+
+.top10-slide-btn:hover {
+  color: var(--gold-primary);
+  background: linear-gradient(to left, rgba(8, 8, 8, 1), rgba(8, 8, 8, 0.72));
+  transform: translateY(-50%) scale(1.04);
 }
 
 .top10-card:hover {

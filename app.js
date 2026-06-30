@@ -141,10 +141,7 @@ async function initApp() {
   renderCarousel('carousel-action', MOVIES.action);
   renderCarousel('carousel-series', MOVIES.series);
   renderTop10();
-  const mGrid = $('top10-movies-grid');
-  const sGrid = $('top10-series-grid');
-  if (mGrid) makeDragScroll(mGrid);
-  if (sGrid) makeDragScroll(sGrid);
+  initTop10SlideButtons();
   initCarouselArrows();
   initHeroSlider();
   initNavbar();
@@ -257,59 +254,37 @@ function renderTop10() {
   }
 }
 
-// Lógica de arrastar para rolar horizontalmente (drag-to-scroll)
-function makeDragScroll(slider) {
-  if (!slider) return;
+function getTop10Step(grid) {
+  const card = grid.querySelector('.top10-card');
+  if (!card) return 0;
+  const styles = window.getComputedStyle(grid);
+  const gap = parseFloat(styles.columnGap || styles.gap || '0') || 0;
+  return (card.getBoundingClientRect().width + gap) * 4;
+}
 
-  let isDown = false;
-  let startX = 0;
-  let scrollLeft = 0;
-  let hasMoved = false;
-  let pointerId = null;
+function slideTop10Grid(grid) {
+  if (!grid) return;
+  const step = getTop10Step(grid);
+  if (!step) return;
 
-  slider.addEventListener('pointerdown', (e) => {
-    if (e.button !== undefined && e.button !== 0) return;
-    isDown = true;
-    pointerId = e.pointerId;
-    startX = e.clientX;
-    scrollLeft = slider.scrollLeft;
-    hasMoved = false;
-    slider.classList.add('dragging');
-    slider.setPointerCapture?.(pointerId);
+  const maxScroll = grid.scrollWidth - grid.clientWidth;
+  const nextLeft = grid.scrollLeft + step;
+  const shouldLoop = nextLeft >= maxScroll - 8;
+
+  grid.scrollTo({
+    left: shouldLoop ? 0 : Math.min(nextLeft, maxScroll),
+    behavior: 'smooth'
   });
+}
 
-  const stopDrag = () => {
-    if (!isDown) return;
-    isDown = false;
-    slider.classList.remove('dragging');
-    if (pointerId !== null) {
-      slider.releasePointerCapture?.(pointerId);
-      pointerId = null;
-    }
-  };
-
-  slider.addEventListener('pointerup', stopDrag);
-  slider.addEventListener('pointercancel', stopDrag);
-  slider.addEventListener('pointerleave', stopDrag);
-
-  slider.addEventListener('pointermove', (e) => {
-    if (!isDown) return;
-    e.preventDefault();
-    const walk = (e.clientX - startX) * 1.45;
-    if (Math.abs(walk) > 5) {
-      hasMoved = true;
-    }
-    slider.scrollLeft = scrollLeft - walk;
+function initTop10SlideButtons() {
+  document.querySelectorAll('.top10-slide-btn').forEach((button) => {
+    const grid = $(button.dataset.target);
+    button.hidden = !grid || grid.scrollWidth <= grid.clientWidth + 8;
+    button.addEventListener('click', () => {
+      slideTop10Grid(grid);
+    });
   });
-
-  // Evita abrir o modal se o usuario arrastou para rolar.
-  slider.addEventListener('click', (e) => {
-    if (hasMoved) {
-      e.preventDefault();
-      e.stopPropagation();
-      hasMoved = false;
-    }
-  }, true);
 }
 // ---- CAROUSEL ARROWS ----
 function initCarouselArrows() {

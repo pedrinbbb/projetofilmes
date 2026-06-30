@@ -640,11 +640,22 @@ movieForm.addEventListener('submit', async (e) => {
 
     const data = await res.json();
     if (res.ok) {
+      if (!isEdit && !data.id) {
+        showToast('O servidor respondeu sucesso, mas nao retornou o ID salvo. Tente novamente.');
+        return;
+      }
+      if (!isEdit && isSeries && data.movie && getMovieType(data.movie) !== 'series') {
+        showToast('A série foi salva com tipo incorreto. Verifique o servidor antes de continuar.');
+        return;
+      }
+
       showToast(isEdit
         ? (isSeries ? '✓ Dados da série atualizados!' : '✓ Dados do filme atualizados!')
         : (isSeries ? '✓ Série adicionada ao catálogo!' : '✓ Filme adicionado ao catálogo!')
       );
       closeMovieModal();
+      if (isSeries && $('search-series')) $('search-series').value = '';
+      if (!isSeries && $('search-movies')) $('search-movies').value = '';
       await loadDashboardData();
       if (!isEdit && isSeries && data.id) {
         switchTab('series');

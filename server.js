@@ -2230,9 +2230,20 @@ app.post('/api/movies', requireAdminAuth, (req, res) => {
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [title, year, finalDuration, parsedRating, genre, desc, poster, backdrop, director, cast, category, normalizedType, finalVideoUrl]
     );
+    if (!movieId) {
+      return res.status(500).json({ error: 'Nao foi possivel salvar o titulo no banco de dados' });
+    }
+
+    const savedMovie = dbGet('SELECT * FROM movies WHERE id = ?', [movieId]);
+    if (!savedMovie) {
+      return res.status(500).json({ error: 'Titulo criado, mas nao foi encontrado na consulta de confirmacao' });
+    }
+    if (savedMovie.videourl !== undefined && savedMovie.videoUrl === undefined) {
+      savedMovie.videoUrl = savedMovie.videourl;
+    }
 
     console.log(`[ADMIN] 🎬 Novo titulo adicionado: "${title}" (ID: ${movieId})`);
-    return res.status(201).json({ success: true, id: movieId, message: 'Titulo adicionado com sucesso!' });
+    return res.status(201).json({ success: true, id: movieId, movie: savedMovie, message: 'Titulo adicionado com sucesso!' });
   } catch (err) {
     console.error('[ADD MOVIE ERROR]', err);
     return res.status(500).json({ error: 'Erro ao adicionar titulo no catalogo' });

@@ -854,7 +854,11 @@ function initVideoPlayer() {
   const speedMenu = $('speed-menu');
   const fullscreenBtn = $('ctrl-fullscreen');
   const subtitlesBtn = $('ctrl-subtitles');
+  const subtitlesOverlay = $('player-subtitles-overlay');
   const backBtn = $('player-back-btn');
+  let subtitleCues = [];
+  let subtitlesEnabled = false;
+  let subtitlesLoadToken = 0;
 
   if (!playerOverlay) return;
 
@@ -893,6 +897,120 @@ function initVideoPlayer() {
     return targetUrl;
   }
 
+  function parseVttTime(value) {
+    const cleanValue = value.trim().replace(',', '.');
+    const parts = cleanValue.split(':');
+    if (parts.length < 2) return 0;
+
+    const seconds = parseFloat(parts.pop()) || 0;
+    const minutes = parseInt(parts.pop(), 10) || 0;
+    const hours = parseInt(parts.pop() || '0', 10) || 0;
+
+    return (hours * 3600) + (minutes * 60) + seconds;
+  }
+
+  function cleanSubtitleText(text) {
+    return text
+      .replace(/<[^>]+>/g, '')
+      .replace(/\\N/g, '\n')
+      .replace(/\r/g, '')
+      .trim();
+  }
+
+  function parseVtt(text) {
+    return text
+      .replace(/^\uFEFF/, '')
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '\n')
+      .split(/\n{2,}/)
+      .map(block => block.trim())
+      .filter(Boolean)
+      .reduce((cues, block) => {
+        if (/^(WEBVTT|NOTE|STYLE|REGION)(\s|$)/i.test(block)) return cues;
+
+        const lines = block.split('\n');
+        const timeLineIndex = lines.findIndex(line => line.includes('-->'));
+        if (timeLineIndex === -1) return cues;
+
+        const [rawStart, rawEnd] = lines[timeLineIndex].split('-->');
+        const endTime = rawEnd.trim().split(/\s+/)[0];
+        const cueText = cleanSubtitleText(lines.slice(timeLineIndex + 1).join('\n'));
+
+        if (!cueText) return cues;
+
+        cues.push({
+          start: parseVttTime(rawStart),
+          end: parseVttTime(endTime),
+          text: cueText
+        });
+        return cues;
+      }, []);
+  }
+
+  function hideCustomSubtitles() {
+    if (!subtitlesOverlay) return;
+    subtitlesOverlay.textContent = '';
+    subtitlesOverlay.style.display = 'none';
+  }
+
+  function resetCustomSubtitles() {
+    subtitlesLoadToken += 1;
+    subtitleCues = [];
+    subtitlesEnabled = false;
+    hideCustomSubtitles();
+
+    if (subtitlesBtn) {
+      subtitlesBtn.style.display = 'none';
+      subtitlesBtn.classList.remove('active');
+    }
+  }
+
+  function updateCustomSubtitles() {
+    if (!subtitlesOverlay || !subtitlesEnabled || subtitleCues.length === 0) {
+      hideCustomSubtitles();
+      return;
+    }
+
+    const currentTime = video.currentTime || 0;
+    const activeCue = subtitleCues.find(cue => currentTime >= cue.start && currentTime <= cue.end);
+
+    if (!activeCue) {
+      hideCustomSubtitles();
+      return;
+    }
+
+    subtitlesOverlay.textContent = activeCue.text;
+    subtitlesOverlay.style.display = 'block';
+  }
+
+  async function loadCustomSubtitles(subtitlesUrl) {
+    const loadToken = ++subtitlesLoadToken;
+
+    try {
+      const res = await fetch(subtitlesUrl);
+      if (!res.ok) throw new Error('Nao foi possivel carregar a legenda');
+
+      const text = await res.text();
+      const cues = parseVtt(text);
+      if (loadToken !== subtitlesLoadToken) return;
+
+      subtitleCues = cues;
+      subtitlesEnabled = cues.length > 0;
+
+      if (subtitlesBtn && cues.length > 0) {
+        subtitlesBtn.style.display = 'inline-flex';
+        subtitlesBtn.classList.add('active');
+      }
+
+      updateCustomSubtitles();
+    } catch (err) {
+      if (loadToken !== subtitlesLoadToken) return;
+      console.error('Erro ao carregar legendas customizadas:', err);
+      resetCustomSubtitles();
+      showToast('Nao foi possivel carregar a legenda');
+    }
+  }
+
   // Global open function
   window.openVideoPlayer = async function(movie) {
     const allowed = await checkSubscriptionAndScreens();
@@ -916,6 +1034,8 @@ function initVideoPlayer() {
                           cleanUrl.endsWith('.m3u8') ||
                           url.includes('.m3u8?') ||
                           url.includes('/api/video/stream');
+
+    resetCustomSubtitles();
 
     if (!isDirectVideo || url.includes('youtube.com') || url.includes('youtu.be') || url.includes('vimeo.com') || url.includes('drive.google.com')) {
       // Configurar modo Iframe
@@ -956,24 +1076,9 @@ function initVideoPlayer() {
       // Limpar tracks de legendas anteriores
       video.querySelectorAll('track').forEach(t => t.remove());
 
-      const subtitlesBtn = $('ctrl-subtitles');
-      if (movie.subtitlesUrl) {
-        const track = document.createElement('track');
-        track.kind = 'subtitles';
-        track.label = 'Português';
-        track.srclang = 'pt';
-        track.src = movie.subtitlesUrl;
-        track.default = true;
-        video.appendChild(track);
-
-        if (subtitlesBtn) {
-          subtitlesBtn.style.display = 'inline-flex';
-          subtitlesBtn.classList.add('active');
-        }
-      } else {
-        if (subtitlesBtn) {
-          subtitlesBtn.style.display = 'none';
-        }
+      const subtitlesUrl = movie.subtitlesUrl || movie.subtitlesurl || '';
+      if (subtitlesUrl) {
+        loadCustomSubtitles(subtitlesUrl);
       }
       
       if (url.includes('.m3u8')) {
@@ -1127,6 +1232,7 @@ function initVideoPlayer() {
       window.hlsPlayer = null;
     }
 
+    resetCustomSubtitles();
     hideHint();
     
     document.removeEventListener('mousemove', resetControlsTimer);
@@ -1191,6 +1297,7 @@ function initVideoPlayer() {
 
   // Update progress bar
   video.addEventListener('timeupdate', () => {
+    updateCustomSubtitles();
     if (!video.duration) return;
     const pct = (video.currentTime / video.duration) * 100;
     progressFill.style.width = `${pct}%`;
@@ -1327,17 +1434,17 @@ function initVideoPlayer() {
 
   if (subtitlesBtn) {
     subtitlesBtn.addEventListener('click', () => {
-      const track = video.textTracks[0];
-      if (track) {
-        if (track.mode === 'showing') {
-          track.mode = 'hidden';
-          subtitlesBtn.classList.remove('active');
-          showToast('Legendas desativadas');
-        } else {
-          track.mode = 'showing';
-          subtitlesBtn.classList.add('active');
-          showToast('Legendas ativadas');
-        }
+      if (subtitleCues.length === 0) return;
+
+      subtitlesEnabled = !subtitlesEnabled;
+      if (subtitlesEnabled) {
+        subtitlesBtn.classList.add('active');
+        updateCustomSubtitles();
+        showToast('Legendas ativadas');
+      } else {
+        subtitlesBtn.classList.remove('active');
+        hideCustomSubtitles();
+        showToast('Legendas desativadas');
       }
     });
   }
@@ -1905,4 +2012,3 @@ document.addEventListener('DOMContentLoaded', () => {
   initSubscriptionEvents();
   simulateLoading();
 });
-

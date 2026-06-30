@@ -222,22 +222,17 @@ ul {
 }
 
 @media (min-width: 601px) {
-  body .nav-logo {
+  body .navbar {
     display: none;
   }
 
-  body .navbar {
-    top: 72px;
-    height: 54px;
-  }
-
   .hero-content {
-    padding-top: calc(var(--nav-height) + 72px);
+    padding-top: 72px;
   }
 
   #search-results-section,
   #catalog-section {
-    margin-top: 142px !important;
+    margin-top: 92px !important;
   }
 }
 

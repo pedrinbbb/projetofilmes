@@ -1330,7 +1330,14 @@ function initVideoPlayer() {
   }
 
   playPauseBtn.addEventListener('click', togglePlay);
-  video.addEventListener('click', togglePlay);
+  video.addEventListener('click', () => {
+    const mobilePlayer = window.matchMedia('(max-width: 768px), (pointer: coarse)').matches;
+    if (mobilePlayer) {
+      resetControlsTimer();
+      return;
+    }
+    togglePlay();
+  });
 
   // Rewind / Forward 10s
   rewindBtn.addEventListener('click', () => {

@@ -505,9 +505,12 @@
     <div class="player-container" id="player-container">
       
       <!-- HTML5 Native Video Tag (for direct MP4/WebM files) -->
-      <video class="video-element" id="video-element" crossorigin="anonymous" playsinline>
+      <video class="video-element" id="video-element" playsinline>
         Seu navegador não suporta a reprodução deste formato de vídeo.
       </video>
+
+      <!-- Custom Subtitles Display Overlay -->
+      <div class="player-subtitles-overlay" id="player-subtitles-overlay" style="display: none;"></div>
 
       <!-- Iframe wrapper (for YouTube / Vimeo) -->
       <div class="iframe-element-wrapper" id="iframe-element-wrapper">

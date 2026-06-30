@@ -14,6 +14,20 @@
 </head>
 <body>
   <header class="goat-header">
+    <nav class="settings-top-nav" aria-label="Navegacao do site">
+      <a class="active" href="/">Inicio</a>
+      <a href="/#filmes">Filmes</a>
+      <a href="/#series">Series</a>
+      <a href="/my-goat.html">Minha lista</a>
+    </nav>
+
+    <div class="settings-top-actions">
+      <form class="settings-search" id="settings-search-form" role="search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input id="settings-search-input" type="search" placeholder="Buscar filmes, series..." autocomplete="off" />
+      </form>
+    </div>
+
     <a class="goat-home" href="/" aria-label="Voltar para o inicio">
       <i class="fa-solid fa-house"></i>
     </a>

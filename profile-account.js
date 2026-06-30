@@ -544,6 +544,14 @@ if (guardSession()) {
 
   form.addEventListener('submit', saveProfile);
 
+  $('settings-search-form')?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const query = $('settings-search-input')?.value.trim();
+    if (!query) return;
+    localStorage.setItem('goatcine_pending_search', query);
+    window.location.href = '/';
+  });
+
   profileMenuTrigger.addEventListener('click', (event) => {
     event.stopPropagation();
     const open = !profileMenu.classList.contains('open');

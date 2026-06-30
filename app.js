@@ -189,6 +189,7 @@ async function initApp() {
   initHeroSlider();
   initNavbar();
   initSearch();
+  applyPendingSearch();
   initModal();
   initCategoryTabs();
   initHeroButtons();
@@ -655,6 +656,16 @@ function initSearch() {
       searchInput.blur();
     }
   });
+}
+
+function applyPendingSearch() {
+  const pendingSearch = localStorage.getItem('goatcine_pending_search');
+  const searchInput = $('search-input');
+  if (!pendingSearch || !searchInput) return;
+
+  localStorage.removeItem('goatcine_pending_search');
+  searchInput.value = pendingSearch;
+  performSearch(pendingSearch);
 }
 
 // ---- CATEGORY TABS ----

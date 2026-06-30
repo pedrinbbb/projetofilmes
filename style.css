@@ -298,6 +298,17 @@ ul {
   background: var(--gold-muted);
 }
 
+@media (min-width: 769px) {
+  .nav-actions .nav-search-container {
+    width: min(360px, 28vw);
+  }
+
+  .nav-actions .search-pill,
+  .nav-actions .search-pill:focus-within {
+    width: 100%;
+  }
+}
+
 .nav-avatar {
   width: 36px;
   height: 36px;

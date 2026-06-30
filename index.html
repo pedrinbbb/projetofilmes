@@ -70,6 +70,16 @@
 
       <!-- Right Actions -->
       <div class="nav-actions" style="position: relative; gap: 16px;">
+        <div class="nav-search-container" id="nav-search-container">
+          <div class="search-pill">
+            <svg class="search-pill-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+            <input type="text" id="search-input" class="search-pill-input" placeholder="Títulos, gente, gêneros..." autocomplete="off" />
+            <button class="search-pill-clear hidden" id="search-pill-clear" aria-label="Limpar busca">×</button>
+          </div>
+        </div>
+
         <div class="nav-avatar" id="nav-avatar" aria-label="Perfil do usuário">
           <span id="nav-avatar-letter">G</span>
         </div>

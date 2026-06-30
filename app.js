@@ -543,6 +543,26 @@ function initNavbar() {
     showSection('home');
     $('originais')?.scrollIntoView({ behavior: 'smooth' });
   });
+
+  document.querySelectorAll('.nav-category-link').forEach((button) => {
+    button.addEventListener('click', () => {
+      const target = button.dataset.target;
+
+      document.querySelectorAll('.nav-category-link').forEach((item) => item.classList.remove('active'));
+      button.classList.add('active');
+
+      if (target === 'my-goat') {
+        window.location.href = '/my-goat.html';
+        return;
+      }
+
+      showSection('home');
+      const targetElement = $(target);
+      if (targetElement) {
+        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
 }
 
 // ---- SEARCH ----

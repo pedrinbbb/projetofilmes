@@ -126,7 +126,7 @@ function renderProfile() {
   selectedAvatar = activeProfile.avatar_icon || PROFILE_IMAGE_AVATARS[0].url;
   selectedColor = activeProfile.avatar_color || '#FFD700';
 
-  topProfileName.textContent = activeProfile.name || 'Perfil';
+  if (topProfileName) topProfileName.textContent = activeProfile.name || 'Perfil';
   if (accountPillName) accountPillName.textContent = activeProfile.name || 'Perfil';
   setImage(preview, selectedAvatar, `Avatar de ${activeProfile.name || 'perfil'}`);
   setImage(topAvatar, selectedAvatar, `Avatar de ${activeProfile.name || 'perfil'}`);
@@ -591,14 +591,6 @@ if (guardSession()) {
   });
 
   form.addEventListener('submit', saveProfile);
-
-  $('settings-search-form')?.addEventListener('submit', (event) => {
-    event.preventDefault();
-    const query = $('settings-search-input')?.value.trim();
-    if (!query) return;
-    localStorage.setItem('goatcine_pending_search', query);
-    window.location.href = '/';
-  });
 
   profileMenuTrigger.addEventListener('click', (event) => {
     event.stopPropagation();

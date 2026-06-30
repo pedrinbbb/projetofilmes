@@ -1015,6 +1015,15 @@ function initVideoPlayer() {
     subtitlesOverlay.style.display = 'none';
   }
 
+  function syncSubtitlesButton() {
+    if (!subtitlesBtn) return;
+
+    subtitlesBtn.classList.toggle('active', subtitlesEnabled);
+    subtitlesBtn.setAttribute('aria-pressed', subtitlesEnabled ? 'true' : 'false');
+    subtitlesBtn.setAttribute('aria-label', subtitlesEnabled ? 'Legendas ativadas' : 'Legendas desativadas');
+    subtitlesBtn.title = subtitlesEnabled ? 'Legendas ativadas' : 'Legendas desativadas';
+  }
+
   function resetCustomSubtitles() {
     subtitlesLoadToken += 1;
     subtitleCues = [];
@@ -1023,7 +1032,7 @@ function initVideoPlayer() {
 
     if (subtitlesBtn) {
       subtitlesBtn.style.display = 'none';
-      subtitlesBtn.classList.remove('active');
+      syncSubtitlesButton();
     }
   }
 
@@ -1061,7 +1070,7 @@ function initVideoPlayer() {
 
       if (subtitlesBtn && cues.length > 0) {
         subtitlesBtn.style.display = 'inline-flex';
-        subtitlesBtn.classList.add('active');
+        syncSubtitlesButton();
       }
 
       updateCustomSubtitles();
@@ -1506,12 +1515,11 @@ function initVideoPlayer() {
       if (subtitleCues.length === 0) return;
 
       subtitlesEnabled = !subtitlesEnabled;
+      syncSubtitlesButton();
       if (subtitlesEnabled) {
-        subtitlesBtn.classList.add('active');
         updateCustomSubtitles();
         showToast('Legendas ativadas');
       } else {
-        subtitlesBtn.classList.remove('active');
         hideCustomSubtitles();
         showToast('Legendas desativadas');
       }

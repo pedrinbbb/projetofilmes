@@ -492,7 +492,6 @@ ul {
   position: relative;
   z-index: 2;
   padding: 0 64px;
-  padding-top: var(--nav-height);
   max-width: 680px;
   width: 100%;
 }

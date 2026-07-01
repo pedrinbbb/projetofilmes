@@ -1263,7 +1263,12 @@ function generateOTP() {
 app.set('trust proxy', 1);
 
 app.use(cors({ origin: true, credentials: true }));
-app.use(express.json({ limit: '15mb' })); // Aumentar limite para aceitar imagens em base64
+app.use(express.json({ 
+  limit: '15mb',
+  verify: (req, res, buf) => {
+    req.rawBody = buf;
+  }
+})); // Aumentar limite para aceitar imagens em base64
 app.use(express.urlencoded({ extended: false, limit: '15mb' }));
 
 // Criar pasta de uploads no diretório persistente se disponível, ou no local
@@ -2616,6 +2621,60 @@ app.post('/api/user/subscribe', requireAuth, async (req, res) => {
     const plan = dbGet('SELECT * FROM plans WHERE id = ?', [planId]);
     if (!plan) return res.status(404).json({ error: 'Plano não encontrado' });
 
+    const goatPayActive = !!process.env.GOATPAY_API_KEY;
+
+    if (goatPayActive) {
+      console.log(`[GOATPAY] 💳 Iniciando cobrança real via GoatPay para o usuário ${req.user.id}...`);
+      try {
+        const body = {
+          amount: parseFloat(plan.price),
+          description: `Assinatura GOATCINE - Plano ${plan.name}`,
+          externalReference: `${req.user.id}_${planId}`
+        };
+
+        const response = await fetch('https://api.goatpay.com.br/v1/payment-pix/create', {
+          method: 'POST',
+          headers: {
+            'X-API-Key': process.env.GOATPAY_API_KEY,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(body)
+        });
+
+        if (!response.ok) {
+          const errText = await response.text();
+          throw new Error(`Erro ao criar PIX na GoatPay: ${errText}`);
+        }
+
+        const resData = await response.json();
+        if (!resData.success || !resData.data) {
+          throw new Error(resData.message || 'Erro na resposta da GoatPay');
+        }
+
+        const txid = resData.data.id;
+        const qrcodeImage = resData.data.qrCodeBase64;
+        const qrcodeText = resData.data.copyPaste;
+
+        // Salvar txid pendente no usuário
+        dbRun('UPDATE users SET pending_txid = ?, pending_plan_id = ? WHERE id = ?', [txid, planId, req.user.id]);
+        
+        // Registrar log inicial pendente
+        dbRun(
+          "INSERT OR REPLACE INTO payment_logs (user_id, plan_id, txid, amount, status) VALUES (?, ?, ?, ?, 'pending')",
+          [req.user.id, planId, txid, plan.price]
+        );
+
+        return res.json({
+          realPix: true,
+          txid,
+          qrcodeImage,
+          qrcodeText
+        });
+      } catch (goatErr) {
+        console.error('[GOATPAY CRITICAL ERROR] Falha ao usar GoatPay. Revertendo para outros meios.', goatErr.message);
+      }
+    }
+
     const efiActive = !!(process.env.EFI_CLIENT_ID && process.env.EFI_CLIENT_SECRET && process.env.EFI_KEY && process.env.EFI_CERTIFICATE_PATH);
 
     if (efiActive) {
@@ -2716,6 +2775,88 @@ app.post('/api/user/subscribe', requireAuth, async (req, res) => {
   } catch (err) {
     console.error('[SUBSCRIBE ERROR]', err);
     return res.status(500).json({ error: 'Erro ao iniciar fluxo de assinatura' });
+  }
+});
+
+// Webhook da GoatPay (Confirmação de pagamento via PIX)
+app.post('/api/webhook/goatpay', (req, res) => {
+  const signatureHeader = req.headers['x-goatpay-signature'];
+  const webhookSecret = process.env.GOATPAY_WEBHOOK_SECRET;
+
+  // Se o segredo está configurado, validar a assinatura HMAC
+  if (webhookSecret) {
+    if (!signatureHeader || !signatureHeader.startsWith('sha256=')) {
+      console.warn('[GOATPAY WEBHOOK] ⚠️ Assinatura ausente ou formato inválido');
+      return res.status(401).send('Invalid signature format');
+    }
+
+    const crypto = require('crypto');
+    const received = signatureHeader.slice('sha256='.length);
+    const expected = crypto
+      .createHmac('sha256', webhookSecret)
+      .update(req.rawBody || '')
+      .digest('hex');
+
+    const a = Buffer.from(expected, 'hex');
+    const b = Buffer.from(received, 'hex');
+    
+    const isValid = a.length === b.length && crypto.timingSafeEqual(a, b);
+    if (!isValid) {
+      console.warn('[GOATPAY WEBHOOK] ❌ Assinatura inválida');
+      return res.status(401).send('Invalid signature');
+    }
+  } else {
+    console.warn('[GOATPAY WEBHOOK] ⚠️ Executando sem GOATPAY_WEBHOOK_SECRET configurado. Assinatura não validada.');
+  }
+
+  try {
+    const { id, event, data } = req.body;
+    if (event === 'payment.paid' && data && data.status === 'COMPLETED') {
+      const txid = data.id;
+      const extRef = data.externalReference; // "userId_planId"
+      
+      if (!extRef) {
+        console.warn(`[GOATPAY WEBHOOK] externalReference ausente para transação ${txid}`);
+        return res.status(200).send('Missing externalReference');
+      }
+
+      const parts = extRef.split('_');
+      const userId = parseInt(parts[0], 10);
+      const planId = parseInt(parts[1], 10);
+
+      if (isNaN(userId) || isNaN(planId)) {
+        console.warn(`[GOATPAY WEBHOOK] Formato inválido de externalReference: ${extRef}`);
+        return res.status(200).send('Invalid externalReference format');
+      }
+
+      // Buscar se há usuário correspondente
+      const user = dbGet('SELECT id FROM users WHERE id = ?', [userId]);
+      if (user) {
+        const nowStr = new Date().toISOString();
+        const targetPlan = dbGet('SELECT duration_days FROM plans WHERE id = ?', [planId]);
+        const days = targetPlan ? targetPlan.duration_days : 30;
+        const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+        
+        dbRun(
+          'UPDATE users SET sub_active = 1, sub_plan_id = ?, sub_activated_at = ?, sub_expires_at = ?, pending_txid = NULL, pending_plan_id = NULL WHERE id = ?',
+          [planId, nowStr, expiresAt, userId]
+        );
+
+        // Atualizar ou inserir o log de pagamento
+        dbRun(
+          "INSERT OR REPLACE INTO payment_logs (user_id, plan_id, txid, amount, status, created_at, paid_at) VALUES (?, ?, ?, ?, 'paid', ?, ?)",
+          [userId, planId, txid, data.amount, nowStr, nowStr]
+        );
+        console.log(`[GOATPAY WEBHOOK] 💳 Pagamento CONFIRMADO! Usuário ID ${userId} ativado no plano ${planId}.`);
+      } else {
+        console.warn(`[GOATPAY WEBHOOK] Usuário ID ${userId} não encontrado no banco.`);
+      }
+    }
+    
+    return res.status(200).send('OK');
+  } catch (err) {
+    console.error('[GOATPAY WEBHOOK ERROR]', err);
+    return res.status(500).send('Internal Error');
   }
 });
 

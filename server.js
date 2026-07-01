@@ -779,6 +779,129 @@ async function runMigrationsAndSeeds() {
     console.log(`  ✅ ${defaultMovies.length} filmes semeados com sucesso!`);
   }
 
+  // --- SEED SEASONS FOR ORIGEM AUTOMATICALLY ---
+  try {
+    const movie = await dbGetAsync("SELECT id FROM movies WHERE title = ?", ["Origem"]);
+    let movieId;
+    if (movie) {
+      movieId = movie.id;
+      // Garantir que a duração da série seja atualizada no banco
+      await dbRunAsync("UPDATE movies SET duration = '3 Temporadas' WHERE id = ?", [movieId]);
+    } else {
+      movieId = await dbRunAsync(`
+        INSERT INTO movies (title, year, duration, rating, genre, "desc", poster, backdrop, director, "cast", category, type, videoUrl, subtitlesUrl)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        "Origem",
+        2022,
+        "3 Temporadas",
+        7.8,
+        "Terror / Drama / Mistério",
+        "A trama acompanha os habitantes de uma cidade misteriosa e aterrorizante em algum lugar dos Estados Unidos, da qual ninguém consegue sair. Ao cair da noite, eles precisam se esconder de criaturas monstruosas que emergem da floresta para caçá-los.",
+        "https://image.tmdb.org/t/p/w500/a9b8S2QhQ60w4KkK24k30H9qD3g.jpg",
+        "https://image.tmdb.org/t/p/w1280/v64U1YV4t8s8pQo4K5x1jJp0f.jpg",
+        "John Griffin",
+        "Harold Perrineau, Catalina Sandino Moreno, Eion Bailey",
+        "series",
+        "series",
+        "",
+        ""
+      ]);
+      if (!movieId && !IS_POSTGRES) {
+        const row = await dbGetAsync("SELECT id FROM movies WHERE title = ?", ["Origem"]);
+        movieId = row?.id;
+      }
+    }
+
+    if (movieId) {
+      const season3Episodes = [
+        {
+          number: 1,
+          title: "Estilhaçar",
+          duration: "50 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FO%2Forigem%2F03-temporada%2F01%2Fstream.m3u8&slug=origem&temporada=3&numero_episodio=1&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Boyd sente a cidade escapar do seu controle à medida que o tempo esfria e os moradores se tornam mais desesperados. Tabitha encontra-se no mundo real e busca ajuda."
+        },
+        {
+          number: 2,
+          title: "Quando Nós Vamos",
+          duration: "57 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FO%2Forigem%2F03-temporada%2F02%2Fstream.m3u8&slug=origem&temporada=3&numero_episodio=2&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Boyd luta para encontrar um caminho a seguir enquanto a cidade se despede de um de seus membros. A saúde de Fátima piora, e Tabitha recebe ajuda de um aliado inesperado."
+        },
+        {
+          number: 3,
+          title: "Armadilha para Ratos",
+          duration: "45 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FO%2Forigem%2F03-temporada%2F03%2Fstream.m3u8&slug=origem&temporada=3&numero_episodio=3&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Kenny lidera um grupo na floresta em busca de comida. Donna e Ellis tentam dissuadir Boyd de um plano perigoso, enquanto Tabitha faz uma descoberta impressionante e Fátima questiona o bem-estar de seu bebê."
+        },
+        {
+          number: 4,
+          title: "De Volta e de Novo",
+          duration: "44 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FO%2Forigem%2F03-temporada%2F04%2Fstream.m3u8&slug=origem&temporada=3&numero_episodio=4&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Boyd é forçado a tomar decisões difíceis quando recém-chegados chegam à cidade ao anoitecer. Victor tenta desenterrar memórias do passado em busca de respostas."
+        },
+        {
+          number: 5,
+          title: "A Luz do Dia",
+          duration: "51 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FO%2Forigem%2F03-temporada%2F05%2Fstream.m3u8&slug=origem&temporada=3&numero_episodio=5&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Victor enfrenta uma lembrança dolorosa de seu passado. Julie busca formas de lidar com seu trauma, Boyd luta para manter a segurança enquanto o julgamento dele é questionado, e Tabitha se ajusta ao novo ambiente."
+        },
+        {
+          number: 6,
+          title: "Tecido Cicatricial",
+          duration: "53 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FO%2Forigem%2F03-temporada%2F06%2Fstream.m3u8&slug=origem&temporada=3&numero_episodio=6&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Fátima e Ellis tomam uma decisão importante sobre a gravidez. As tensões na casa dos Matthews aumentam, e Randall abre-se com Marielle sobre seus medos."
+        },
+        {
+          number: 7,
+          title: "Essas Vidas Frágeis",
+          duration: "47 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FO%2Forigem%2F03-temporada%2F07%2Fstream.m3u8&slug=origem&temporada=3&numero_episodio=7&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "As preocupações com a gravidez de Fátima se aprofundam. Jade segue pistas na floresta, enquanto Julie e Randall buscam um pouco de normalidade."
+        },
+        {
+          number: 8,
+          title: "Limiares",
+          duration: "48 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FO%2Forigem%2F03-temporada%2F08%2Fstream.m3u8&slug=origem&temporada=3&numero_episodio=8&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Após uma tragédia, verdades vêm à tona e acusações surgem. Victor luta para recuperar memórias enterradas, enquanto Julie e Ethan buscam respostas nas ruínas da floresta."
+        },
+        {
+          number: 9,
+          title: "Revelações: Capítulo Um",
+          duration: "55 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FO%2Forigem%2F03-temporada%2F09%2Fstream.m3u8&slug=origem&temporada=3&numero_episodio=9&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "As tensões atingem o ponto mais alto quando os moradores descobrem que um deles desapareceu."
+        },
+        {
+          number: 10,
+          title: "Revelações: Capítulo Dois",
+          duration: "73 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FO%2Forigem%2F03-temporada%2F10%2Fstream.m3u8&slug=origem&temporada=3&numero_episodio=10&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "No final da temporada, Boyd é levado ao limite enquanto o tempo se esgota para alguém que ele ama. A jornada de Tabitha toma um rumo chocante, revelando que a cidade faz parte de um ciclo que exige sacrifícios."
+        }
+      ];
+
+      for (const ep of season3Episodes) {
+        const existing = await dbGetAsync("SELECT id FROM episodes WHERE movie_id = ? AND season = 3 AND number = ?", [movieId, ep.number]);
+        if (!existing) {
+          await dbRunAsync(`
+            INSERT INTO episodes (movie_id, season, number, title, duration, videoUrl, desc, subtitlesUrl)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          `, [movieId, 3, ep.number, ep.title, ep.duration, ep.videoUrl, ep.desc, ""]);
+        }
+      }
+      console.log("[DB SEED] ✅ Temporada 3 de Origem semeada com sucesso.");
+    }
+  } catch (err) {
+    console.error("[DB SEED ERROR] Erro ao semear Temporada 3 de Origem:", err);
+  }
+
   console.log('  ✅ Banco de dados pronto e iniciado');
 }
 

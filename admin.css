@@ -896,3 +896,10 @@ body {
 .input-with-button button {
   white-space: nowrap;
 }
+
+.form-group.drag-active {
+  outline: 2px dashed var(--color-gold-bright);
+  outline-offset: 4px;
+  background: rgba(212, 175, 55, 0.05) !important;
+  border-radius: 8px;
+}

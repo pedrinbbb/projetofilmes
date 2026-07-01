@@ -1755,6 +1755,9 @@ function setupSubtitleUpload(btnId, fileInputId, urlInputId) {
 
   if (!btn || !fileInput || !urlInput) return;
 
+  const container = urlInput.closest('.form-group');
+  if (!container) return;
+
   // Trigger file selection when clicking the button
   btn.addEventListener('click', () => fileInput.click());
 
@@ -1764,22 +1767,19 @@ function setupSubtitleUpload(btnId, fileInputId, urlInputId) {
     if (file) handleSubtitleFileUpload(file, urlInput, btn);
   });
 
-  // Drag and drop events on the text input field
-  urlInput.addEventListener('dragover', (e) => {
+  // Drag and drop events on the entire form-group container
+  container.addEventListener('dragover', (e) => {
     e.preventDefault();
-    urlInput.style.borderColor = 'var(--color-gold-bright)';
-    urlInput.style.background = 'rgba(255, 215, 0, 0.08)';
+    container.classList.add('drag-active');
   });
 
-  urlInput.addEventListener('dragleave', () => {
-    urlInput.style.borderColor = '';
-    urlInput.style.background = '';
+  container.addEventListener('dragleave', () => {
+    container.classList.remove('drag-active');
   });
 
-  urlInput.addEventListener('drop', (e) => {
+  container.addEventListener('drop', (e) => {
     e.preventDefault();
-    urlInput.style.borderColor = '';
-    urlInput.style.background = '';
+    container.classList.remove('drag-active');
 
     const file = e.dataTransfer.files[0];
     if (file) {

@@ -2131,7 +2131,7 @@ app.post('/api/admin/subtitles/upload', requireAdminAuth, (req, res) => {
     }
 
     // Limpar o prefixo data:...;base64, se existir
-    const base64Data = fileData.replace(/^data:[\w/.-]+;base64,/, "");
+    const base64Data = fileData.replace(/^data:[^;]*;base64,/, "");
     const buffer = Buffer.from(base64Data, 'base64');
 
     // Sanitizar nome do arquivo para evitar Path Traversal

@@ -17,6 +17,7 @@ const { Pool }  = require('pg');
 const initSqlJs  = require('sql.js');
 const crypto     = require('crypto');
 const https      = require('https');
+const zlib       = require('zlib');
 
 const app        = express();
 const PORT       = process.env.PORT || 3000;
@@ -1308,7 +1309,92 @@ if (!fs.existsSync(subtitlesDir)) {
   fs.mkdirSync(subtitlesDir);
 }
 
+const publicRoot = path.resolve(__dirname);
+const staticRouteFiles = {
+  '/': 'index.html',
+  '/login': 'login.html',
+  '/login.html': 'login.html',
+  '/index.html': 'index.html',
+  '/profiles.html': 'profiles.html',
+  '/gerenciar-perfis': 'profiles.html',
+  '/auth-callback': 'auth-callback.html',
+  '/auth-callback.html': 'auth-callback.html',
+  '/conta': 'account-profile.html',
+  '/assinatura': 'account-profile.html',
+  '/cobranca': 'account-profile.html',
+  '/dispositivos': 'account-profile.html'
+};
+
+const staticContentTypes = {
+  '.html': 'text/html; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.js': 'application/javascript; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.svg': 'image/svg+xml; charset=utf-8',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
+  '.ico': 'image/x-icon',
+  '.vtt': 'text/vtt; charset=utf-8',
+  '.srt': 'text/plain; charset=utf-8'
+};
+
+const blockedStaticFiles = new Set([
+  'server.js',
+  'goatcine.db',
+  'package.json',
+  'package-lock.json',
+  '.env'
+]);
+
+function resolvePublicFile(reqPath) {
+  const cleanPath = decodeURIComponent(reqPath.split('?')[0]);
+  const routeFile = staticRouteFiles[cleanPath];
+  const relativePath = routeFile || cleanPath.replace(/^\/+/, '');
+  if (!relativePath || blockedStaticFiles.has(relativePath)) return null;
+
+  const ext = path.extname(relativePath).toLowerCase();
+  if (!staticContentTypes[ext]) return null;
+
+  const absolutePath = path.resolve(publicRoot, relativePath);
+  if (!absolutePath.startsWith(publicRoot + path.sep) && absolutePath !== publicRoot) return null;
+  if (!fs.existsSync(absolutePath) || !fs.statSync(absolutePath).isFile()) return null;
+  return absolutePath;
+}
+
+function sendOptimizedStatic(req, res, next) {
+  if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+  if (req.path.startsWith('/api/') || req.path.startsWith('/uploads/')) return next();
+  const requestedFile = decodeURIComponent(req.path.split('?')[0]).replace(/^\/+/, '');
+  if (blockedStaticFiles.has(requestedFile)) return res.sendStatus(404);
+
+  const filePath = resolvePublicFile(req.path);
+  if (!filePath) return next();
+
+  try {
+    const ext = path.extname(filePath).toLowerCase();
+    const contentType = staticContentTypes[ext] || 'application/octet-stream';
+    const body = fs.readFileSync(filePath);
+    const acceptsGzip = /\bgzip\b/i.test(req.headers['accept-encoding'] || '');
+    const shouldCompress = acceptsGzip && ['.html', '.css', '.js', '.json', '.svg', '.vtt', '.srt'].includes(ext);
+    const output = shouldCompress ? zlib.gzipSync(body, { level: 6 }) : body;
+
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Cache-Control', ext === '.html' ? 'no-cache' : 'public, max-age=3600');
+    res.setHeader('Content-Length', output.length);
+    res.setHeader('Vary', 'Accept-Encoding');
+    if (shouldCompress) res.setHeader('Content-Encoding', 'gzip');
+    if (req.method === 'HEAD') return res.end();
+    return res.end(output);
+  } catch (err) {
+    console.error('[STATIC OPTIMIZED ERROR]', err);
+    return next();
+  }
+}
+
 // Servir a pasta raiz do projeto e a pasta de uploads persistente
+app.use(sendOptimizedStatic);
 app.use('/legendas', express.static(subtitlesDir, {
   setHeaders(res, filePath) {
     const ext = path.extname(filePath).toLowerCase();

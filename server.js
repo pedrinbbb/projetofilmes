@@ -1298,6 +1298,11 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir);
 }
 
+const avatarsDir = path.join(uploadsDir, 'avatars');
+if (!fs.existsSync(avatarsDir)) {
+  fs.mkdirSync(avatarsDir, { recursive: true });
+}
+
 const subtitlesDir = path.join(__dirname, 'legendas');
 if (!fs.existsSync(subtitlesDir)) {
   fs.mkdirSync(subtitlesDir);
@@ -2039,6 +2044,43 @@ app.put('/api/profiles/:id', requireAuth, (req, res) => {
   }
 });
 
+app.post('/api/profiles/:id/avatar', requireAuth, (req, res) => {
+  try {
+    const profileId = parseInt(req.params.id, 10);
+    const profile = dbGet('SELECT * FROM profiles WHERE id = ? AND user_id = ?', [profileId, req.user.id]);
+    if (!profile) {
+      return res.status(404).json({ error: 'Perfil nao encontrado.' });
+    }
+
+    const imageData = String(req.body.imageData || '');
+    const match = imageData.match(/^data:image\/(png|jpeg|jpg|webp);base64,([A-Za-z0-9+/=]+)$/);
+    if (!match) {
+      return res.status(400).json({ error: 'Imagem invalida.' });
+    }
+
+    const ext = match[1] === 'jpeg' ? 'jpg' : match[1];
+    const buffer = Buffer.from(match[2], 'base64');
+    if (!buffer.length || buffer.length > 2 * 1024 * 1024) {
+      return res.status(400).json({ error: 'Imagem deve ter no maximo 2MB.' });
+    }
+
+    const fileName = `profile-${req.user.id}-${profileId}-${Date.now()}.${ext}`;
+    fs.writeFileSync(path.join(avatarsDir, fileName), buffer);
+
+    const avatarUrl = `/uploads/avatars/${fileName}`;
+    dbRun(
+      'UPDATE profiles SET avatar_icon = ? WHERE id = ? AND user_id = ?',
+      [avatarUrl, profileId, req.user.id]
+    );
+
+    const updatedProfile = dbGet('SELECT * FROM profiles WHERE id = ? AND user_id = ?', [profileId, req.user.id]);
+    return res.json({ profile: sanitizeProfile(updatedProfile), avatarUrl });
+  } catch (err) {
+    console.error('[PROFILE AVATAR UPLOAD ERROR]', err);
+    return res.status(500).json({ error: 'Erro ao salvar avatar.' });
+  }
+});
+
 app.post('/api/profiles/:id/verify-pin', requireAuth, (req, res) => {
   try {
     const profileId = parseInt(req.params.id, 10);
@@ -2557,6 +2599,19 @@ app.delete('/api/user/devices/:id', requireAuth, (req, res) => {
   } catch (err) {
     console.error('[USER DEVICE DELETE ERROR]', err);
     return res.status(500).json({ error: 'Erro ao desconectar dispositivo.' });
+  }
+});
+
+app.delete('/api/user/account', requireAuth, (req, res) => {
+  try {
+    dbRun('DELETE FROM sessions WHERE user_id = ?', [req.user.id]);
+    dbRun('DELETE FROM profiles WHERE user_id = ?', [req.user.id]);
+    dbRun('DELETE FROM users WHERE id = ?', [req.user.id]);
+    activeUsers.delete(String(req.user.id));
+    return res.json({ success: true, message: 'Conta excluida com sucesso.' });
+  } catch (err) {
+    console.error('[USER DELETE ACCOUNT ERROR]', err);
+    return res.status(500).json({ error: 'Erro ao excluir conta.' });
   }
 });
 

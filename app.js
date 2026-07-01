@@ -20,6 +20,7 @@
 
 // Top 10, Hero Slides e Categoria de Filmes carregadas dinamicamente da API
 let MOVIES = { trending: [], new: [], action: [], series: [] };
+let ALL_CATALOG = [];
 let TOP10_MOVIES = [];
 let TOP10_SERIES = [];
 let HERO_SLIDES = [];
@@ -120,6 +121,7 @@ function markEpisodeAsWatched(episodeId) {
 }
 
 const WATCH_PROGRESS_PREFIX = 'goatcine_watch_progress_';
+const WATCH_HISTORY_PREFIX = 'goatcine_watch_history_';
 let continueWatchingRenderTimer = null;
 
 function getWatchProgressKey() {
@@ -137,6 +139,49 @@ function readWatchProgress() {
 
 function writeWatchProgress(progress) {
   localStorage.setItem(getWatchProgressKey(), JSON.stringify(progress));
+}
+
+function getWatchHistoryKey() {
+  return `${WATCH_HISTORY_PREFIX}${getActiveProfileId()}`;
+}
+
+function readWatchHistory() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(getWatchHistoryKey()) || '[]');
+    return Array.isArray(saved) ? saved : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeWatchHistory(history) {
+  localStorage.setItem(getWatchHistoryKey(), JSON.stringify(history.slice(0, 80)));
+}
+
+function recordWatchHistory(item, currentTime = 0, durationSeconds = 0, completed = false) {
+  const progressId = getProgressId(item);
+  if (!progressId || !item?.title) return;
+
+  const history = readWatchHistory().filter(entry => entry.progressId !== progressId);
+  history.unshift({
+    progressId,
+    id: item.seriesId || item.movieId || item.id,
+    episodeId: item.episodeId || null,
+    type: item.episodeId ? 'episode' : (item.type === 'series' ? 'series' : 'movie'),
+    title: item.seriesTitle || item.title,
+    playbackTitle: item.title,
+    poster: item.parentPoster || item.poster || '',
+    backdrop: item.parentBackdrop || item.backdrop || '',
+    genre: item.genre || '',
+    year: item.year || '',
+    rating: item.rating || '',
+    duration: item.duration || '',
+    currentTime: Number(currentTime) || 0,
+    durationSeconds: Number(durationSeconds) || 0,
+    completed: Boolean(completed),
+    watchedAt: Date.now()
+  });
+  writeWatchHistory(history);
 }
 
 function getProgressId(item) {
@@ -162,6 +207,8 @@ function saveWatchProgress(item, currentTime, durationSeconds) {
   const progress = readWatchProgress();
   const isAlmostFinished = watchedSeconds >= totalSeconds - 20 || watchedSeconds / totalSeconds >= 0.95;
   const isEpisode = Boolean(item.episodeId);
+
+  recordWatchHistory(item, watchedSeconds, totalSeconds, isAlmostFinished);
 
   if (isAlmostFinished) {
     if (isEpisode && item.episodeId) {
@@ -230,6 +277,8 @@ function clearWatchProgress(item) {
 
 function markPlaybackCompleted(item) {
   if (!item) return;
+
+  recordWatchHistory(item, item.durationSeconds || 0, item.durationSeconds || 0, true);
 
   if (item.episodeId) {
     markEpisodeAsWatched(item.episodeId);
@@ -329,10 +378,258 @@ function renderContinueWatching() {
   entries.forEach(entry => carousel.appendChild(createContinueWatchingCard(entry)));
 }
 
+function uniqueById(items) {
+  return Array.from(new Map((items || []).filter(Boolean).map(item => [String(item.id), item])).values());
+}
+
+function getAllCatalog() {
+  return uniqueById(ALL_CATALOG.length
+    ? ALL_CATALOG
+    : [...MOVIES.trending, ...MOVIES.new, ...MOVIES.action, ...MOVIES.series]);
+}
+
+function getPrimaryGenre(movie) {
+  return String(movie?.genre || '').split('/')[0].trim();
+}
+
+function getFavoriteGenreFromHistory() {
+  const counts = new Map();
+  readWatchHistory().forEach((entry) => {
+    String(entry.genre || '').split('/').map(g => g.trim()).filter(Boolean).forEach((genre) => {
+      counts.set(genre, (counts.get(genre) || 0) + 1);
+    });
+  });
+  return Array.from(counts.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] || '';
+}
+
+function getMyListItems() {
+  loadMyList();
+  const all = getAllCatalog();
+  return all.filter(item => myList.has(String(item.id)));
+}
+
+function takeLoop(items, count = 12) {
+  const source = uniqueById(items);
+  if (source.length <= count) return source;
+  return source.slice(0, count);
+}
+
+function buildGenreCollection(all) {
+  const byGenre = new Map();
+  all.forEach((movie) => {
+    String(movie.genre || '').split('/').map(g => g.trim()).filter(Boolean).forEach((genre) => {
+      if (!byGenre.has(genre)) byGenre.set(genre, []);
+      byGenre.get(genre).push(movie);
+    });
+  });
+
+  return Array.from(byGenre.entries())
+    .sort((a, b) => b[1].length - a[1].length)
+    .slice(0, 12)
+    .map(([genre, movies]) => ({
+      ...movies.sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0))[0],
+      homeBadge: genre
+    }));
+}
+
+function buildPremiumCollections() {
+  const all = getAllCatalog();
+  const movies = all.filter(item => item.type !== 'series');
+  const series = all.filter(item => item.type === 'series');
+  const byRating = [...all].sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0));
+  const byYear = [...movies].sort((a, b) => Number(b.year || 0) - Number(a.year || 0));
+  const newest = MOVIES.new.length ? MOVIES.new : byYear;
+  const favoriteGenre = getFavoriteGenreFromHistory();
+  const history = readWatchHistory();
+  const lastWatched = history[0];
+  const becauseSource = favoriteGenre
+    ? all.filter(item => String(item.genre || '').includes(favoriteGenre))
+    : byRating;
+  const recommended = uniqueById([
+    ...getMyListItems(),
+    ...becauseSource,
+    ...byRating
+  ]);
+
+  return [
+    {
+      id: 'recommended-row',
+      title: '⭐ Recomendados para Você',
+      items: takeLoop(recommended, 16)
+    },
+    {
+      id: 'filmes',
+      title: '🔥 Em Alta Hoje',
+      items: takeLoop(MOVIES.trending.length ? MOVIES.trending : byRating, 16)
+    },
+    {
+      id: 'top10-brasil',
+      title: '🇧🇷 Top 10 Brasil',
+      items: takeLoop((TOP10_MOVIES.length ? TOP10_MOVIES : byRating).map((movie, index) => ({
+        ...movie,
+        homeRank: index + 1
+      })), 10)
+    },
+    {
+      id: 'lancamentos',
+      title: '🎬 Lançamentos',
+      items: takeLoop(byYear, 16)
+    },
+    {
+      id: 'novidades',
+      title: '🆕 Adicionados Recentemente',
+      items: takeLoop(newest, 16)
+    },
+    {
+      id: 'because-row',
+      title: lastWatched?.title ? `❤️ Porque você assistiu ${lastWatched.title}` : '❤️ Porque você assistiu...',
+      items: takeLoop(becauseSource, 16)
+    },
+    {
+      id: 'genre-row',
+      title: '🎭 Por gênero',
+      items: buildGenreCollection(all)
+    },
+    {
+      id: 'popular-row',
+      title: '👑 Mais Populares',
+      items: takeLoop(byRating, 16)
+    },
+    {
+      id: 'series',
+      title: '📺 Séries em destaque',
+      items: takeLoop(series.length ? series : byRating, 16)
+    },
+    {
+      id: 'weekly-trends',
+      title: '📈 Tendências da Semana',
+      items: takeLoop(uniqueById([...MOVIES.action, ...MOVIES.trending, ...newest, ...byRating]), 16)
+    }
+  ].filter(row => row.items.length > 0);
+}
+
+function removeLegacyHomeRows() {
+  ['filmes', 'novidades', 'series', 'top10-movies', 'top10-series'].forEach((id) => {
+    const element = $(id);
+    if (element && !element.closest('#premium-rows')) element.remove();
+  });
+
+  const actionSection = $('carousel-action')?.closest('.row-section');
+  if (actionSection) actionSection.remove();
+}
+
+function renderHomeSkeletons() {
+  const premiumRows = $('premium-rows');
+  if (!premiumRows) return;
+
+  premiumRows.innerHTML = ['Recomendados para Você', 'Em Alta Hoje', 'Top 10 Brasil'].map((title, rowIndex) => `
+    <section class="row-section premium-row" aria-label="${title}">
+      <div class="row-header">
+        <h2 class="row-title">${title}</h2>
+      </div>
+      <div class="carousel-wrapper">
+        <div class="carousel premium-carousel" role="list" aria-busy="true">
+          ${Array.from({ length: 8 }).map((_, index) => `
+            <div class="movie-card skeleton-card" role="listitem" style="animation-delay:${(rowIndex + index) * 35}ms">
+              <span></span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </section>
+  `).join('');
+}
+
+function createPremiumRow(row) {
+  const section = document.createElement('section');
+  section.className = 'row-section premium-row';
+  section.id = row.id;
+  section.setAttribute('aria-label', row.title.replace(/[^\p{L}\p{N}\s]/gu, '').trim() || row.title);
+
+  const leftId = `${row.id}-left`;
+  const rightId = `${row.id}-right`;
+  const carouselId = `${row.id}-carousel`;
+
+  section.innerHTML = `
+    <div class="row-header">
+      <h2 class="row-title">${escapeHtml(row.title)}</h2>
+      <button class="row-see-all premium-see-all" type="button">Ver Todos</button>
+    </div>
+    <div class="carousel-wrapper">
+      <button class="carousel-arrow left" id="${leftId}" type="button" aria-label="Anterior">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="15,18 9,12 15,6"/>
+        </svg>
+      </button>
+      <div class="carousel premium-carousel" id="${carouselId}" role="list" tabindex="0"></div>
+      <button class="carousel-arrow right" id="${rightId}" type="button" aria-label="Próximo">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="9,18 15,12 9,6"/>
+        </svg>
+      </button>
+    </div>
+  `;
+
+  const carousel = section.querySelector('.premium-carousel');
+  row.items.forEach(item => carousel.appendChild(createMovieCard(item)));
+
+  const scrollCarousel = (direction) => {
+    const amount = Math.max(320, Math.floor(carousel.clientWidth * 0.82));
+    carousel.scrollBy({ left: amount * direction, behavior: 'smooth' });
+  };
+
+  section.querySelector(`#${leftId}`).addEventListener('click', () => scrollCarousel(-1));
+  section.querySelector(`#${rightId}`).addEventListener('click', () => scrollCarousel(1));
+  carousel.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      scrollCarousel(-1);
+    }
+    if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      scrollCarousel(1);
+    }
+  });
+
+  section.querySelector('.premium-see-all').addEventListener('click', () => {
+    const grid = $('catalog-grid');
+    const catalogSection = $('catalog-section');
+    const standardContent = $('standard-content');
+    const heroSection = $('hero');
+    const title = $('catalog-title');
+    if (!grid || !catalogSection || !standardContent || !title) return;
+
+    activeView = 'home';
+    standardContent.classList.add('hidden');
+    if (heroSection) heroSection.style.display = 'none';
+    catalogSection.classList.remove('hidden');
+    title.textContent = row.title;
+    const filter = $('catalog-genre-filter');
+    if (filter) filter.innerHTML = '<option value="all">Todos os títulos</option>';
+    grid.innerHTML = '';
+    row.items.forEach(item => grid.appendChild(createMovieCard(item)));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  return section;
+}
+
+function renderPremiumHomeRows() {
+  removeLegacyHomeRows();
+  const premiumRows = $('premium-rows');
+  if (!premiumRows) return;
+
+  const collections = buildPremiumCollections();
+  premiumRows.innerHTML = '';
+  collections.forEach(row => premiumRows.appendChild(createPremiumRow(row)));
+}
+
 // ---- INIT ----
 async function initApp() {
   createParticles();
   loadMyList();
+  removeLegacyHomeRows();
+  renderHomeSkeletons();
 
   try {
     const res = await fetch('/api/movies');
@@ -346,6 +643,7 @@ async function initApp() {
 
     const movieList = list.filter(m => m.type !== 'series');
     const seriesList = list.filter(m => m.type === 'series');
+    ALL_CATALOG = [...movieList, ...seriesList];
 
     // Organizar filmes por categorias e séries em uma prateleira própria
     MOVIES.trending = movieList.filter(m => m.category === 'trending');
@@ -394,10 +692,7 @@ async function initApp() {
     showToast('⚠️ Erro ao conectar com o catálogo de filmes.');
   }
 
-  renderCarousel('carousel-trending', MOVIES.trending);
-  renderCarousel('carousel-new', MOVIES.new);
-  renderCarousel('carousel-action', MOVIES.action);
-  renderCarousel('carousel-series', MOVIES.series);
+  renderPremiumHomeRows();
   renderTop10();
   renderContinueWatching();
   refreshTop10SlideButtons();
@@ -436,30 +731,95 @@ function createMovieCard(movie) {
   const card = document.createElement('div');
   card.className = 'movie-card fade-in';
   card.setAttribute('role', 'listitem');
+  card.tabIndex = 0;
   card.setAttribute('aria-label', `${movie.title} (${movie.year}) - Avaliação: ${movie.rating}`);
   card.dataset.id = movie.id;
   card.dataset.typeLabel = movie.type === 'series' ? 'SERIE' : 'FILME';
   card.dataset.rating = movie.rating || '';
+  if (movie.homeRank) card.dataset.rank = movie.homeRank;
+
+  const isInList = myList.has(String(movie.id));
+  const typeLabel = movie.type === 'series' ? 'Série' : 'Filme';
+  const durationLabel = movie.type === 'series' ? 'Série' : (movie.duration || 'GOATCINE');
+  const poster = movie.poster || movie.backdrop || '';
+  const shortDesc = movie.desc || 'Sem descrição disponível.';
 
   card.innerHTML = `
     <div class="card-poster-wrapper">
+      ${movie.homeRank ? `<span class="card-rank-badge">#${movie.homeRank}</span>` : ''}
+      ${movie.homeBadge ? `<span class="card-genre-badge">${escapeHtml(movie.homeBadge)}</span>` : ''}
       <img class="card-poster" 
-           src="${movie.poster}" 
-           alt="Poster do filme ${movie.title}"
+           src="${poster}" 
+           alt="Poster de ${escapeHtml(movie.title)}"
            loading="lazy"
+           decoding="async"
            onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22180%22 height=%22270%22 viewBox=%220 0 180 270%22><rect width=%22180%22 height=%22270%22 fill=%22%23161616%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 fill=%22%23FFD700%22 font-size=%2240%22>🎬</text></svg>'" />
       <div class="card-overlay">
-        <div class="card-title">${movie.title}</div>
-        <div class="card-rating">⭐ ${movie.rating}</div>
+        <div class="card-title">${escapeHtml(movie.title)}</div>
+        <div class="card-hover-meta">
+          <span>⭐ ${escapeHtml(movie.rating || 'N/A')}</span>
+          <span>📅 ${escapeHtml(movie.year || '')}</span>
+          <span>⏱ ${escapeHtml(durationLabel)}</span>
+        </div>
+        <div class="card-hover-genre">🎭 ${escapeHtml(movie.genre || typeLabel)}</div>
+        <p class="card-hover-desc">${escapeHtml(shortDesc)}</p>
+        <div class="card-hover-actions" aria-label="Ações de ${escapeHtml(movie.title)}">
+          <button class="card-action watch" type="button" data-card-action="watch" aria-label="Assistir ${escapeHtml(movie.title)}">▶ Assistir</button>
+          <button class="card-action list ${isInList ? 'active' : ''}" type="button" data-card-action="list" aria-label="Adicionar ${escapeHtml(movie.title)} à minha lista">${isInList ? '✓' : '➕'}</button>
+          <button class="card-action info" type="button" data-card-action="info" aria-label="Mais informações sobre ${escapeHtml(movie.title)}">ℹ</button>
+        </div>
       </div>
     </div>
     <div class="card-info">
-      <div class="card-name">${movie.title}</div>
-      <div class="card-year">${movie.year} · ${movie.genre}</div>
+      <div class="card-name">${escapeHtml(movie.title)}</div>
+      <div class="card-year">${escapeHtml(movie.year || '')} · ${escapeHtml(movie.genre || typeLabel)}</div>
     </div>
   `;
 
-  card.addEventListener('click', () => openModal(movie));
+  function handleAction(action, targetButton) {
+    if (action === 'watch') {
+      if (movie.type === 'series') {
+        openModal(movie);
+      } else {
+        openVideoPlayer(movie);
+      }
+      return;
+    }
+
+    if (action === 'list') {
+      const active = toggleMyListItem(movie);
+      targetButton.classList.toggle('active', active);
+      targetButton.textContent = active ? '✓' : '➕';
+      return;
+    }
+
+    openModal(movie);
+  }
+
+  card.addEventListener('click', (event) => {
+    const actionButton = event.target.closest('[data-card-action]');
+    if (actionButton) {
+      event.stopPropagation();
+      handleAction(actionButton.dataset.cardAction, actionButton);
+      return;
+    }
+
+    if (window.matchMedia('(hover: none)').matches && !card.classList.contains('touch-active')) {
+      document.querySelectorAll('.movie-card.touch-active').forEach(item => item.classList.remove('touch-active'));
+      card.classList.add('touch-active');
+      return;
+    }
+
+    openModal(movie);
+  });
+
+  card.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      openModal(movie);
+    }
+  });
+
   return card;
 }
 
@@ -816,10 +1176,10 @@ function performSearch(q) {
   }
 
   // Filtrar todos os filmes
-  const allMovies = [...MOVIES.trending, ...MOVIES.new, ...MOVIES.action, ...MOVIES.series];
+  const allMovies = getAllCatalog();
   
   // Remover duplicados
-  const uniqueMovies = Array.from(new Map(allMovies.map(m => [m.id, m])).values());
+  const uniqueMovies = uniqueById(allMovies);
 
   const found = uniqueMovies.filter(m =>
     m.title.toLowerCase().includes(q.toLowerCase()) ||
@@ -942,7 +1302,7 @@ function applyPendingSearch() {
 
 // ---- MODAL ----
 function findMovieById(id) {
-  const allMovies = [...MOVIES.trending, ...MOVIES.new, ...MOVIES.action, ...MOVIES.series];
+  const allMovies = getAllCatalog();
   return allMovies.find(m => m.id === id);
 }
 
@@ -1185,6 +1545,16 @@ async function loadSeriesEpisodes(movie) {
   }
 }
 
+function setModalDynamicBackground(imageUrl) {
+  if (!modalOverlay) return;
+  const url = imageUrl ? `url("${cssUrl(imageUrl)}")` : 'none';
+  modalOverlay.classList.add('bg-swapping');
+  window.setTimeout(() => {
+    modalOverlay.style.setProperty('--modal-dynamic-bg', url);
+    modalOverlay.classList.remove('bg-swapping');
+  }, 80);
+}
+
 function openModal(movie) {
   currentModalMovie = movie;
   const modalTitle = $('modal-title');
@@ -1205,6 +1575,7 @@ function openModal(movie) {
   if (episodeList) episodeList.innerHTML = '';
 
   // Set content
+  setModalDynamicBackground(movie.backdrop || movie.poster);
   modalTitle.textContent = movie.title;
   modalDesc.textContent = movie.desc;
   modalBackdrop.src = movie.backdrop || movie.poster;
@@ -1244,7 +1615,7 @@ function openModal(movie) {
   `;
 
   // Similar movies
-  const allMovies = [...MOVIES.trending, ...MOVIES.new, ...MOVIES.action, ...MOVIES.series];
+  const allMovies = getAllCatalog();
   const similar = allMovies.filter(m => m.id !== movie.id && (
     m.genre.split('/')[0].trim() === movie.genre.split('/')[0].trim() ||
     m.category === movie.category
@@ -2861,9 +3232,9 @@ function renderCatalog(type) {
   if (!catalogTitle || !catalogGrid || !genreFilter) return;
 
   // Filtrar títulos com base no tipo
-  const allMovies = [...MOVIES.trending, ...MOVIES.new, ...MOVIES.action, ...MOVIES.series];
+  const allMovies = getAllCatalog();
   // Remover duplicados
-  const uniqueMovies = Array.from(new Map(allMovies.map(m => [m.id, m])).values());
+  const uniqueMovies = uniqueById(allMovies);
   
   const catalogList = uniqueMovies.filter(m => {
     if (type === 'series') return m.type === 'series';

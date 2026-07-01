@@ -786,7 +786,7 @@ async function runMigrationsAndSeeds() {
     if (movie) {
       movieId = movie.id;
       // Garantir que a duração da série seja atualizada no banco
-      await dbRunAsync("UPDATE movies SET duration = '3 Temporadas' WHERE id = ?", [movieId]);
+      await dbRunAsync("UPDATE movies SET duration = '4 Temporadas' WHERE id = ?", [movieId]);
     } else {
       movieId = await dbRunAsync(`
         INSERT INTO movies (title, year, duration, rating, genre, "desc", poster, backdrop, director, "cast", category, type, videoUrl, subtitlesUrl)
@@ -794,7 +794,7 @@ async function runMigrationsAndSeeds() {
       `, [
         "Origem",
         2022,
-        "3 Temporadas",
+        "4 Temporadas",
         7.8,
         "Terror / Drama / Mistério",
         "A trama acompanha os habitantes de uma cidade misteriosa e aterrorizante em algum lugar dos Estados Unidos, da qual ninguém consegue sair. Ao cair da noite, eles precisam se esconder de criaturas monstruosas que emergem da floresta para caçá-los.",
@@ -897,9 +897,93 @@ async function runMigrationsAndSeeds() {
         }
       }
       console.log("[DB SEED] ✅ Temporada 3 de Origem semeada com sucesso.");
+
+      const season4Episodes = [
+        {
+          number: 1,
+          title: "A Chegada",
+          duration: "52 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FO%2Forigem%2F04-temporada%2F01%2Fstream.m3u8&slug=origem&temporada=4&numero_episodio=1&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Uma nova chegada lança a cidade no caos. Enquanto isso, Jade e Tabitha lutam com suas revelações na Árvore de Garrafas, e Boyd lida com as implicações do retorno de Smiley."
+        },
+        {
+          number: 2,
+          title: "Briga",
+          duration: "49 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FO%2Forigem%2F04-temporada%2F02%2Fstream.m3u8&slug=origem&temporada=4&numero_episodio=2&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Uma descoberta macabra envia ondas de choque pela cidade. Enquanto a comunidade lida com as consequências dessa descoberta, Jade e Tabitha continuam a lutar com o peso das revelações que encontraram."
+        },
+        {
+          number: 3,
+          title: "Alegremente Vamos",
+          duration: "48 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FO%2Forigem%2F04-temporada%2F03%2Fstream.m3u8&slug=origem&temporada=4&numero_episodio=3&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Boyd tenta salvar Acosta de si mesma enquanto Julie se aprofunda em suas novas habilidades. Em outro lugar, Tabitha embarca em uma jogada desesperada, e Victor se junta a Ethan em uma busca por respostas."
+        },
+        {
+          number: 4,
+          title: "De Mitos e Monstros",
+          duration: "50 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FO%2Forigem%2F04-temporada%2F04%2Fstream.m3u8&slug=origem&temporada=4&numero_episodio=4&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Uma descoberta sinistra força a equipe de Boyd a adotar uma postura defensiva. Julie experimenta suas habilidades emergentes enquanto Sara sofre tormento psicológico por vozes misteriosas. Victor compartilha detalhes com Henry sobre a primeira vez que o Homem de Amarelo chegou."
+        },
+        {
+          number: 5,
+          title: "Que Longa e Estranha Viagem Tem Sido",
+          duration: "51 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FO%2Forigem%2F04-temporada%2F05%2Fstream.m3u8&slug=origem&temporada=4&numero_episodio=5&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "A busca por respostas leva Boyd e Jade a um território inexplorado. Enquanto isso, uma simples entrega de comida no assentamento se transforma em um cenário de pesadelo."
+        },
+        {
+          number: 6,
+          title: "O Coração é um Caçador Solitário",
+          duration: "47 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FO%2Forigem%2F04-temporada%2F06%2Fstream.m3u8&slug=origem&temporada=4&numero_episodio=6&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Surge uma divisão entre Boyd e Jade em relação às visões que Boyd está tendo, mesmo quando notícias alarmantes chegam do assentamento."
+        },
+        {
+          number: 7,
+          title: "Planos Bem Traçados",
+          duration: "50 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FO%2Forigem%2F04-temporada%2F07%2Fstream.m3u8&slug=origem&temporada=4&numero_episodio=7&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "O passado sombrio de Tabitha e Jade vem à tona, e outro morador da cidade enfrenta sérios problemas. Boyd inicia um plano para testar uma teoria arriscada."
+        },
+        {
+          number: 8,
+          title: "Pesada é a Cabeça",
+          duration: "49 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FO%2Forigem%2F04-temporada%2F08%2Fstream.m3u8&slug=origem&temporada=4&numero_episodio=8&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "A busca de Boyd para liderar os moradores de volta para casa atinge um ponto crítico e perigoso. As tensões aumentam enquanto os moradores lutam para entender a natureza de seu confinamento."
+        },
+        {
+          number: 9,
+          title: "A Calmaria Antes",
+          duration: "48 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FO%2Forigem%2F04-temporada%2F09%2Fstream.m3u8&slug=origem&temporada=4&numero_episodio=9&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Enquanto os moradores se preparam para uma missão arriscada de recuperar os ossos das crianças da câmara, a cidade enfrenta uma ameaça sinistra e iminente."
+        },
+        {
+          number: 10,
+          title: "Se uma Árvore Cair na Floresta...",
+          duration: "75 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FO%2Forigem%2F04-temporada%2F10%2Fstream.m3u8&slug=origem&temporada=4&numero_episodio=10&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "No final da temporada, Jade e Tabitha conseguem extrair os ossos dos túneis, mas a fuga é complicada por uma sabotagem e uma mudança repentina no ambiente da cidade. O céu fica vermelho e o dia vira noite, permitindo uma emboscada dos monstros."
+        }
+      ];
+
+      for (const ep of season4Episodes) {
+        const existing = await dbGetAsync("SELECT id FROM episodes WHERE movie_id = ? AND season = 4 AND number = ?", [movieId, ep.number]);
+        if (!existing) {
+          await dbRunAsync(`
+            INSERT INTO episodes (movie_id, season, number, title, duration, videoUrl, "desc", subtitlesUrl)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          `, [movieId, 4, ep.number, ep.title, ep.duration, ep.videoUrl, ep.desc, ""]);
+        }
+      }
+      console.log("[DB SEED] ✅ Temporada 4 de Origem semeada com sucesso.");
     }
   } catch (err) {
-    console.error("[DB SEED ERROR] Erro ao semear Temporada 3 de Origem:", err);
+    console.error("[DB SEED ERROR] Erro ao semear Temporada 4 de Origem:", err);
   }
 
   console.log('  ✅ Banco de dados pronto e iniciado');

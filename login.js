@@ -183,7 +183,7 @@ function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-async function fetchWithTimeout(url, options = {}, timeoutMs = 14000) {
+async function fetchWithTimeout(url, options = {}, timeoutMs = 30000) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -832,7 +832,7 @@ function saveAuthAndRedirect(token, user, isNew = false) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: recoveryEmail })
-      }, 14000);
+      }, 30000);
 
       const data = await response.json();
       if (!response.ok) {
@@ -854,7 +854,7 @@ function saveAuthAndRedirect(token, user, isNew = false) {
       }
     } catch (err) {
       setForgotError(codeGroup, codeError, err.name === 'AbortError'
-        ? 'O reenvio demorou demais. Tente novamente.'
+        ? 'O envio ainda está demorando. Aguarde alguns segundos e tente novamente.'
         : err.message);
     } finally {
       resendCodeBtn.disabled = false;
@@ -888,7 +888,7 @@ function saveAuthAndRedirect(token, user, isNew = false) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email })
-        }, 14000);
+        }, 30000);
         
         const data = await response.json();
         if (!response.ok) {
@@ -916,7 +916,7 @@ function saveAuthAndRedirect(token, user, isNew = false) {
         }
       } catch (err) {
         setForgotError(emailGroup, emailError, err.name === 'AbortError'
-          ? 'O envio demorou demais. Verifique a configuração do e-mail e tente novamente.'
+          ? 'O envio ainda está demorando. Aguarde alguns segundos e tente novamente.'
           : err.message);
       } finally {
         if (sendBtn) {

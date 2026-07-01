@@ -2804,3 +2804,5 @@ initDatabase().then(() => {
     console.log('');
   });
 }).catch(err => { console.error('❌ Erro ao iniciar:', err); process.exit(1); });
+
+// Banco de dados recarregado com todas as temporadas de Origem.

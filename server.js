@@ -544,6 +544,20 @@ async function runMigrationsAndSeeds() {
         videoUrl: "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/Creed%20Nascido%20Para%20Lutar%202016%20Bluray%201080p%20Dublado%20-%20WWW.THEPIRATEFILMES.COM.mp4"
       },
       {
+        title: "Creed: III",
+        year: 2023,
+        duration: "1h 56min",
+        rating: 7.3,
+        genre: "Ação / Drama",
+        desc: "Depois de dominar o mundo do boxe, Adonis Creed tem prosperado tanto em sua carreira quanto em sua vida familiar. Quando um amigo de infância e ex-prodígio do boxe, Damian, ressurge após cumprir uma longa pena na prisão, ele está ansioso para provar que merece sua chance no ringue.",
+        poster: "https://image.tmdb.org/t/p/w500/cvsXj3DYs52LifH8iFS4t6VvU2n.jpg",
+        backdrop: "https://image.tmdb.org/t/p/w1280/5i6SJUzN2eeU25Z2sLqN5H6s99e.jpg",
+        director: "Michael B. Jordan",
+        cast: "Michael B. Jordan, Tessa Thompson, Jonathan Majors",
+        category: "new",
+        videoUrl: "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/Dupla.Perigosa.2026.WEB-DL.1080p.x264.DUAL.5.1-SF.mp4"
+      },
+      {
         title: "Dupla Perigosa",
         year: 2026,
         duration: "2h 15min",

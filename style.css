@@ -3726,3 +3726,69 @@ ul {
   font-size: 0.7rem;
   color: var(--text-muted, #888);
 }
+
+/* =============================================
+   DOUBLE TAP FEEDBACK FOR MOBILE PLAYER
+   ============================================= */
+.double-tap-feedback {
+  position: absolute;
+  top: 0;
+  width: 50%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0) 70%);
+  opacity: 0;
+  transition: opacity 0.2s ease-out;
+}
+
+.double-tap-feedback.left {
+  left: 0;
+}
+
+.double-tap-feedback.right {
+  right: 0;
+}
+
+.double-tap-icon-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 215, 0, 0.35);
+  border-radius: 50%;
+  width: 84px;
+  height: 84px;
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.6), 0 0 15px rgba(255, 215, 0, 0.15);
+  animation: doubleTapBounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.double-tap-feedback i {
+  color: #ffd700;
+  font-size: 1.8rem;
+  margin-bottom: 6px;
+  filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.4));
+}
+
+.double-tap-feedback span {
+  color: #ffffff;
+  font-size: 0.88rem;
+  font-weight: 700;
+  font-family: 'Outfit', 'Inter', sans-serif;
+  letter-spacing: 0.5px;
+}
+
+@keyframes doubleTapBounce {
+  0% { transform: scale(0.6); opacity: 0; }
+  50% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.double-tap-feedback.animate-in {
+  opacity: 1;
+}

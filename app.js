@@ -2034,13 +2034,75 @@ function initVideoPlayer() {
   }
 
   playPauseBtn.addEventListener('click', togglePlay);
-  video.addEventListener('click', () => {
+  function showDoubleTapFeedback(side) {
+    const existing = playerOverlay.querySelector('.double-tap-feedback');
+    if (existing) existing.remove();
+
+    const feedback = document.createElement('div');
+    feedback.className = `double-tap-feedback ${side}`;
+    
+    const iconClass = side === 'right' ? 'fa-solid fa-angles-right' : 'fa-solid fa-angles-left';
+    const text = side === 'right' ? '+10s' : '-10s';
+
+    feedback.innerHTML = `
+      <div class="double-tap-icon-wrapper">
+        <i class="${iconClass}"></i>
+        <span>${text}</span>
+      </div>
+    `;
+
+    const container = $('player-container') || playerOverlay;
+    container.appendChild(feedback);
+
+    requestAnimationFrame(() => {
+      feedback.classList.add('animate-in');
+    });
+
+    setTimeout(() => {
+      feedback.style.opacity = '0';
+      setTimeout(() => {
+        feedback.remove();
+      }, 200);
+    }, 450);
+  }
+
+  let lastVideoClickTime = 0;
+  let clickTimeout = null;
+
+  video.addEventListener('click', (e) => {
     const mobilePlayer = window.matchMedia('(max-width: 768px), (pointer: coarse)').matches;
-    if (mobilePlayer) {
-      resetControlsTimer();
+    if (!mobilePlayer) {
+      togglePlay();
       return;
     }
-    togglePlay();
+
+    const currentTime = Date.now();
+    const delay = 320;
+    
+    if (currentTime - lastVideoClickTime < delay) {
+      clearTimeout(clickTimeout);
+      clickTimeout = null;
+      
+      const rect = video.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const isRightSide = clickX > rect.width / 2;
+      
+      if (isRightSide) {
+        video.currentTime = Math.min(video.duration || 0, video.currentTime + 10);
+        showDoubleTapFeedback('right');
+      } else {
+        video.currentTime = Math.max(0, video.currentTime - 10);
+        showDoubleTapFeedback('left');
+      }
+      
+      lastVideoClickTime = 0;
+    } else {
+      lastVideoClickTime = currentTime;
+      clickTimeout = setTimeout(() => {
+        resetControlsTimer();
+        clickTimeout = null;
+      }, delay);
+    }
   });
 
   // Rewind / Forward 10s

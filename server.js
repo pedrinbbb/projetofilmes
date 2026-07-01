@@ -24,6 +24,36 @@ const PORT       = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'goatcine_dev_secret';
 const DEFAULT_POSTER_URL = 'data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22500%22%20height=%22750%22%3E%3Crect%20width=%22100%25%22%20height=%22100%25%22%20fill=%22%23000000%22/%3E%3C/svg%3E';
 const DEFAULT_BACKDROP_URL = 'data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%221280%22%20height=%22720%22%3E%3Crect%20width=%22100%25%22%20height=%22100%25%22%20fill=%22%23000000%22/%3E%3C/svg%3E';
+const DEFAULT_TRAILER_URLS = {
+  'Dune: Part Two': 'https://www.youtube.com/watch?v=Way9Dexny3w',
+  Oppenheimer: 'https://www.youtube.com/watch?v=uYPbbksJxIg',
+  'Poor Things': 'https://www.youtube.com/watch?v=RlbR5N6veqw',
+  'The Batman': 'https://www.youtube.com/watch?v=mqqft2x_Aa4',
+  Parasite: 'https://www.youtube.com/watch?v=5xH0HfJHsaY',
+  Interstellar: 'https://www.youtube.com/watch?v=zSWdZVtXT7E',
+  'Past Lives': 'https://www.youtube.com/watch?v=kA244xewjcI',
+  'Everything Everywhere': 'https://www.youtube.com/watch?v=wxN1T1UxQ2A',
+  'Creed: Nascido para Lutar': 'https://www.youtube.com/watch?v=Uv554B7YHk4',
+  'Dupla Perigosa': 'https://www.youtube.com/watch?v=D7oUW5837Tc',
+  Furiosa: 'https://www.youtube.com/watch?v=XJMuhwVlca4',
+  'Civil War': 'https://www.youtube.com/watch?v=aDyQxtg0V2w',
+  Longlegs: 'https://www.youtube.com/watch?v=OG7wOTE8NhE',
+  'Inside Out 2': 'https://www.youtube.com/watch?v=LEjhY15eCx0',
+  'Alien: Romulus': 'https://www.youtube.com/watch?v=x0XDEy1t9dI',
+  'Deadpool & Wolverine': 'https://www.youtube.com/watch?v=73_1biulkYk',
+  Challengers: 'https://www.youtube.com/watch?v=VobT0to272U',
+  Twisters: 'https://www.youtube.com/watch?v=l49T1Bq-580',
+  'Mission: Impossible 7': 'https://www.youtube.com/watch?v=2m1drlOZSDw',
+  'Top Gun: Maverick': 'https://www.youtube.com/watch?v=qSqVVswa420',
+  'John Wick 4': 'https://www.youtube.com/watch?v=qEVUtrk8_B4',
+  'Avatar: The Way of Water': 'https://www.youtube.com/watch?v=d9MyW72ELq0',
+  'Black Panther: Wakanda Forever': 'https://www.youtube.com/watch?v=_Z3QKkl1WyM',
+  'Gladiator II': 'https://www.youtube.com/watch?v=4rgYUipGJNo',
+  'The Fall Guy': 'https://www.youtube.com/watch?v=j7jPnwVGdZ8',
+  'Thor: Love and Thunder': 'https://www.youtube.com/watch?v=Go8nTmfrQd8',
+  Origem: 'https://www.youtube.com/watch?v=pDHqAj4eJcM',
+  'Creed: III': 'https://www.youtube.com/watch?v=AHmCH7iB_IM'
+};
 
 // URL de conexão do PostgreSQL
 const DATABASE_URL = process.env.DATABASE_URL;
@@ -318,6 +348,7 @@ async function runMigrationsAndSeeds() {
       category    VARCHAR(100) NOT NULL,
       type        VARCHAR(50) NOT NULL DEFAULT 'movie',
       videoUrl    VARCHAR(500) NOT NULL,
+      trailerUrl  VARCHAR(500) DEFAULT NULL,
       subtitlesUrl VARCHAR(500) DEFAULT NULL,
       position    INTEGER NOT NULL DEFAULT 0
     )`);
@@ -375,6 +406,7 @@ async function runMigrationsAndSeeds() {
   if (!IS_POSTGRES) {
     try { db.run("ALTER TABLE movies ADD COLUMN type TEXT DEFAULT 'movie'"); } catch (e) {}
     try { db.run("ALTER TABLE movies ADD COLUMN subtitlesUrl TEXT DEFAULT NULL"); } catch (e) {}
+    try { db.run("ALTER TABLE movies ADD COLUMN trailerUrl TEXT DEFAULT NULL"); } catch (e) {}
     try { db.run("ALTER TABLE episodes ADD COLUMN subtitlesUrl TEXT DEFAULT NULL"); } catch (e) {}
     try { db.run("ALTER TABLE movies ADD COLUMN position INTEGER DEFAULT 0"); } catch (e) {}
     try { db.run("ALTER TABLE profiles ADD COLUMN pin_hash TEXT DEFAULT NULL"); } catch (e) {}
@@ -389,6 +421,7 @@ async function runMigrationsAndSeeds() {
   } else {
     await dbRunSync("ALTER TABLE movies ADD COLUMN IF NOT EXISTS type VARCHAR(50) DEFAULT 'movie'");
     await dbRunSync("ALTER TABLE movies ADD COLUMN IF NOT EXISTS subtitlesUrl VARCHAR(500) DEFAULT NULL");
+    await dbRunSync("ALTER TABLE movies ADD COLUMN IF NOT EXISTS trailerUrl VARCHAR(500) DEFAULT NULL");
     await dbRunSync("ALTER TABLE episodes ADD COLUMN IF NOT EXISTS subtitlesUrl VARCHAR(500) DEFAULT NULL");
     await dbRunSync("ALTER TABLE movies ADD COLUMN IF NOT EXISTS position INTEGER DEFAULT 0");
     await dbRunSync("ALTER TABLE profiles ALTER COLUMN avatar_icon TYPE VARCHAR(500)");
@@ -818,8 +851,8 @@ async function runMigrationsAndSeeds() {
       await dbRunAsync("UPDATE movies SET duration = '4 Temporadas' WHERE id = ?", [movieId]);
     } else {
       movieId = await dbRunAsync(`
-        INSERT INTO movies (title, year, duration, rating, genre, "desc", poster, backdrop, director, "cast", category, type, videoUrl, subtitlesUrl)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO movies (title, year, duration, rating, genre, "desc", poster, backdrop, director, "cast", category, type, videoUrl, subtitlesUrl, trailerUrl)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
         "Origem",
         2022,
@@ -1037,13 +1070,26 @@ async function runMigrationsAndSeeds() {
         "new",
         "movie",
         "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/Dupla.Perigosa.2026.WEB-DL.1080p.x264.DUAL.5.1-SF.mp4",
-        null
+        null,
+        DEFAULT_TRAILER_URLS['Creed: III']
       ]);
       if (!IS_POSTGRES) saveDb();
       console.log("  ✅ Creed: III adicionado com sucesso!");
     }
   } catch (err) {
     console.error("[DB SEED ERROR] Erro ao garantir Creed: III:", err);
+  }
+
+  try {
+    for (const [title, trailerUrl] of Object.entries(DEFAULT_TRAILER_URLS)) {
+      await dbRunAsync(
+        'UPDATE movies SET trailerUrl = ? WHERE title = ? AND (trailerUrl IS NULL OR trailerUrl = \'\')',
+        [trailerUrl, title]
+      );
+    }
+    if (!IS_POSTGRES) saveDb();
+  } catch (err) {
+    console.error('[DB SEED ERROR] Erro ao preencher trailers:', err);
   }
 
   console.log('  ✅ Banco de dados pronto e iniciado');
@@ -3084,6 +3130,9 @@ app.get('/api/movies', (req, res) => {
       if (m.subtitlesurl !== undefined && m.subtitlesUrl === undefined) {
         m.subtitlesUrl = m.subtitlesurl;
       }
+      if (m.trailerurl !== undefined && m.trailerUrl === undefined) {
+        m.trailerUrl = m.trailerurl;
+      }
       m.poster = m.poster || DEFAULT_POSTER_URL;
       m.backdrop = m.backdrop || DEFAULT_BACKDROP_URL;
       return m;
@@ -3121,7 +3170,7 @@ app.post('/api/movies/reorder', requireAdminAuth, (req, res) => {
 // Adicionar Filme (Admin)
 app.post('/api/movies', requireAdminAuth, (req, res) => {
   try {
-    const { title, year, duration, rating, genre, desc, poster, backdrop, director, cast, category, videoUrl, type, subtitlesUrl } = req.body;
+    const { title, year, duration, rating, genre, desc, poster, backdrop, director, cast, category, videoUrl, type, subtitlesUrl, trailerUrl } = req.body;
     const normalizedType = type === 'series' ? 'series' : 'movie';
     const isSeries = normalizedType === 'series';
     const finalDuration = isSeries ? (duration || 'Serie') : duration;
@@ -3130,15 +3179,16 @@ app.post('/api/movies', requireAdminAuth, (req, res) => {
     const finalBackdrop = (backdrop || '').trim() || DEFAULT_BACKDROP_URL;
     const parsedRating = parseFloat(String(rating).replace(',', '.'));
     const finalSubtitlesUrl = (subtitlesUrl || '').trim() || null;
+    const finalTrailerUrl = (trailerUrl || '').trim() || null;
 
     if (!title || !year || Number.isNaN(parsedRating) || !genre || !desc || !director || !cast || !category || (!isSeries && (!finalDuration || !finalVideoUrl))) {
       return res.status(400).json({ error: 'Todos os campos obrigatorios devem ser preenchidos' });
     }
 
     const movieId = dbRun(
-      `INSERT INTO movies (title, year, duration, rating, genre, "desc", poster, backdrop, director, "cast", category, type, videoUrl, subtitlesUrl) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [title, year, finalDuration, parsedRating, genre, desc, finalPoster, finalBackdrop, director, cast, category, normalizedType, finalVideoUrl, finalSubtitlesUrl]
+      `INSERT INTO movies (title, year, duration, rating, genre, "desc", poster, backdrop, director, "cast", category, type, videoUrl, subtitlesUrl, trailerUrl) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [title, year, finalDuration, parsedRating, genre, desc, finalPoster, finalBackdrop, director, cast, category, normalizedType, finalVideoUrl, finalSubtitlesUrl, finalTrailerUrl]
     );
     if (!movieId) {
       return res.status(500).json({ error: 'Nao foi possivel salvar o titulo no banco de dados' });
@@ -3154,6 +3204,9 @@ app.post('/api/movies', requireAdminAuth, (req, res) => {
     if (savedMovie.subtitlesurl !== undefined && savedMovie.subtitlesUrl === undefined) {
       savedMovie.subtitlesUrl = savedMovie.subtitlesurl;
     }
+    if (savedMovie.trailerurl !== undefined && savedMovie.trailerUrl === undefined) {
+      savedMovie.trailerUrl = savedMovie.trailerurl;
+    }
 
     console.log(`[ADMIN] 🎬 Novo titulo adicionado: "${title}" (ID: ${movieId})`);
     return res.status(201).json({ success: true, id: movieId, movie: savedMovie, message: 'Titulo adicionado com sucesso!' });
@@ -3167,7 +3220,7 @@ app.post('/api/movies', requireAdminAuth, (req, res) => {
 app.put('/api/movies/:id', requireAdminAuth, (req, res) => {
   const { id } = req.params;
   try {
-    const { title, year, duration, rating, genre, desc, poster, backdrop, director, cast, category, videoUrl, type, subtitlesUrl } = req.body;
+    const { title, year, duration, rating, genre, desc, poster, backdrop, director, cast, category, videoUrl, type, subtitlesUrl, trailerUrl } = req.body;
     const normalizedType = type === 'series' ? 'series' : 'movie';
     const isSeries = normalizedType === 'series';
     const finalDuration = isSeries ? (duration || 'Serie') : duration;
@@ -3176,15 +3229,16 @@ app.put('/api/movies/:id', requireAdminAuth, (req, res) => {
     const finalBackdrop = (backdrop || '').trim() || DEFAULT_BACKDROP_URL;
     const parsedRating = parseFloat(String(rating).replace(',', '.'));
     const finalSubtitlesUrl = (subtitlesUrl || '').trim() || null;
+    const finalTrailerUrl = (trailerUrl || '').trim() || null;
 
     if (!title || !year || Number.isNaN(parsedRating) || !genre || !desc || !director || !cast || !category || (!isSeries && (!finalDuration || !finalVideoUrl))) {
       return res.status(400).json({ error: 'Todos os campos obrigatorios devem ser preenchidos' });
     }
 
     dbRun(
-      `UPDATE movies SET title=?, year=?, duration=?, rating=?, genre=?, "desc"=?, poster=?, backdrop=?, director=?, "cast"=?, category=?, type=?, videoUrl=?, subtitlesUrl=?
+      `UPDATE movies SET title=?, year=?, duration=?, rating=?, genre=?, "desc"=?, poster=?, backdrop=?, director=?, "cast"=?, category=?, type=?, videoUrl=?, subtitlesUrl=?, trailerUrl=?
        WHERE id=?`,
-      [title, parseInt(year), finalDuration, parsedRating, genre, desc, finalPoster, finalBackdrop, director, cast, category, normalizedType, finalVideoUrl, finalSubtitlesUrl, id]
+      [title, parseInt(year), finalDuration, parsedRating, genre, desc, finalPoster, finalBackdrop, director, cast, category, normalizedType, finalVideoUrl, finalSubtitlesUrl, finalTrailerUrl, id]
     );
 
     console.log(`[ADMIN] 🎬 Titulo atualizado: "${title}" (ID: ${id})`);

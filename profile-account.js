@@ -17,12 +17,9 @@ let activeProfile = JSON.parse(localStorage.getItem('goatcine_profile') || 'null
 let currentUser = JSON.parse(localStorage.getItem('goatcine_user') || 'null');
 let selectedAvatar = activeProfile?.avatar_icon || PROFILE_IMAGE_AVATARS[0].url;
 let selectedColor = activeProfile?.avatar_color || '#FFD700';
-let selectedFrame = 'default';
-let profileBio = '';
 let pinMode = 'keep';
 let toastTimer = null;
 let subscriptionCache = null;
-let accountCatalog = [];
 
 const SETTINGS_ROUTES = {
   conta: '/conta',
@@ -50,11 +47,7 @@ const profileMenuTrigger = $('top-profile-trigger');
 const profileMenu = $('top-profile-menu');
 const avatarGrid = $('avatar-grid');
 const toggleAvatarPicker = $('toggle-avatar-picker');
-const uploadAvatarBtn = $('upload-avatar-btn');
-const avatarUploadInput = $('avatar-upload-input');
-const avatarFrame = $('avatar-frame');
 const nameInput = $('profile-name');
-const bioInput = $('profile-bio');
 const pinStatus = $('pin-status');
 const pinInputRow = $('pin-input-row');
 const pinInput = $('profile-pin');
@@ -63,36 +56,6 @@ const pinBoxes = Array.from(document.querySelectorAll('.pin-box'));
 const saveBtn = form.querySelector('.save-btn');
 const saveState = $('save-state');
 const toast = $('toast');
-
-function getProfileMetaKey() {
-  return `goatcine_profile_meta_${activeProfile?.id || 'default'}`;
-}
-
-function readProfileMeta() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(getProfileMetaKey()) || '{}');
-    return saved && typeof saved === 'object' ? saved : {};
-  } catch {
-    return {};
-  }
-}
-
-function writeProfileMeta(meta) {
-  localStorage.setItem(getProfileMetaKey(), JSON.stringify(meta));
-}
-
-function getProfileStorageKey(prefix) {
-  return `${prefix}${activeProfile?.id || 'default'}`;
-}
-
-function readJsonStorage(key, fallback) {
-  try {
-    const value = JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback));
-    return value ?? fallback;
-  } catch {
-    return fallback;
-  }
-}
 
 function guardSession() {
   if (!token) {
@@ -159,27 +122,15 @@ function formatDateTime(value) {
 }
 
 function renderProfile() {
-  const meta = readProfileMeta();
   nameInput.value = activeProfile.name || '';
-  if (bioInput) bioInput.value = meta.bio || '';
   selectedAvatar = activeProfile.avatar_icon || PROFILE_IMAGE_AVATARS[0].url;
   selectedColor = activeProfile.avatar_color || '#FFD700';
-  selectedFrame = meta.frame || 'default';
-  profileBio = meta.bio || '';
 
   if (topProfileName) topProfileName.textContent = activeProfile.name || 'Perfil';
   if (accountPillName) accountPillName.textContent = activeProfile.name || 'Perfil';
   setImage(preview, selectedAvatar, `Avatar de ${activeProfile.name || 'perfil'}`);
   setImage(topAvatar, selectedAvatar, `Avatar de ${activeProfile.name || 'perfil'}`);
   if (accountPillAvatar) setImage(accountPillAvatar, selectedAvatar, `Avatar de ${activeProfile.name || 'perfil'}`);
-  [preview, topAvatar, accountPillAvatar].filter(Boolean).forEach((element) => {
-    element.dataset.frame = selectedFrame;
-    element.style.setProperty('--profile-accent', selectedColor);
-  });
-  if (avatarFrame) avatarFrame.value = selectedFrame;
-  document.querySelectorAll('.accent-swatch').forEach((swatch) => {
-    swatch.classList.toggle('active', swatch.dataset.color === selectedColor);
-  });
   pinStatus.textContent = activeProfile.has_pin ? 'PIN definido' : 'Nenhum PIN definido';
   if (removePinTab) removePinTab.hidden = !activeProfile.has_pin;
   if (!activeProfile.has_pin && pinMode === 'remove') setPinMode('keep');
@@ -209,57 +160,6 @@ function updateAvatarSelection() {
   avatarGrid.querySelectorAll('.avatar-choice').forEach((btn, index) => {
     btn.classList.toggle('active', PROFILE_IMAGE_AVATARS[index].url === selectedAvatar);
   });
-}
-
-function compressAvatarFile(file) {
-  return new Promise((resolve, reject) => {
-    if (!file || !file.type.startsWith('image/')) {
-      reject(new Error('Arquivo invalido.'));
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error('Nao foi possivel ler a imagem.'));
-    reader.onload = () => {
-      const image = new Image();
-      image.onerror = () => reject(new Error('Nao foi possivel carregar a imagem.'));
-      image.onload = () => {
-        const size = Math.min(image.width, image.height);
-        const sourceX = Math.floor((image.width - size) / 2);
-        const sourceY = Math.floor((image.height - size) / 2);
-        const canvas = document.createElement('canvas');
-        canvas.width = 512;
-        canvas.height = 512;
-        const ctx = canvas.getContext('2d');
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = 'high';
-        ctx.drawImage(image, sourceX, sourceY, size, size, 0, 0, 512, 512);
-        resolve(canvas.toDataURL('image/jpeg', 0.82));
-      };
-      image.src = reader.result;
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-async function uploadSelectedAvatarIfNeeded() {
-  if (!selectedAvatar.startsWith('data:image/')) return selectedAvatar;
-
-  const res = await fetch(`/api/profiles/${activeProfile.id}/avatar`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`
-    },
-    body: JSON.stringify({ imageData: selectedAvatar })
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Nao foi possivel enviar o avatar.');
-
-  activeProfile = data.profile;
-  localStorage.setItem('goatcine_profile', JSON.stringify(activeProfile));
-  selectedAvatar = data.avatarUrl || activeProfile.avatar_icon;
-  return selectedAvatar;
 }
 
 function clearPinBoxes() {
@@ -366,20 +266,19 @@ async function saveProfile(event) {
     return;
   }
 
+  const payload = {
+    name,
+    avatar_icon: selectedAvatar,
+    avatar_color: selectedColor
+  };
+
+  if (pinMode === 'set') payload.pin = pinInput.value.trim();
+  if (pinMode === 'remove') payload.pin = '';
+
   saveBtn.disabled = true;
   saveState.innerHTML = '<i class="fa-solid fa-circle"></i> Salvando';
 
   try {
-    const avatarUrl = await uploadSelectedAvatarIfNeeded();
-    const payload = {
-      name,
-      avatar_icon: avatarUrl,
-      avatar_color: selectedColor
-    };
-
-    if (pinMode === 'set') payload.pin = pinInput.value.trim();
-    if (pinMode === 'remove') payload.pin = '';
-
     const res = await fetch(`/api/profiles/${activeProfile.id}`, {
       method: 'PUT',
       headers: {
@@ -397,13 +296,8 @@ async function saveProfile(event) {
 
     activeProfile = data.profile;
     localStorage.setItem('goatcine_profile', JSON.stringify(activeProfile));
-    selectedAvatar = avatarUrl || activeProfile.avatar_icon;
+    selectedAvatar = activeProfile.avatar_icon;
     selectedColor = activeProfile.avatar_color;
-    writeProfileMeta({
-      bio: bioInput?.value.trim() || '',
-      frame: avatarFrame?.value || 'default',
-      accent: selectedColor
-    });
     setPinMode('keep');
     renderProfile();
     showToast('Perfil atualizado com sucesso.');
@@ -610,148 +504,6 @@ async function disconnectDevice(deviceId, isCurrent) {
   }
 }
 
-function formatHours(seconds) {
-  const hours = Math.max(0, Number(seconds) || 0) / 3600;
-  if (hours < 1) return `${Math.round(hours * 60)}min`;
-  return `${Math.round(hours)}h`;
-}
-
-function getProfileMyList() {
-  return readJsonStorage(getProfileStorageKey('goatcine_my_list_'), []).map(String);
-}
-
-function getProfileProgress() {
-  return Object.values(readJsonStorage(getProfileStorageKey('goatcine_watch_progress_'), {}));
-}
-
-function getProfileHistory() {
-  return readJsonStorage(getProfileStorageKey('goatcine_watch_history_'), []);
-}
-
-function getProfileWatchedEpisodes() {
-  return readJsonStorage(getProfileStorageKey('goatcine_watched_episodes_'), []);
-}
-
-function primaryGenre(value) {
-  return String(value || '').split('/')[0].trim();
-}
-
-function detectDeviceLabel() {
-  const ua = navigator.userAgent || '';
-  if (/Mobi|Android|iPhone/i.test(ua)) return 'Mobile';
-  if (/Tablet|iPad/i.test(ua)) return 'Tablet';
-  return 'Desktop';
-}
-
-function createMiniCard(item) {
-  const card = document.createElement('article');
-  card.className = 'mini-title-card';
-  card.innerHTML = `
-    <img src="${item.poster || item.backdrop || ''}" alt="${item.title || item.playbackTitle || 'Titulo'}" loading="lazy" />
-    <div>
-      <strong>${item.title || item.playbackTitle || 'Titulo'}</strong>
-      <span>${[item.year, item.genre || item.subtitle].filter(Boolean).join(' · ')}</span>
-    </div>
-  `;
-  return card;
-}
-
-function renderMiniRail(id, items, emptyText) {
-  const rail = $(id);
-  if (!rail) return;
-  rail.innerHTML = '';
-  const limited = (items || []).filter(Boolean).slice(0, 12);
-  if (!limited.length) {
-    rail.innerHTML = `<div class="empty-box compact-empty">${emptyText}</div>`;
-    return;
-  }
-  limited.forEach(item => rail.appendChild(createMiniCard(item)));
-}
-
-async function loadAccountDashboard() {
-  try {
-    const res = await fetch('/api/movies');
-    if (res.ok) {
-      const data = await res.json();
-      accountCatalog = data.movies || [];
-    }
-  } catch {}
-
-  const catalogById = new Map(accountCatalog.map(item => [String(item.id), item]));
-  const progress = getProfileProgress();
-  const history = getProfileHistory();
-  const watchedEpisodes = getProfileWatchedEpisodes();
-  const myListIds = getProfileMyList();
-  const myListItems = myListIds.map(id => catalogById.get(String(id))).filter(Boolean);
-  const completed = history.filter(item => item.completed);
-  const totalSeconds = [...progress, ...history].reduce((sum, item) => sum + (Number(item.currentTime) || 0), 0);
-  const genreCounts = new Map();
-
-  history.concat(myListItems).forEach((item) => {
-    const genre = primaryGenre(item.genre);
-    if (genre) genreCounts.set(genre, (genreCounts.get(genre) || 0) + 1);
-  });
-
-  const favoriteGenre = Array.from(genreCounts.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] || '-';
-  const movieCount = completed.filter(item => item.type !== 'series' && item.type !== 'episode').length;
-  const seriesCount = new Set(completed.filter(item => item.type === 'series' || item.type === 'episode').map(item => item.id)).size || watchedEpisodes.length;
-
-  $('stat-movies-watched').textContent = movieCount;
-  $('stat-series-watched').textContent = seriesCount;
-  $('stat-hours-watched').textContent = formatHours(totalSeconds);
-  $('stat-favorite-genre').textContent = favoriteGenre;
-  $('stat-last-access').textContent = formatDateTime(Date.now());
-  $('stat-device').textContent = detectDeviceLabel();
-
-  renderMiniRail('account-continue-rail', progress.map(item => ({
-    ...item,
-    title: item.title || item.playbackTitle,
-    poster: item.poster || item.backdrop
-  })), 'Nada em andamento ainda.');
-  renderMiniRail('account-my-list-rail', myListItems, 'Sua lista ainda está vazia.');
-  renderMiniRail('account-favorites-rail', (myListItems.length ? myListItems : accountCatalog).sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0)), 'Sem favoritos ainda.');
-  renderMiniRail('account-watched-rail', completed, 'Nenhum título concluído ainda.');
-
-  const historyList = $('account-history-list');
-  if (historyList) {
-    historyList.innerHTML = '';
-    if (!history.length) {
-      historyList.innerHTML = '<div class="empty-box compact-empty">Seu histórico aparecerá aqui.</div>';
-    } else {
-      history.slice(0, 10).forEach((item) => {
-        const row = document.createElement('div');
-        row.className = 'history-row';
-        row.innerHTML = `
-          <div>
-            <strong>${item.playbackTitle || item.title}</strong>
-            <span>${formatDateTime(item.watchedAt)} · ${item.completed ? 'Concluído' : 'Em andamento'}</span>
-          </div>
-          <small>${item.genre || item.type || 'GOATCINE'}</small>
-        `;
-        historyList.appendChild(row);
-      });
-    }
-  }
-}
-
-async function deleteAccount() {
-  const confirmed = window.confirm('Excluir sua conta permanentemente? Essa ação não pode ser desfeita.');
-  if (!confirmed) return;
-
-  try {
-    const res = await fetch('/api/user/account', {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Nao foi possivel excluir a conta.');
-    localStorage.clear();
-    window.location.href = '/login.html';
-  } catch (err) {
-    showToast(err.message || 'Nao foi possivel excluir a conta.');
-  }
-}
-
 async function logout(callServer = true) {
   try {
     if (callServer) {
@@ -771,7 +523,6 @@ async function logout(callServer = true) {
 if (guardSession()) {
   buildAvatarGrid();
   renderProfile();
-  loadAccountDashboard();
   loadFreshProfile().catch(() => showToast('Nao foi possivel atualizar os dados do perfil.'));
 
   const initialSection = getSectionFromLocation();
@@ -779,43 +530,6 @@ if (guardSession()) {
 
   toggleAvatarPicker.addEventListener('click', () => {
     avatarGrid.hidden = !avatarGrid.hidden;
-  });
-
-  uploadAvatarBtn?.addEventListener('click', () => {
-    avatarUploadInput?.click();
-  });
-
-  avatarUploadInput?.addEventListener('change', async () => {
-    const file = avatarUploadInput.files?.[0];
-    if (!file) return;
-    try {
-      selectedAvatar = await compressAvatarFile(file);
-      setImage(preview, selectedAvatar, 'Preview do avatar enviado');
-      updateAvatarSelection();
-      showToast('Preview pronto. Salve para aplicar o avatar.');
-    } catch (err) {
-      showToast(err.message || 'Nao foi possivel preparar a imagem.');
-    } finally {
-      avatarUploadInput.value = '';
-    }
-  });
-
-  avatarFrame?.addEventListener('change', () => {
-    selectedFrame = avatarFrame.value || 'default';
-    [preview, topAvatar, accountPillAvatar].filter(Boolean).forEach((element) => {
-      element.dataset.frame = selectedFrame;
-    });
-  });
-
-  document.querySelectorAll('.accent-swatch').forEach((swatch) => {
-    swatch.addEventListener('click', () => {
-      selectedColor = swatch.dataset.color || '#FFD700';
-      document.querySelectorAll('.accent-swatch').forEach(item => item.classList.remove('active'));
-      swatch.classList.add('active');
-      [preview, topAvatar, accountPillAvatar].filter(Boolean).forEach((element) => {
-        element.style.setProperty('--profile-accent', selectedColor);
-      });
-    });
   });
 
   document.querySelectorAll('.settings-nav-item').forEach((btn) => {
@@ -877,20 +591,6 @@ if (guardSession()) {
   });
 
   form.addEventListener('submit', saveProfile);
-
-  $('action-edit-profile')?.addEventListener('click', () => {
-    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    nameInput.focus();
-  });
-
-  $('action-change-password')?.addEventListener('click', () => {
-    if (currentUser?.email) localStorage.setItem('goatcine_reset_email', currentUser.email);
-    window.location.href = '/login.html';
-  });
-
-  $('action-active-sessions')?.addEventListener('click', () => setActiveSection('dispositivos'));
-  $('action-manage-devices')?.addEventListener('click', () => setActiveSection('dispositivos'));
-  $('action-delete-account')?.addEventListener('click', deleteAccount);
 
   profileMenuTrigger.addEventListener('click', (event) => {
     event.stopPropagation();

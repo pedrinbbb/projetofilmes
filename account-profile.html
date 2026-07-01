@@ -73,51 +73,6 @@
           </div>
         </header>
 
-        <section class="account-dashboard" aria-label="Painel do perfil">
-          <div class="dashboard-grid" id="account-stats-grid">
-            <article class="dashboard-stat"><span>Filmes assistidos</span><strong id="stat-movies-watched">0</strong></article>
-            <article class="dashboard-stat"><span>Séries</span><strong id="stat-series-watched">0</strong></article>
-            <article class="dashboard-stat"><span>Horas assistidas</span><strong id="stat-hours-watched">0h</strong></article>
-            <article class="dashboard-stat"><span>Gênero favorito</span><strong id="stat-favorite-genre">-</strong></article>
-            <article class="dashboard-stat"><span>Último acesso</span><strong id="stat-last-access">Agora</strong></article>
-            <article class="dashboard-stat"><span>Dispositivo</span><strong id="stat-device">Desktop</strong></article>
-          </div>
-
-          <div class="dashboard-rails">
-            <section class="dashboard-rail">
-              <div class="section-head compact"><span>📺 Continue Assistindo</span><h2>Retomar</h2></div>
-              <div class="mini-rail" id="account-continue-rail"></div>
-            </section>
-            <section class="dashboard-rail">
-              <div class="section-head compact"><span>❤️ Minha Lista</span><h2>Salvos</h2></div>
-              <div class="mini-rail" id="account-my-list-rail"></div>
-            </section>
-            <section class="dashboard-rail">
-              <div class="section-head compact"><span>⭐ Filmes Favoritos</span><h2>Destaques</h2></div>
-              <div class="mini-rail" id="account-favorites-rail"></div>
-            </section>
-            <section class="dashboard-rail">
-              <div class="section-head compact"><span>🕒 Histórico Completo</span><h2>Atividade</h2></div>
-              <div class="history-list" id="account-history-list"></div>
-            </section>
-            <section class="dashboard-rail">
-              <div class="section-head compact"><span>🎬 Filmes Assistidos</span><h2>Concluídos</h2></div>
-              <div class="mini-rail" id="account-watched-rail"></div>
-            </section>
-          </div>
-
-          <section class="profile-section account-actions-panel">
-            <div class="section-head compact"><span>📈 Estatísticas & conta</span><h2>Gerenciar</h2></div>
-            <div class="account-action-grid">
-              <button class="account-action" type="button" id="action-edit-profile"><i class="fa-regular fa-pen-to-square"></i> Editar Perfil</button>
-              <button class="account-action" type="button" id="action-change-password"><i class="fa-solid fa-key"></i> Alterar senha</button>
-              <button class="account-action" type="button" id="action-active-sessions"><i class="fa-solid fa-shield-halved"></i> Sessões ativas</button>
-              <button class="account-action" type="button" id="action-manage-devices"><i class="fa-solid fa-display"></i> Gerenciar dispositivos</button>
-              <button class="account-action danger" type="button" id="action-delete-account"><i class="fa-regular fa-trash-can"></i> Excluir conta</button>
-            </div>
-          </section>
-        </section>
-
         <form class="profile-form" id="profile-form">
           <section class="profile-section">
             <div class="section-head">
@@ -131,23 +86,8 @@
                   <i class="fa-regular fa-images"></i>
                   Trocar imagem
                 </button>
-                <button class="ghost-btn secondary" type="button" id="upload-avatar-btn">
-                  <i class="fa-solid fa-cloud-arrow-up"></i>
-                  Upload
-                </button>
-                <input id="avatar-upload-input" type="file" accept="image/*" hidden />
-                <p>Escolha um avatar ou envie sua imagem. A foto é cortada automaticamente antes de salvar.</p>
+                <p>Escolha um dos avatares disponíveis para este perfil.</p>
                 <div class="avatar-grid" id="avatar-grid" hidden></div>
-                <div class="avatar-frame-row">
-                  <label class="field-label inline" for="avatar-frame">Moldura</label>
-                  <select class="profile-input compact-input" id="avatar-frame">
-                    <option value="default">Padrão</option>
-                    <option value="gold" disabled>Dourada</option>
-                    <option value="vip" disabled>VIP</option>
-                    <option value="premium" disabled>Premium</option>
-                    <option value="admin" disabled>Administrador</option>
-                  </select>
-                </div>
               </div>
             </div>
           </section>
@@ -164,22 +104,7 @@
 
           <section class="profile-section">
             <div class="section-head">
-              <span>03 · Presença</span>
-              <h2>Bio e destaque</h2>
-            </div>
-            <label class="field-label" for="profile-bio">Bio curta</label>
-            <textarea class="profile-input profile-textarea" id="profile-bio" maxlength="120" rows="3" placeholder="Conte um pouco sobre seu gosto de cinema"></textarea>
-            <div class="accent-picker" id="accent-picker" aria-label="Cor de destaque do perfil">
-              <button type="button" class="accent-swatch active" data-color="#FFD700" style="--swatch:#FFD700" aria-label="Dourado"></button>
-              <button type="button" class="accent-swatch" data-color="#FFE44D" style="--swatch:#FFE44D" aria-label="Dourado claro"></button>
-              <button type="button" class="accent-swatch" data-color="#DAA520" style="--swatch:#DAA520" aria-label="Ouro antigo"></button>
-            </div>
-            <small>Use apenas cores da paleta GOATCINE.</small>
-          </section>
-
-          <section class="profile-section">
-            <div class="section-head">
-              <span>04 · PIN</span>
+              <span>03 · PIN</span>
               <h2>Trava da tela</h2>
             </div>
             <div class="pin-tabs" role="group" aria-label="Opções de PIN">

@@ -638,7 +638,8 @@ async function initApp() {
     const list = (data.movies || []).map(m => ({
       ...m,
       type: m.type === 'series' ? 'series' : 'movie',
-      videoUrl: m.videoUrl || m.videourl || ''
+      videoUrl: m.videoUrl || m.videourl || '',
+      trailerUrl: m.trailerUrl || m.trailerurl || ''
     }));
 
     const movieList = list.filter(m => m.type !== 'series');
@@ -739,10 +740,7 @@ function createMovieCard(movie) {
   if (movie.homeRank) card.dataset.rank = movie.homeRank;
 
   const isInList = myList.has(String(movie.id));
-  const typeLabel = movie.type === 'series' ? 'Série' : 'Filme';
-  const durationLabel = movie.type === 'series' ? 'Série' : (movie.duration || 'GOATCINE');
   const poster = movie.poster || movie.backdrop || '';
-  const shortDesc = movie.desc || 'Sem descrição disponível.';
 
   card.innerHTML = `
     <div class="card-poster-wrapper">
@@ -756,13 +754,6 @@ function createMovieCard(movie) {
            onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22180%22 height=%22270%22 viewBox=%220 0 180 270%22><rect width=%22180%22 height=%22270%22 fill=%22%23161616%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 fill=%22%23FFD700%22 font-size=%2240%22>🎬</text></svg>'" />
       <div class="card-overlay">
         <div class="card-title">${escapeHtml(movie.title)}</div>
-        <div class="card-hover-meta">
-          <span>⭐ ${escapeHtml(movie.rating || 'N/A')}</span>
-          <span>📅 ${escapeHtml(movie.year || '')}</span>
-          <span>⏱ ${escapeHtml(durationLabel)}</span>
-        </div>
-        <div class="card-hover-genre">🎭 ${escapeHtml(movie.genre || typeLabel)}</div>
-        <p class="card-hover-desc">${escapeHtml(shortDesc)}</p>
         <div class="card-hover-actions" aria-label="Ações de ${escapeHtml(movie.title)}">
           <button class="card-action watch" type="button" data-card-action="watch" aria-label="Assistir ${escapeHtml(movie.title)}">▶ Assistir</button>
           <button class="card-action list ${isInList ? 'active' : ''}" type="button" data-card-action="list" aria-label="Adicionar ${escapeHtml(movie.title)} à minha lista">${isInList ? '✓' : '➕'}</button>
@@ -1565,6 +1556,7 @@ function openModal(movie) {
   const modalSimilarGrid = $('modal-similar-grid');
   const modalWatchBtn = $('modal-watch-btn');
   const modalListBtn = $('modal-list-btn');
+  const modalTrailerBtn = $('modal-trailer-btn');
   const modalEpisodes = $('modal-episodes');
   const seasonTabs = $('season-tabs');
   const episodeList = $('episode-list-user');
@@ -1646,6 +1638,21 @@ function openModal(movie) {
   modalListBtn.onclick = () => {
     toggleMyListItem(movie);
   };
+
+  const trailerUrl = movie.trailerUrl || movie.trailerurl || '';
+  if (modalTrailerBtn) {
+    modalTrailerBtn.style.display = trailerUrl ? 'inline-flex' : 'none';
+    modalTrailerBtn.onclick = trailerUrl ? () => {
+      closeModal();
+      openVideoPlayer({
+        ...movie,
+        title: `${movie.title} - Trailer`,
+        videoUrl: trailerUrl,
+        subtitlesUrl: '',
+        isTrailer: true
+      });
+    } : null;
+  }
 
   // Show modal
   modalOverlay.classList.add('open');
@@ -2119,8 +2126,11 @@ function initVideoPlayer() {
 
   // Global open function
   window.openVideoPlayer = async function(movie) {
-    const allowed = await checkSubscriptionAndScreens();
-    if (!allowed) return;
+    const isTrailerPlayback = Boolean(movie?.isTrailer);
+    if (!isTrailerPlayback) {
+      const allowed = await checkSubscriptionAndScreens();
+      if (!allowed) return;
+    }
 
     movie = await enrichSeriesPlaybackItem(movie);
     clearNextEpisodePrompt();
@@ -2135,7 +2145,7 @@ function initVideoPlayer() {
     // Determinar se o link é Iframe (YouTube/Vimeo/Google Drive/Axplay) ou vídeo direto (.mp4, .webm, .m3u8)
     const rawUrl = movie.videoUrl || movie.videourl || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
     const url = getPlayableUrl(rawUrl);
-    currentPlaybackItem = { ...movie, videoUrl: rawUrl };
+    currentPlaybackItem = isTrailerPlayback ? null : { ...movie, videoUrl: rawUrl };
     lastProgressSaveAt = 0;
     renderPlayerEpisodes();
     

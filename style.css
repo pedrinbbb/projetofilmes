@@ -966,10 +966,10 @@ ul {
 
 .card-title {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--text-primary);
   line-height: 1.3;
-  margin-bottom: 4px;
+  margin-bottom: 10px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -981,42 +981,11 @@ ul {
   font-weight: 600;
 }
 
-.card-hover-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 6px;
-  color: var(--text-secondary);
-  font-size: 10px;
-  font-weight: 800;
-}
-
-.card-hover-genre {
-  margin-bottom: 6px;
-  color: var(--gold-primary);
-  font-size: 10px;
-  font-weight: 800;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.card-hover-desc {
-  display: -webkit-box;
-  min-height: 32px;
-  margin: 0 0 10px;
-  overflow: hidden;
-  color: var(--text-secondary);
-  font-size: 11px;
-  line-height: 1.45;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
-
 .card-hover-actions {
   display: flex;
   align-items: center;
   gap: 6px;
+  margin-top: 0;
 }
 
 .card-action {
@@ -1172,12 +1141,6 @@ ul {
 
   .movie-card {
     width: 172px;
-  }
-
-  .card-hover-meta,
-  .card-hover-genre,
-  .card-hover-desc {
-    font-size: 9px;
   }
 
   .card-action {

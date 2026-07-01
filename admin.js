@@ -643,6 +643,7 @@ window.openEditModal = function(id) {
   $('m-director').value = movie.director;
   $('m-cast').value = movie.cast;
   $('m-videoUrl').value = movie.videoUrl || movie.videourl || '';
+  $('m-trailerUrl').value = movie.trailerUrl || movie.trailerurl || '';
   $('m-subtitlesUrl').value = movie.subtitlesUrl || movie.subtitlesurl || '';
   $('m-desc').value = movie.desc;
   updateMovieTypeFields();
@@ -672,6 +673,7 @@ movieForm.addEventListener('submit', async (e) => {
     director: $('m-director').value.trim(),
     cast: $('m-cast').value.trim(),
     videoUrl: isSeries ? '' : $('m-videoUrl').value.trim(),
+    trailerUrl: $('m-trailerUrl').value.trim(),
     subtitlesUrl: $('m-subtitlesUrl').value.trim(),
     desc: $('m-desc').value.trim(),
   };
@@ -680,7 +682,7 @@ movieForm.addEventListener('submit', async (e) => {
   let formsValid = true;
   Object.keys(payload).forEach(key => {
     if (isSeries && (key === 'duration' || key === 'videoUrl')) return;
-    if (key === 'poster' || key === 'backdrop' || key === 'subtitlesUrl') return;
+    if (key === 'poster' || key === 'backdrop' || key === 'subtitlesUrl' || key === 'trailerUrl') return;
     if (!payload[key] && payload[key] !== 0) {
       formsValid = false;
     }

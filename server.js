@@ -3387,6 +3387,14 @@ app.get('/gerenciar-perfis', (req, res) => {
   res.sendFile(path.join(__dirname, 'profiles.html'));
 });
 
+app.get(['/filmes', '/series'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+app.get('/minha-lista', (req, res) => {
+  res.sendFile(path.join(__dirname, 'my-goat.html'));
+});
+
 app.get(['/conta', '/assinatura', '/cobranca', '/dispositivos'], (req, res) => {
   res.sendFile(path.join(__dirname, 'account-profile.html'));
 });

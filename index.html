@@ -48,7 +48,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.3.0/css/all.min.css" />
 
-  <link rel="stylesheet" href="style.css?v=hero-frame-1" />
+  <link rel="stylesheet" href="style.css?v=category-pages-1" />
 </head>
 <body>
   <header class="mobile-home-header" aria-label="Busca da página inicial">
@@ -63,7 +63,7 @@
     <div class="nav-container">
 
       <!-- Logo -->
-      <a href="#" class="nav-logo" id="nav-logo-link" aria-label="GOATCINE - Página inicial">
+      <a href="/" class="nav-logo" id="nav-logo-link" aria-label="GOATCINE - Página inicial">
         <img src="/uploads/logo.png?v=1" style="max-height: 38px; display: none;" onerror="this.onerror=null; this.style.display='none'; document.getElementById('nav-logo-fallback').style.display='inline-flex';" onload="this.style.display='block'; document.getElementById('nav-logo-fallback').style.display='none';" />
         <span id="nav-logo-fallback" style="display: inline-flex; align-items: center; gap: 8px;">
           <span class="logo-icon">🏆</span>
@@ -73,20 +73,17 @@
 
       <!-- Nav Links -->
       <ul class="nav-links" id="nav-links" role="list">
-        <li><a href="#" class="nav-link active" id="nav-home">Início</a></li>
-        <li><a href="#filmes" class="nav-link" id="nav-movies">Filmes</a></li>
-        <li><a href="#series" class="nav-link" id="nav-series">Séries</a></li>
-        <li><a href="#originais" class="nav-link" id="nav-originals">
-          <span class="nav-badge">GOAT</span> Originais
-        </a></li>
+        <li><a href="/" class="nav-link active" id="nav-home">Início</a></li>
+        <li><a href="/filmes" class="nav-link" id="nav-movies">Filmes</a></li>
+        <li><a href="/series" class="nav-link" id="nav-series">Séries</a></li>
+        <li><a href="/minha-lista" class="nav-link" id="nav-my-list">Minha lista</a></li>
       </ul>
 
       <ul class="nav-category-links" id="nav-category-links" role="list" aria-label="Categorias">
-        <li><button class="nav-category-link active" type="button" data-target="hero">Início</button></li>
-        <li><button class="nav-category-link" type="button" data-target="filmes">Em Alta</button></li>
-        <li><button class="nav-category-link" type="button" data-target="novidades">Novidades</button></li>
-        <li><button class="nav-category-link" type="button" data-target="series">Séries</button></li>
-        <li><button class="nav-category-link" type="button" data-target="my-goat">Minha lista</button></li>
+        <li><a class="nav-category-link active" href="/" data-view="home">Início</a></li>
+        <li><a class="nav-category-link" href="/filmes" data-view="movies">Filmes</a></li>
+        <li><a class="nav-category-link" href="/series" data-view="series">Séries</a></li>
+        <li><a class="nav-category-link" href="/minha-lista">Minha lista</a></li>
       </ul>
 
       <!-- Right Actions -->
@@ -775,6 +772,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.8/dist/hls.min.js"></script>
   <script src="presence.js"></script>
-  <script src="app.js?v=hero-frame-1"></script>
+  <script src="app.js?v=category-pages-1"></script>
 </body>
 </html>

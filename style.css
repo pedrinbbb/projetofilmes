@@ -303,10 +303,14 @@ ul {
   }
 
   .nav-category-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     min-height: 34px;
     padding: 0 16px;
     border-radius: 999px;
     color: var(--text-secondary);
+    text-decoration: none;
     font-size: 13px;
     font-weight: 800;
     transition: color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast);

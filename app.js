@@ -46,6 +46,27 @@ let currentModalMovie = null;
 let activeView = 'home';
 let currentCatalogType = 'movies';
 
+function getViewFromPath() {
+  const path = window.location.pathname.replace(/\/+$/, '') || '/';
+  if (path === '/filmes') return 'movies';
+  if (path === '/series') return 'series';
+  return 'home';
+}
+
+function getPathForView(viewName) {
+  if (viewName === 'movies') return '/filmes';
+  if (viewName === 'series') return '/series';
+  return '/';
+}
+
+function navigateToView(viewName) {
+  const nextPath = getPathForView(viewName);
+  if (window.location.pathname !== nextPath) {
+    window.history.pushState({ viewName }, '', nextPath);
+  }
+  showSection(viewName);
+}
+
 // ---- DOM REFS ----
 const $ = (id) => document.getElementById(id);
 const navbar = $('navbar');
@@ -730,6 +751,7 @@ async function initApp() {
   initCarouselArrows();
   initHeroSlider();
   initNavbar();
+  showSection(getViewFromPath(), { skipScroll: true });
   initSearch();
   applyPendingSearch();
   initModal();
@@ -1114,48 +1136,36 @@ function initNavbar() {
   // Nav link router navigation click handlers
   $('nav-logo-link')?.addEventListener('click', (e) => {
     e.preventDefault();
-    showSection('home');
+    navigateToView('home');
   });
 
   $('nav-home')?.addEventListener('click', (e) => {
     e.preventDefault();
-    showSection('home');
+    navigateToView('home');
   });
 
   $('nav-movies')?.addEventListener('click', (e) => {
     e.preventDefault();
-    showSection('movies');
+    navigateToView('movies');
   });
 
   $('nav-series')?.addEventListener('click', (e) => {
     e.preventDefault();
-    showSection('series');
+    navigateToView('series');
   });
 
-  $('nav-originals')?.addEventListener('click', (e) => {
-    e.preventDefault();
-    showSection('home');
-    $('originais')?.scrollIntoView({ behavior: 'smooth' });
-  });
+  document.querySelectorAll('.nav-category-link').forEach((link) => {
+    link.addEventListener('click', (event) => {
+      const view = link.dataset.view;
+      if (!view) return;
 
-  document.querySelectorAll('.nav-category-link').forEach((button) => {
-    button.addEventListener('click', () => {
-      const target = button.dataset.target;
-
-      document.querySelectorAll('.nav-category-link').forEach((item) => item.classList.remove('active'));
-      button.classList.add('active');
-
-      if (target === 'my-goat') {
-        window.location.href = '/my-goat.html';
-        return;
-      }
-
-      showSection('home');
-      const targetElement = $(target);
-      if (targetElement) {
-        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
+      event.preventDefault();
+      navigateToView(view);
     });
+  });
+
+  window.addEventListener('popstate', () => {
+    showSection(getViewFromPath());
   });
 }
 
@@ -3250,9 +3260,11 @@ function initSubscriptionEvents() {
 }
 
 // ---- CATALOG & ROUTING ----
-function showSection(viewName) {
+function showSection(viewName, options = {}) {
   // Rolar suavemente para o topo ao trocar de seção
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (!options.skipScroll) {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 
   const standardContent = $('standard-content');
   const searchResultsSection = $('search-results-section');
@@ -3275,6 +3287,9 @@ function showSection(viewName) {
   // Atualizar links ativos na navbar
   document.querySelectorAll('.nav-link').forEach(link => {
     link.classList.remove('active');
+  });
+  document.querySelectorAll('.nav-category-link').forEach(link => {
+    link.classList.toggle('active', link.dataset.view === viewName);
   });
   
   if (viewName === 'home') {

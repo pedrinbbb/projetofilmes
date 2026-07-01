@@ -1048,6 +1048,122 @@ async function runMigrationsAndSeeds() {
     console.error("[DB SEED ERROR] Erro ao semear Temporada 4 de Origem:", err);
   }
 
+  // --- SEED SEASONS FOR THE LAST OF US AUTOMATICALLY ---
+  try {
+    const movie = await dbGetAsync("SELECT id FROM movies WHERE title = ?", ["The Last of Us"]);
+    let movieId;
+    if (movie) {
+      movieId = movie.id;
+      await dbRunAsync("UPDATE movies SET duration = '1 Temporada' WHERE id = ?", [movieId]);
+    } else {
+      await dbRunAsync(`
+        INSERT INTO movies (title, year, duration, rating, genre, "desc", poster, backdrop, director, "cast", category, type, videoUrl, subtitlesUrl, trailerUrl)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        "The Last of Us",
+        2023,
+        "1 Temporada",
+        8.7,
+        "Ação / Drama / Ficção Científica",
+        "Uma série dramática baseada no aclamado videogame de mesmo nome, onde um sobrevivente endurecido assume a responsabilidade de contrabandear uma garota de 14 anos para fora de uma zona de quarentena opressiva.",
+        "https://image.tmdb.org/t/p/w500/uKVQjEUuC19Zq0r486z85g4goIP.jpg",
+        "https://image.tmdb.org/t/p/w1280/uDgy6hyPdZ2sbTyIKypw2C46wJm.jpg",
+        "Craig Mazin, Neil Druckmann",
+        "Pedro Pascal, Bella Ramsey, Gabriel Luna",
+        "series",
+        "series",
+        "",
+        "",
+        "https://www.youtube.com/watch?v=uLtkt8BonwM"
+      ]);
+      const row = await dbGetAsync("SELECT id FROM movies WHERE title = ?", ["The Last of Us"]);
+      movieId = row?.id;
+      if (!IS_POSTGRES) saveDb();
+    }
+
+    if (movieId) {
+      const season1Episodes = [
+        {
+          number: 1,
+          title: "Quando Estiver Perdido na Escuridão",
+          duration: "1h 21min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-last-of-us%2F01-temporada%2F01%2Fstream.m3u8&slug=the-last-of-us&temporada=1&numero_episodio=1&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Vinte anos após o surto do fungo Cordyceps devastar o planeta, Joel recebe a missão de escoltar a jovem Ellie para fora de uma zona de quarentena em Boston."
+        },
+        {
+          number: 2,
+          title: "Infectados",
+          duration: "53 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-last-of-us%2F01-temporada%2F02%2Fstream.m3u8&slug=the-last-of-us&temporada=1&numero_episodio=2&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Joel, Tess e Ellie exploram as ruínas de uma cidade tomada pelo fungo enquanto tentam entender o real valor da menina para os Vagalumes."
+        },
+        {
+          number: 3,
+          title: "Por Muito, Muito Tempo",
+          duration: "1h 15min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-last-of-us%2F01-temporada%2F03%2Fstream.m3u8&slug=the-last-of-us&temporada=1&numero_episodio=3&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "O episódio foca na história de sobrevivência de Bill e Frank, mostrando uma conexão improvável que floresceu durante o apocalipse."
+        },
+        {
+          number: 4,
+          title: "Por Favor, Segure a Minha Mão",
+          duration: "46 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-last-of-us%2F01-temporada%2F04%2Fstream.m3u8&slug=the-last-of-us&temporada=1&numero_episodio=4&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Joel e Ellie enfrentam perigos ao passarem por Kansas City, onde encontram um grupo violento de rebeldes sobreviventes."
+        },
+        {
+          number: 5,
+          title: "Resistir e Sobreviver",
+          duration: "59 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-last-of-us%2F01-temporada%2F05%2Fstream.m3u8&slug=the-last-of-us&temporada=1&numero_episodio=5&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "A dupla tenta escapar dos rebeldes locais enquanto cruza o caminho de outros sobreviventes, levando a consequências trágicas e marcantes."
+        },
+        {
+          number: 6,
+          title: "Parentesco",
+          duration: "59 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-last-of-us%2F01-temporada%2F06%2Fstream.m3u8&slug=the-last-of-us&temporada=1&numero_episodio=6&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Joel e Ellie seguem em direção a um território perigoso em busca de Tommy, o irmão de Joel, ignorando avisos sobre os riscos da região."
+        },
+        {
+          number: 7,
+          title: "O Que Deixamos Para Trás",
+          duration: "56 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-last-of-us%2F01-temporada%2F07%2Fstream.m3u8&slug=the-last-of-us&temporada=1&numero_episodio=7&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Enquanto Joel luta pela vida após ser gravemente ferido, Ellie relembra eventos dolorosos do seu passado militar ao lado de sua melhor amiga Riley."
+        },
+        {
+          number: 8,
+          title: "Quando Mais Precisamos",
+          duration: "51 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-last-of-us%2F01-temporada%2F08%2Fstream.m3u8&slug=the-last-of-us&temporada=1&numero_episodio=8&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Ellie cruza o caminho de um grupo de sobreviventes religioso e canibal liderado pelo sinistro David, precisando lutar para proteger a si mesma e a Joel."
+        },
+        {
+          number: 9,
+          title: "Procure a Luz",
+          duration: "43 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-last-of-us%2F01-temporada%2F09%2Fstream.m3u8&slug=the-last-of-us&temporada=1&numero_episodio=9&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Joel e Ellie finalmente chegam ao hospital dos Vagalumes, forçando Joel a tomar uma decisão extrema para salvar a vida de Ellie."
+        }
+      ];
+
+      for (const ep of season1Episodes) {
+        const existing = await dbGetAsync("SELECT id FROM episodes WHERE movie_id = ? AND season = 1 AND number = ?", [movieId, ep.number]);
+        if (!existing) {
+          await dbRunAsync(`
+            INSERT INTO episodes (movie_id, season, number, title, duration, videoUrl, "desc", subtitlesUrl)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          `, [movieId, 1, ep.number, ep.title, ep.duration, ep.videoUrl, ep.desc, ""]);
+        }
+      }
+      if (!IS_POSTGRES) saveDb();
+      console.log("[DB SEED] ✅ Temporada 1 de The Last of Us semeada com sucesso.");
+    }
+  } catch (err) {
+    console.error("[DB SEED ERROR] Erro ao semear Temporada 1 de The Last of Us:", err);
+  }
+
   // --- GARANTIR QUE CREED: III SEJA ADICIONADO SE ESTIVER AUSENTE ---
   try {
     const existingCreed3 = await dbGetAsync("SELECT id FROM movies WHERE title = ?", ["Creed: III"]);

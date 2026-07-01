@@ -2340,6 +2340,7 @@ app.put('/api/admin/plans/:id', requireAdminAuth, (req, res) => {
       'UPDATE plans SET name = ?, price = ?, screens = ?, duration_days = ? WHERE id = ?',
       [name, parseFloat(price), parseInt(screens), parseInt(duration_days), id]
     );
+    saveDb();
 
     const plan = dbGet('SELECT * FROM plans WHERE id = ?', [id]);
     return res.json({ plan });
@@ -2650,7 +2651,7 @@ app.post('/api/user/subscribe', requireAuth, async (req, res) => {
         const body = {
           amount: parseFloat(plan.price),
           description: `Assinatura GOATCINE - Plano ${plan.name}`,
-          externalReference: `${req.user.id}_${planId}`
+          externalReference: `${req.user.id}_${planId}_${Date.now()}`
         };
 
         const secureFetch = (typeof globalThis !== 'undefined' && globalThis.fetch) ? globalThis.fetch : fetch;

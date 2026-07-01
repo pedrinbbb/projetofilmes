@@ -454,17 +454,17 @@ function buildPremiumCollections() {
   return [
     {
       id: 'recommended-row',
-      title: '⭐ Recomendados para Você',
+      title: 'Recomendados para Você',
       items: takeLoop(recommended, 8)
     },
     {
       id: 'filmes',
-      title: '🔥 Em Alta Hoje',
+      title: 'Em Alta Hoje',
       items: takeLoop(MOVIES.trending.length ? MOVIES.trending : byRating, 8)
     },
     {
       id: 'top10-brasil',
-      title: '🇧🇷 Top 10 Brasil',
+      title: 'Top 10 Brasil',
       items: takeLoop((TOP10_MOVIES.length ? TOP10_MOVIES : byRating).map((movie, index) => ({
         ...movie,
         homeRank: index + 1
@@ -472,37 +472,37 @@ function buildPremiumCollections() {
     },
     {
       id: 'lancamentos',
-      title: '🎬 Lançamentos',
+      title: 'Lançamentos',
       items: takeLoop(byYear, 8)
     },
     {
       id: 'novidades',
-      title: '🆕 Adicionados Recentemente',
+      title: 'Adicionados Recentemente',
       items: takeLoop(newest, 8)
     },
     {
       id: 'because-row',
-      title: lastWatched?.title ? `❤️ Porque você assistiu ${lastWatched.title}` : '❤️ Porque você assistiu...',
+      title: lastWatched?.title ? `Porque você assistiu ${lastWatched.title}` : 'Porque você assistiu...',
       items: takeLoop(becauseSource, 8)
     },
     {
       id: 'genre-row',
-      title: '🎭 Por gênero',
+      title: 'Por gênero',
       items: buildGenreCollection(all)
     },
     {
       id: 'popular-row',
-      title: '👑 Mais Populares',
+      title: 'Mais Populares',
       items: takeLoop(byRating, 8)
     },
     {
       id: 'series',
-      title: '📺 Séries em destaque',
+      title: 'Séries em destaque',
       items: takeLoop(series.length ? series : byRating, 8)
     },
     {
       id: 'weekly-trends',
-      title: '📈 Tendências da Semana',
+      title: 'Tendências da Semana',
       items: takeLoop(uniqueById([...MOVIES.action, ...MOVIES.trending, ...newest, ...byRating]), 8)
     }
   ].filter(row => row.items.length > 0);

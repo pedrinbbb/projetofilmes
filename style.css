@@ -890,7 +890,7 @@ ul {
    ============================================= */
 .movie-card {
   flex-shrink: 0;
-  width: 180px;
+  width: 196px;
   cursor: pointer;
   position: relative;
   border-radius: var(--radius-md);
@@ -1171,7 +1171,7 @@ ul {
   }
 
   .movie-card {
-    width: 142px;
+    width: 154px;
   }
 
   .card-hover-meta,
@@ -2266,7 +2266,7 @@ ul {
   }
 
   .movie-card {
-    width: 140px;
+    width: 150px;
   }
 
   .modal-body {

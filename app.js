@@ -2714,9 +2714,7 @@ async function selectPlanForSub(planId, cardElement) {
           if (checkData.subscription && checkData.subscription.sub_active === 1) {
             clearInterval(subPollInterval);
             subPollInterval = null;
-            showToast('🎉 Pagamento confirmado! Assinatura ativada.');
-            closeSubModal();
-            setTimeout(() => window.location.reload(), 1500);
+            showSuccessPremiumOverlay();
           }
         }
       } catch (err) {
@@ -2732,6 +2730,49 @@ async function selectPlanForSub(planId, cardElement) {
       qrWrapper.innerHTML = `<div style="width:180px;height:180px;display:flex;align-items:center;justify-content:center;color:#e55;font-size:13px;text-align:center;padding:12px;">Falha ao carregar QR Code</div>`;
     }
   }
+}
+
+function showSuccessPremiumOverlay() {
+  const existing = $('sub-success-overlay');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'sub-success-overlay';
+  overlay.className = 'success-premium-overlay';
+
+  overlay.innerHTML = `
+    <div class="success-premium-card">
+      <div class="success-premium-glow"></div>
+      <div class="success-premium-crown-wrapper">
+        <i class="fa-solid fa-crown success-premium-icon"></i>
+      </div>
+      <h2 class="success-premium-title">Você agora é um GOAT! 🐐👑</h2>
+      <p class="success-premium-text">Obrigado por se tornar um GOAT e fazer parte disso com a gente. Sua experiência premium está pronta!</p>
+      <div class="success-premium-loading-bar-wrapper">
+        <div class="success-premium-loading-bar-fill" id="success-loading-fill"></div>
+      </div>
+      <span class="success-premium-footer">Preparando sua tela premium...</span>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  requestAnimationFrame(() => {
+    overlay.classList.add('show');
+    setTimeout(() => {
+      const fill = $('success-loading-fill');
+      if (fill) fill.style.width = '100%';
+    }, 100);
+  });
+
+  closeSubModal();
+
+  setTimeout(() => {
+    overlay.classList.remove('show');
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
+  }, 3800);
 }
 
 async function activateTrial() {

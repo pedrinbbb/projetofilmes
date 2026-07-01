@@ -1504,9 +1504,9 @@ app.post('/api/auth/resend-code', async (req, res) => {
 
 /**
  * POST /api/auth/forgot-password
- * Recebe o e-mail, gera um código temporário de redefinição no banco e o retorna.
+ * Recebe o e-mail, gera um código temporário de redefinição e envia por e-mail.
  * Body: { email }
- * Response: { success: true, dev_code }
+ * Response: { success: true }
  */
 app.post('/api/auth/forgot-password', async (req, res) => {
   try {
@@ -1530,34 +1530,26 @@ app.post('/api/auth/forgot-password', async (req, res) => {
       [cleanEmail, user.name, '', code, expiresAt]
     );
 
-    console.log(`[FORGOT-PASSWORD] 🔑 Código gerado para redefinição de ${cleanEmail}: ${code}`);
+    console.log(`[FORGOT-PASSWORD] Solicitação de redefinição criada para ${cleanEmail}`);
 
-    if (isEmailConfigured()) {
-      try {
-        await sendResetPasswordEmail(cleanEmail, user.name, code);
-        console.log(`[EMAIL] ✅ Código de redefinição enviado para: ${cleanEmail}`);
-        return res.json({
-          success: true,
-          message: 'Código de redefinição de senha enviado para o seu e-mail.'
-        });
-      } catch (mailErr) {
-        console.error(`[EMAIL ERROR] Falha no envio para ${cleanEmail}. Erro:`, mailErr.message);
-        console.log(`[EMAIL] ⚠️ Fallback ativo no forgot-password — Código: ${code}`);
-        return res.json({
-          success: true,
-          dev_code: code,
-          message: 'Falha ao enviar e-mail. Usando modo de desenvolvimento.'
-        });
-      }
-    } else {
-      console.log(`[EMAIL] ⚠️  Dev mode — Código de redefinição para ${cleanEmail}: ${code}`);
-      return res.json({
-        success: true,
-        dev_code: code,
-        message: 'Código gerado no console (Modo Desenvolvimento).'
-      });
+    if (!isEmailConfigured()) {
+      dbRun('DELETE FROM verification_codes WHERE email = ?', [cleanEmail]);
+      console.error('[EMAIL ERROR] SMTP nao configurado para redefinicao de senha.');
+      return res.status(500).json({ error: 'Envio de e-mail não configurado. Tente novamente mais tarde.' });
     }
 
+    try {
+      await sendResetPasswordEmail(cleanEmail, user.name, code);
+      console.log(`[EMAIL] ✅ Código de redefinição enviado para: ${cleanEmail}`);
+      return res.json({
+        success: true,
+        message: 'Código de redefinição de senha enviado para o seu e-mail.'
+      });
+    } catch (mailErr) {
+      dbRun('DELETE FROM verification_codes WHERE email = ?', [cleanEmail]);
+      console.error(`[EMAIL ERROR] Falha no envio para ${cleanEmail}. Erro:`, mailErr.message);
+      return res.status(500).json({ error: 'Não foi possível enviar o código por e-mail. Tente novamente.' });
+    }
   } catch (err) {
     console.error('[FORGOT PASSWORD ERROR]', err);
     return res.status(500).json({ error: 'Erro ao gerar solicitação de redefinição de senha.' });

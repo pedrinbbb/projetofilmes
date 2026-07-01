@@ -703,9 +703,6 @@ function saveAuthAndRedirect(token, user, isNew = false) {
   const confirmInput = document.getElementById('forgot-confirm-password');
   const confirmError = document.getElementById('forgot-confirm-error');
   
-  const devBox = document.getElementById('forgot-dev-box');
-  const devCodeEl = document.getElementById('forgot-dev-code');
-  
   const togglePassBtn = document.getElementById('forgot-toggle-pass');
   const toggleConfirmBtn = document.getElementById('forgot-toggle-confirm');
 
@@ -757,7 +754,6 @@ function saveAuthAndRedirect(token, user, isNew = false) {
       confirmInput.value = '';
       confirmError.textContent = '';
       setForgotPasswordStep(false);
-      if (devBox) devBox.style.display = 'none';
       const successAlert = document.getElementById('forgot-success-alert');
       if (successAlert) {
         successAlert.style.display = 'none';
@@ -832,15 +828,6 @@ function saveAuthAndRedirect(token, user, isNew = false) {
             <span style="font-size: 12px; opacity: 0.9;">Enviamos um código para validar seu email. Confira também a caixa de Spam.</span>
           `;
         }
-        
-        // Populate dev_code if provided by backend bypass
-        if (data.dev_code && devBox && devCodeEl) {
-          devCodeEl.textContent = data.dev_code;
-          devBox.style.display = 'block';
-        } else if (devBox) {
-          devBox.style.display = 'none';
-        }
-
       } catch (err) {
         emailError.textContent = err.message;
       } finally {

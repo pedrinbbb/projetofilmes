@@ -3405,3 +3405,48 @@ ul {
 .top10-overlay {
   display: none;
 }
+
+/* Indicadores de progresso e assistido nos episódios */
+.episode-status-badge.watched {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(46, 204, 113, 0.15);
+  color: #2ecc71;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  width: fit-content;
+  margin-top: 6px;
+  text-transform: uppercase;
+  border: 1px solid rgba(46, 204, 113, 0.25);
+}
+
+.episode-progress-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 6px;
+  max-width: 200px;
+}
+
+.episode-progress-bar {
+  width: 100%;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.episode-progress-fill {
+  height: 100%;
+  background: var(--gold-primary, #ffd700);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.episode-status-text {
+  font-size: 0.7rem;
+  color: var(--text-muted, #888);
+}

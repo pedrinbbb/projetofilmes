@@ -93,6 +93,31 @@ function toggleMyListItem(movie) {
   return true;
 }
 
+const WATCHED_EPISODES_PREFIX = 'goatcine_watched_episodes_';
+
+function getWatchedEpisodesKey() {
+  return `${WATCHED_EPISODES_PREFIX}${getActiveProfileId()}`;
+}
+
+function readWatchedEpisodes() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(getWatchedEpisodesKey()) || '[]');
+    return Array.isArray(saved) ? new Set(saved.map(String)) : new Set();
+  } catch {
+    return new Set();
+  }
+}
+
+function writeWatchedEpisodes(watchedSet) {
+  localStorage.setItem(getWatchedEpisodesKey(), JSON.stringify(Array.from(watchedSet)));
+}
+
+function markEpisodeAsWatched(episodeId) {
+  const watched = readWatchedEpisodes();
+  watched.add(String(episodeId));
+  writeWatchedEpisodes(watched);
+}
+
 const WATCH_PROGRESS_PREFIX = 'goatcine_watch_progress_';
 let continueWatchingRenderTimer = null;
 
@@ -135,8 +160,12 @@ function saveWatchProgress(item, currentTime, durationSeconds) {
 
   const progress = readWatchProgress();
   const isAlmostFinished = watchedSeconds >= totalSeconds - 20 || watchedSeconds / totalSeconds >= 0.95;
+  const isEpisode = Boolean(item.episodeId);
 
   if (isAlmostFinished) {
+    if (isEpisode && item.episodeId) {
+      markEpisodeAsWatched(item.episodeId);
+    }
     if (progress[progressId]) {
       delete progress[progressId];
       writeWatchProgress(progress);
@@ -951,20 +980,58 @@ function groupEpisodesBySeason(episodes) {
     }));
 }
 
+function formatSeconds(seconds) {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60);
+  if (h > 0) {
+    return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
 function renderSeason(seasonGroup, movie) {
   const episodeList = $('episode-list-user');
   if (!episodeList || !seasonGroup) return;
 
-  episodeList.innerHTML = seasonGroup.episodes.map(ep => `
-    <button class="episode-card-user" type="button" data-episode-id="${ep.id}">
-      <span class="episode-number-user">${ep.number}</span>
-      <span>
-        <span class="episode-name-user">${escapeHtml(ep.title)}</span>
-        <span class="episode-desc-user">${escapeHtml(ep.desc || 'Sem descricao disponivel.')}</span>
-      </span>
-      <span class="episode-duration-user">${escapeHtml(ep.duration)}</span>
-    </button>
-  `).join('');
+  const progress = readWatchProgress();
+  const watchedSet = readWatchedEpisodes();
+
+  episodeList.innerHTML = seasonGroup.episodes.map(ep => {
+    const isWatched = watchedSet.has(String(ep.id));
+    const progEntry = progress[`episode:${ep.id}`];
+    
+    let indicatorHtml = '';
+    let cardStyle = '';
+    
+    if (isWatched) {
+      indicatorHtml = `<span class="episode-status-badge watched"><i class="fas fa-check-circle"></i> Assistido</span>`;
+      cardStyle = 'border-left: 3px solid #2ecc71;';
+    } else if (progEntry && progEntry.currentTime && progEntry.durationSeconds) {
+      const pct = Math.min(100, Math.max(0, (progEntry.currentTime / progEntry.durationSeconds) * 100));
+      indicatorHtml = `
+        <div class="episode-progress-container">
+          <div class="episode-progress-bar">
+            <div class="episode-progress-fill" style="width: ${pct}%"></div>
+          </div>
+          <span class="episode-status-text">Parou em ${formatSeconds(progEntry.currentTime)}</span>
+        </div>
+      `;
+      cardStyle = 'border-left: 3px solid var(--gold-primary, #ffd700);';
+    }
+
+    return `
+      <button class="episode-card-user" type="button" data-episode-id="${ep.id}" style="${cardStyle}">
+        <span class="episode-number-user">${ep.number}</span>
+        <div style="flex: 1; text-align: left; display: flex; flex-direction: column; gap: 4px;">
+          <span class="episode-name-user">${escapeHtml(ep.title)}</span>
+          <span class="episode-desc-user">${escapeHtml(ep.desc || 'Sem descrição disponível.')}</span>
+          ${indicatorHtml}
+        </div>
+        <span class="episode-duration-user">${escapeHtml(ep.duration)}</span>
+      </button>
+    `;
+  }).join('');
 
   episodeList.querySelectorAll('.episode-card-user').forEach(card => {
     card.addEventListener('click', () => {

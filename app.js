@@ -990,7 +990,7 @@ function updateHeroSlide(idx) {
     `
     : 'linear-gradient(135deg, #050505 0%, #101010 55%, #000 100%)';
   heroBg.style.backgroundSize = 'cover, cover, cover';
-  heroBg.style.backgroundPosition = 'center center, center center, center center';
+  heroBg.style.backgroundPosition = 'center center, center center, center 28%';
   heroBg.style.backgroundRepeat = 'no-repeat';
 
   // Animate content

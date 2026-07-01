@@ -489,7 +489,7 @@ ul {
   inset: 0;
   background: #000;
   background-size: cover;
-  background-position: center center;
+  background-position: center 28%;
   background-repeat: no-repeat;
   transition: background-image 0.7s ease, background-position 0.7s ease;
 }

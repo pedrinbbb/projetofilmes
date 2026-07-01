@@ -3275,7 +3275,7 @@ function renderCatalog(type) {
     return m.type !== 'series';
   });
 
-  catalogTitle.textContent = type === 'series' ? '🏆 Séries de TV' : '🎬 Catálogo de Filmes';
+  catalogTitle.textContent = type === 'series' ? 'Séries de TV' : 'Catálogo de Filmes';
 
   // Extrair todos os gêneros únicos
   const genres = new Set();

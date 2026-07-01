@@ -890,7 +890,7 @@ ul {
    ============================================= */
 .movie-card {
   flex-shrink: 0;
-  width: 196px;
+  width: 220px;
   cursor: pointer;
   position: relative;
   border-radius: var(--radius-md);
@@ -1117,7 +1117,7 @@ ul {
 
 .premium-row {
   content-visibility: auto;
-  contain-intrinsic-size: 360px;
+  contain-intrinsic-size: 410px;
 }
 
 .premium-carousel:focus-visible {
@@ -1171,7 +1171,7 @@ ul {
   }
 
   .movie-card {
-    width: 154px;
+    width: 172px;
   }
 
   .card-hover-meta,
@@ -2266,7 +2266,7 @@ ul {
   }
 
   .movie-card {
-    width: 150px;
+    width: 166px;
   }
 
   .modal-body {

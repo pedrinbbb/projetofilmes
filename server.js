@@ -891,7 +891,7 @@ async function runMigrationsAndSeeds() {
         const existing = await dbGetAsync("SELECT id FROM episodes WHERE movie_id = ? AND season = 3 AND number = ?", [movieId, ep.number]);
         if (!existing) {
           await dbRunAsync(`
-            INSERT INTO episodes (movie_id, season, number, title, duration, videoUrl, desc, subtitlesUrl)
+            INSERT INTO episodes (movie_id, season, number, title, duration, videoUrl, "desc", subtitlesUrl)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
           `, [movieId, 3, ep.number, ep.title, ep.duration, ep.videoUrl, ep.desc, ""]);
         }

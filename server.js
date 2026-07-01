@@ -1056,9 +1056,30 @@ function translateQuery(sql) {
     return sql;
   }
   
+  // Tradução de INSERT OR REPLACE específico para payment_logs no PostgreSQL
+  let translatedSql = sql;
+  if (translatedSql.toLowerCase().includes('insert or replace into payment_logs')) {
+    translatedSql = translatedSql.replace(/insert or replace/gi, 'INSERT');
+    if (translatedSql.includes('created_at') || translatedSql.includes('paid_at')) {
+      translatedSql += ` ON CONFLICT (txid) DO UPDATE SET 
+        user_id = EXCLUDED.user_id,
+        plan_id = EXCLUDED.plan_id,
+        amount = EXCLUDED.amount,
+        status = EXCLUDED.status,
+        created_at = EXCLUDED.created_at,
+        paid_at = EXCLUDED.paid_at`;
+    } else {
+      translatedSql += ` ON CONFLICT (txid) DO UPDATE SET 
+        user_id = EXCLUDED.user_id,
+        plan_id = EXCLUDED.plan_id,
+        amount = EXCLUDED.amount,
+        status = EXCLUDED.status`;
+    }
+  }
+
   // PostgreSQL: substituir placeholders ? por $1, $2, $3...
   let paramCount = 0;
-  let translatedSql = sql.replace(/\?/g, () => {
+  translatedSql = translatedSql.replace(/\?/g, () => {
     paramCount++;
     return `$${paramCount}`;
   });
@@ -2632,11 +2653,13 @@ app.post('/api/user/subscribe', requireAuth, async (req, res) => {
           externalReference: `${req.user.id}_${planId}`
         };
 
-        const response = await fetch('https://api.goatpay.com.br/v1/payment-pix/create', {
+        const secureFetch = (typeof globalThis !== 'undefined' && globalThis.fetch) ? globalThis.fetch : fetch;
+        const response = await secureFetch('https://api.goatpay.com.br/v1/payment-pix/create', {
           method: 'POST',
           headers: {
             'X-API-Key': process.env.GOATPAY_API_KEY,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Connection': 'close'
           },
           body: JSON.stringify(body)
         });

@@ -1014,6 +1014,37 @@ async function runMigrationsAndSeeds() {
     console.error("[DB SEED ERROR] Erro ao semear Temporada 4 de Origem:", err);
   }
 
+  // --- GARANTIR QUE CREED: III SEJA ADICIONADO SE ESTIVER AUSENTE ---
+  try {
+    const existingCreed3 = await dbGetAsync("SELECT id FROM movies WHERE title = ?", ["Creed: III"]);
+    if (!existingCreed3) {
+      console.log("  📦 Adicionando Creed: III ao catálogo...");
+      await dbRunAsync(`
+        INSERT INTO movies (title, year, duration, rating, genre, "desc", poster, backdrop, director, "cast", category, type, videoUrl, subtitlesUrl)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        "Creed: III",
+        2023,
+        "1h 56min",
+        7.3,
+        "Ação / Drama",
+        "Depois de dominar o mundo do boxe, Adonis Creed tem prosperado tanto em sua carreira quanto em sua vida familiar. Quando um amigo de infância e ex-prodígio do boxe, Damian, ressurge após cumprir uma longa pena na prisão, ele está ansioso para provar que merece sua chance no ringue.",
+        "https://image.tmdb.org/t/p/w500/cvsXj3DYs52LifH8iFS4t6VvU2n.jpg",
+        "https://image.tmdb.org/t/p/w1280/5i6SJUzN2eeU25Z2sLqN5H6s99e.jpg",
+        "Michael B. Jordan",
+        "Michael B. Jordan, Tessa Thompson, Jonathan Majors",
+        "new",
+        "movie",
+        "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/Dupla.Perigosa.2026.WEB-DL.1080p.x264.DUAL.5.1-SF.mp4",
+        null
+      ]);
+      if (!IS_POSTGRES) saveDb();
+      console.log("  ✅ Creed: III adicionado com sucesso!");
+    }
+  } catch (err) {
+    console.error("[DB SEED ERROR] Erro ao garantir Creed: III:", err);
+  }
+
   console.log('  ✅ Banco de dados pronto e iniciado');
 }
 

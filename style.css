@@ -785,54 +785,6 @@ ul {
 }
 
 /* =============================================
-   CATEGORIES
-   ============================================= */
-.categories-section {
-  padding: 32px 48px 0;
-}
-
-.categories-tabs {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  padding-bottom: 4px;
-}
-
-.categories-tabs::-webkit-scrollbar {
-  display: none;
-}
-
-.cat-tab {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 20px;
-  border-radius: 50px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.08);
-  transition: all var(--transition-fast);
-  white-space: nowrap;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.cat-tab:hover {
-  background: rgba(255,255,255,0.1);
-  color: var(--text-primary);
-}
-
-.cat-tab.active {
-  background: linear-gradient(135deg, var(--gold-deep), var(--gold-dark));
-  border-color: var(--gold-dark);
-  color: var(--gold-primary);
-  box-shadow: 0 0 16px rgba(218,165,32,0.3);
-}
-
-/* =============================================
    ROW SECTIONS
    ============================================= */
 .row-section {
@@ -2057,7 +2009,6 @@ ul {
 
   .row-header,
   .carousel-wrapper,
-  .categories-section,
   .top10-grid {
     padding-left: 20px;
     padding-right: 20px;

@@ -407,7 +407,6 @@ async function initApp() {
   initSearch();
   applyPendingSearch();
   initModal();
-  initCategoryTabs();
   initHeroButtons();
   initSeeAllButtons();
   initVideoPlayer();
@@ -939,20 +938,6 @@ function applyPendingSearch() {
   if (searchInput) searchInput.value = pendingSearch;
   if (mobileSearchInput) mobileSearchInput.value = pendingSearch;
   performSearch(pendingSearch);
-}
-
-// ---- CATEGORY TABS ----
-function initCategoryTabs() {
-  document.querySelectorAll('.cat-tab').forEach(tab => {
-    tab.addEventListener('click', function() {
-      document.querySelectorAll('.cat-tab').forEach(t => {
-        t.classList.remove('active');
-        t.setAttribute('aria-selected', 'false');
-      });
-      this.classList.add('active');
-      this.setAttribute('aria-selected', 'true');
-    });
-  });
 }
 
 // ---- MODAL ----

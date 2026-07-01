@@ -701,10 +701,12 @@ function saveAuthAndRedirect(token, user, isNew = false) {
   const forgotBackBtn = document.getElementById('forgot-back-btn');
   
   const emailForm = document.getElementById('forgot-email-form');
+  const emailGroup = document.getElementById('forgot-email-group');
   const emailInput = document.getElementById('forgot-email');
   const emailError = document.getElementById('forgot-email-error');
   
   const resetForm = document.getElementById('forgot-reset-form');
+  const codeGroup = document.getElementById('forgot-code-group');
   const codeInput = document.getElementById('forgot-code');
   const codeError = document.getElementById('forgot-code-error');
   const passGroup = document.getElementById('forgot-pass-group');
@@ -713,12 +715,29 @@ function saveAuthAndRedirect(token, user, isNew = false) {
   const confirmGroup = document.getElementById('forgot-confirm-group');
   const confirmInput = document.getElementById('forgot-confirm-password');
   const confirmError = document.getElementById('forgot-confirm-error');
+  const resendCodeBtn = document.getElementById('forgot-resend-code');
   
   const togglePassBtn = document.getElementById('forgot-toggle-pass');
   const toggleConfirmBtn = document.getElementById('forgot-toggle-confirm');
 
   let recoveryEmail = '';
   let resetCodeVerified = false;
+
+  function setForgotError(group, errorEl, message) {
+    group?.classList.add('error');
+    group?.classList.remove('success');
+    if (errorEl) errorEl.textContent = message;
+  }
+
+  function clearForgotError(group, errorEl) {
+    group?.classList.remove('error');
+    if (errorEl) errorEl.textContent = '';
+  }
+
+  function markForgotSuccess(group) {
+    group?.classList.remove('error');
+    group?.classList.add('success');
+  }
 
   function setForgotPasswordStep(isVerified) {
     resetCodeVerified = isVerified;
@@ -727,6 +746,11 @@ function saveAuthAndRedirect(token, user, isNew = false) {
 
     if (codeInput) {
       codeInput.disabled = isVerified;
+    }
+    if (isVerified) {
+      markForgotSuccess(codeGroup);
+    } else {
+      codeGroup?.classList.remove('success');
     }
 
     const submitText = document.querySelector('#forgot-submit-btn .btn-text');
@@ -757,13 +781,13 @@ function saveAuthAndRedirect(token, user, isNew = false) {
       emailForm.classList.remove('hidden');
       resetForm.classList.add('hidden');
       emailInput.value = '';
-      emailError.textContent = '';
+      clearForgotError(emailGroup, emailError);
       codeInput.value = '';
-      codeError.textContent = '';
+      clearForgotError(codeGroup, codeError);
       newPassInput.value = '';
-      newPassError.textContent = '';
+      clearForgotError(passGroup, newPassError);
       confirmInput.value = '';
-      confirmError.textContent = '';
+      clearForgotError(confirmGroup, confirmError);
       setForgotPasswordStep(false);
       const successAlert = document.getElementById('forgot-success-alert');
       if (successAlert) {
@@ -786,20 +810,70 @@ function saveAuthAndRedirect(token, user, isNew = false) {
 
   codeInput?.addEventListener('input', () => {
     codeInput.value = codeInput.value.replace(/\D/g, '').slice(0, 6);
+    clearForgotError(codeGroup, codeError);
+  });
+
+  newPassInput?.addEventListener('input', () => clearForgotError(passGroup, newPassError));
+  confirmInput?.addEventListener('input', () => clearForgotError(confirmGroup, confirmError));
+
+  resendCodeBtn?.addEventListener('click', async () => {
+    clearForgotError(codeGroup, codeError);
+
+    if (!recoveryEmail) {
+      setForgotError(codeGroup, codeError, 'Informe o email novamente para reenviar o código.');
+      return;
+    }
+
+    resendCodeBtn.disabled = true;
+    resendCodeBtn.textContent = 'Reenviando...';
+
+    try {
+      const response = await fetchWithTimeout('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: recoveryEmail })
+      }, 14000);
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Não foi possível reenviar o código.');
+      }
+
+      codeInput.value = '';
+      codeInput.disabled = false;
+      setForgotPasswordStep(false);
+      setTimeout(() => codeInput?.focus(), 120);
+
+      const successAlert = document.getElementById('forgot-success-alert');
+      if (successAlert) {
+        successAlert.style.display = 'block';
+        successAlert.innerHTML = `
+          <span style="font-weight: 700; display: block; font-size: 13px; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.5px;">Código reenviado</span>
+          <span style="font-size: 12px; opacity: 0.9;">Enviamos um novo código para <strong>${recoveryEmail}</strong>.</span>
+        `;
+      }
+    } catch (err) {
+      setForgotError(codeGroup, codeError, err.name === 'AbortError'
+        ? 'O reenvio demorou demais. Tente novamente.'
+        : err.message);
+    } finally {
+      resendCodeBtn.disabled = false;
+      resendCodeBtn.textContent = 'Reenviar código';
+    }
   });
 
   if (emailForm) {
     emailForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      emailError.textContent = '';
+      clearForgotError(emailGroup, emailError);
       
       const email = emailInput.value.trim();
       if (!email) {
-        emailError.textContent = 'O email é obrigatório.';
+        setForgotError(emailGroup, emailError, 'O email é obrigatório.');
         return;
       }
       if (!isValidEmail(email)) {
-        emailError.textContent = 'Digite um email válido.';
+        setForgotError(emailGroup, emailError, 'Digite um email válido.');
         return;
       }
 
@@ -822,6 +896,7 @@ function saveAuthAndRedirect(token, user, isNew = false) {
         }
 
         recoveryEmail = email;
+        markForgotSuccess(emailGroup);
         
         // Show reset code form
         emailForm.classList.add('hidden');
@@ -836,13 +911,13 @@ function saveAuthAndRedirect(token, user, isNew = false) {
           successAlert.style.display = 'block';
           successAlert.innerHTML = `
             <span style="font-weight: 700; display: block; font-size: 13px; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.5px;">Email enviado</span>
-            <span style="font-size: 12px; opacity: 0.9;">Enviamos um código para validar seu email. Confira também a caixa de Spam.</span>
+            <span style="font-size: 12px; opacity: 0.9;">Enviamos um código para <strong>${email}</strong>. Confira também a caixa de Spam.</span>
           `;
         }
       } catch (err) {
-        emailError.textContent = err.name === 'AbortError'
+        setForgotError(emailGroup, emailError, err.name === 'AbortError'
           ? 'O envio demorou demais. Verifique a configuração do e-mail e tente novamente.'
-          : err.message;
+          : err.message);
       } finally {
         if (sendBtn) {
           sendBtn.classList.remove('loading');
@@ -855,9 +930,9 @@ function saveAuthAndRedirect(token, user, isNew = false) {
   if (resetForm) {
     resetForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      codeError.textContent = '';
-      newPassError.textContent = '';
-      confirmError.textContent = '';
+      clearForgotError(codeGroup, codeError);
+      clearForgotError(passGroup, newPassError);
+      clearForgotError(confirmGroup, confirmError);
 
       const code = codeInput.value.trim();
       const newPassword = newPassInput.value;
@@ -865,7 +940,7 @@ function saveAuthAndRedirect(token, user, isNew = false) {
 
       let hasError = false;
       if (!code || code.length !== 6) {
-        codeError.textContent = 'Código inválido. Deve possuir 6 caracteres.';
+        setForgotError(codeGroup, codeError, 'Código inválido. Deve possuir 6 caracteres.');
         hasError = true;
       }
       if (hasError) return;
@@ -891,9 +966,9 @@ function saveAuthAndRedirect(token, user, isNew = false) {
 
           setForgotPasswordStep(true);
         } catch (err) {
-          codeError.textContent = err.name === 'AbortError'
+          setForgotError(codeGroup, codeError, err.name === 'AbortError'
             ? 'A validação demorou demais. Tente novamente.'
-            : err.message;
+            : err.message);
         } finally {
           if (submitBtn) {
             submitBtn.classList.remove('loading');
@@ -904,11 +979,11 @@ function saveAuthAndRedirect(token, user, isNew = false) {
       }
 
       if (!newPassword || newPassword.length < 8) {
-        newPassError.textContent = 'A senha deve possuir no mínimo 8 caracteres.';
+        setForgotError(passGroup, newPassError, 'A senha deve possuir no mínimo 8 caracteres.');
         hasError = true;
       }
       if (newPassword !== confirmPassword) {
-        confirmError.textContent = 'As senhas não coincidem.';
+        setForgotError(confirmGroup, confirmError, 'As senhas não coincidem.');
         hasError = true;
       }
 
@@ -966,9 +1041,9 @@ function saveAuthAndRedirect(token, user, isNew = false) {
         }
 
       } catch (err) {
-        codeError.textContent = err.name === 'AbortError'
+        setForgotError(codeGroup, codeError, err.name === 'AbortError'
           ? 'A redefinição demorou demais. Tente novamente.'
-          : err.message;
+          : err.message);
       } finally {
         if (submitBtn) {
           submitBtn.classList.remove('loading');

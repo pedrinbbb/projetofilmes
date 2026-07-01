@@ -62,6 +62,7 @@ body {
 a { text-decoration: none; color: inherit; }
 button { cursor: pointer; border: none; background: none; font-family: var(--font); }
 input { font-family: var(--font); }
+.hidden { display: none !important; }
 
 /* =============================================
    ANIMATED BACKGROUND
@@ -558,6 +559,13 @@ input { font-family: var(--font); }
   border-color: var(--border-input-focus);
   background: var(--bg-input-focus);
   box-shadow: 0 0 0 3px var(--gold-muted), 0 0 16px rgba(255,215,0,0.08);
+}
+
+.form-input:disabled {
+  color: var(--success-color);
+  border-color: rgba(74, 222, 128, 0.45);
+  background: rgba(74, 222, 128, 0.06);
+  opacity: 1;
 }
 
 .form-input:focus + .input-icon,

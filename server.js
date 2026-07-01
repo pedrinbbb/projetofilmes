@@ -1565,6 +1565,49 @@ app.post('/api/auth/forgot-password', async (req, res) => {
 });
 
 /**
+ * POST /api/auth/verify-reset-code
+ * Valida o código enviado por e-mail antes de liberar a troca da senha.
+ * Body: { email, code }
+ * Response: { success: true }
+ */
+app.post('/api/auth/verify-reset-code', async (req, res) => {
+  try {
+    const { email, code } = req.body;
+    if (!email || !code)
+      return res.status(400).json({ error: 'Email e código são obrigatórios' });
+
+    const cleanEmail = email.toLowerCase().trim();
+    const record = dbGet('SELECT * FROM verification_codes WHERE email = ?', [cleanEmail]);
+    if (!record)
+      return res.status(400).json({ error: 'Nenhuma solicitação de redefinição pendente para este email.' });
+
+    if (new Date() > new Date(record.expires_at)) {
+      dbRun('DELETE FROM verification_codes WHERE email = ?', [cleanEmail]);
+      return res.status(400).json({ error: 'Código expirado. Solicite a redefinição novamente.' });
+    }
+
+    if (record.attempts >= 5) {
+      dbRun('DELETE FROM verification_codes WHERE email = ?', [cleanEmail]);
+      return res.status(429).json({ error: 'Muitas tentativas incorretas. Solicite um novo código.' });
+    }
+
+    if (record.code !== String(code).trim()) {
+      dbRun('UPDATE verification_codes SET attempts = attempts + 1 WHERE email = ?', [cleanEmail]);
+      const remaining = Math.max(0, 4 - Number(record.attempts || 0));
+      return res.status(400).json({
+        error: `Código incorreto. Você tem ${remaining} tentativa(s) restante(s).`,
+        attempts_left: remaining
+      });
+    }
+
+    return res.json({ success: true, message: 'Código validado com sucesso.' });
+  } catch (err) {
+    console.error('[VERIFY RESET CODE ERROR]', err);
+    return res.status(500).json({ error: 'Erro ao validar o código de redefinição.' });
+  }
+});
+
+/**
  * POST /api/auth/reset-password
  * Valida o código OTP e atualiza a senha do usuário.
  * Body: { email, code, password }
@@ -1592,9 +1635,19 @@ app.post('/api/auth/reset-password', async (req, res) => {
       return res.status(400).json({ error: 'Código expirado. Solicite a redefinição novamente.' });
     }
 
+    if (record.attempts >= 5) {
+      dbRun('DELETE FROM verification_codes WHERE email = ?', [cleanEmail]);
+      return res.status(429).json({ error: 'Muitas tentativas incorretas. Solicite um novo código.' });
+    }
+
     // Código correto?
     if (record.code !== String(code).trim()) {
-      return res.status(400).json({ error: 'Código de redefinição incorreto.' });
+      dbRun('UPDATE verification_codes SET attempts = attempts + 1 WHERE email = ?', [cleanEmail]);
+      const remaining = Math.max(0, 4 - Number(record.attempts || 0));
+      return res.status(400).json({
+        error: `Código de redefinição incorreto. Você tem ${remaining} tentativa(s) restante(s).`,
+        attempts_left: remaining
+      });
     }
 
     // Gerar nova hash de senha e atualizar o usuário

@@ -422,7 +422,7 @@
   <div class="otp-overlay" id="forgot-overlay" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="forgot-title">
     <div class="otp-card">
       <h2 class="otp-title" id="forgot-title">Recuperar Senha</h2>
-      <p class="otp-subtitle">Digite seu email para gerar um código temporário de redefinição.</p>
+      <p class="otp-subtitle">Digite seu email para receber um código de validação antes de trocar a senha.</p>
 
       <!-- Step 1: Email Request -->
       <form id="forgot-email-form" novalidate autocomplete="off">
@@ -448,17 +448,17 @@
         <!-- Success Alert -->
         <div id="forgot-success-alert" class="otp-dev-box" style="background: rgba(74, 222, 128, 0.08); border: 1px dashed #4ADE80; border-radius: var(--radius-md); padding: 12px; margin-bottom: 20px; color: #4ADE80; display: none;">
           <span style="font-weight: 700; display: block; font-size: 13px; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.5px;">📧 E-mail Enviado</span>
-          <span style="font-size: 12px; opacity: 0.9;">O código de redefinição de senha foi enviado com sucesso.</span>
+          <span style="font-size: 12px; opacity: 0.9;">Enviamos um código para validar seu email. Confira também a caixa de Spam.</span>
         </div>
 
         <!-- Dev code box -->
         <div class="otp-dev-box" id="forgot-dev-box" style="margin-bottom: 20px;">
           <span class="otp-dev-label">⚠️ Modo de Recuperação</span>
-          Código de Desbloqueio: <strong id="forgot-dev-code" style="color: #FFD700; font-size: 16px;"></strong>
+          Código de validação: <strong id="forgot-dev-code" style="color: #FFD700; font-size: 16px;"></strong>
         </div>
 
         <div class="form-group" id="forgot-code-group" style="margin-bottom: 15px; text-align: left;">
-          <label for="forgot-code" class="form-label">Código de Desbloqueio</label>
+          <label for="forgot-code" class="form-label">Código recebido por email</label>
           <div class="input-wrapper">
             <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
@@ -468,7 +468,7 @@
           <span class="form-error" id="forgot-code-error" role="alert" aria-live="polite"></span>
         </div>
 
-        <div class="form-group" id="forgot-pass-group" style="margin-bottom: 15px; text-align: left;">
+        <div class="form-group hidden" id="forgot-pass-group" style="margin-bottom: 15px; text-align: left;">
           <label for="forgot-new-password" class="form-label">Nova Senha</label>
           <div class="input-wrapper">
             <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -484,7 +484,7 @@
           <span class="form-error" id="forgot-new-pass-error" role="alert" aria-live="polite"></span>
         </div>
 
-        <div class="form-group" id="forgot-confirm-group" style="margin-bottom: 20px; text-align: left;">
+        <div class="form-group hidden" id="forgot-confirm-group" style="margin-bottom: 20px; text-align: left;">
           <label for="forgot-confirm-password" class="form-label">Confirmar Nova Senha</label>
           <div class="input-wrapper">
             <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -501,7 +501,7 @@
         </div>
 
         <button type="submit" class="btn-submit" id="forgot-submit-btn">
-          <span class="btn-text">Alterar Senha</span>
+          <span class="btn-text">Validar código</span>
           <span class="btn-loader" aria-hidden="true"></span>
         </button>
       </form>

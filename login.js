@@ -696,8 +696,10 @@ function saveAuthAndRedirect(token, user, isNew = false) {
   const resetForm = document.getElementById('forgot-reset-form');
   const codeInput = document.getElementById('forgot-code');
   const codeError = document.getElementById('forgot-code-error');
+  const passGroup = document.getElementById('forgot-pass-group');
   const newPassInput = document.getElementById('forgot-new-password');
   const newPassError = document.getElementById('forgot-new-pass-error');
+  const confirmGroup = document.getElementById('forgot-confirm-group');
   const confirmInput = document.getElementById('forgot-confirm-password');
   const confirmError = document.getElementById('forgot-confirm-error');
   
@@ -708,7 +710,34 @@ function saveAuthAndRedirect(token, user, isNew = false) {
   const toggleConfirmBtn = document.getElementById('forgot-toggle-confirm');
 
   let recoveryEmail = '';
+  let resetCodeVerified = false;
 
+  function setForgotPasswordStep(isVerified) {
+    resetCodeVerified = isVerified;
+    passGroup?.classList.toggle('hidden', !isVerified);
+    confirmGroup?.classList.toggle('hidden', !isVerified);
+
+    if (codeInput) {
+      codeInput.disabled = isVerified;
+    }
+
+    const submitText = document.querySelector('#forgot-submit-btn .btn-text');
+    if (submitText) {
+      submitText.textContent = isVerified ? 'Alterar Senha' : 'Validar código';
+    }
+
+    if (isVerified) {
+      const successAlert = document.getElementById('forgot-success-alert');
+      if (successAlert) {
+        successAlert.style.display = 'block';
+        successAlert.innerHTML = `
+          <span style="font-weight: 700; display: block; font-size: 13px; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.5px;">Email validado</span>
+          <span style="font-size: 12px; opacity: 0.9;">Agora crie sua nova senha para concluir a redefinição.</span>
+        `;
+      }
+      setTimeout(() => newPassInput?.focus(), 120);
+    }
+  }
 
 
   if (forgotBtn) {
@@ -727,9 +756,16 @@ function saveAuthAndRedirect(token, user, isNew = false) {
       newPassError.textContent = '';
       confirmInput.value = '';
       confirmError.textContent = '';
+      setForgotPasswordStep(false);
       if (devBox) devBox.style.display = 'none';
       const successAlert = document.getElementById('forgot-success-alert');
-      if (successAlert) successAlert.style.display = 'none';
+      if (successAlert) {
+        successAlert.style.display = 'none';
+        successAlert.innerHTML = `
+          <span style="font-weight: 700; display: block; font-size: 13px; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.5px;">Email enviado</span>
+          <span style="font-size: 12px; opacity: 0.9;">Enviamos um código para validar seu email. Confira também a caixa de Spam.</span>
+        `;
+      }
       recoveryEmail = '';
     });
   }
@@ -741,6 +777,10 @@ function saveAuthAndRedirect(token, user, isNew = false) {
     });
   }
 
+  codeInput?.addEventListener('input', () => {
+    codeInput.value = codeInput.value.replace(/\D/g, '').slice(0, 6);
+  });
+
   if (emailForm) {
     emailForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -749,6 +789,10 @@ function saveAuthAndRedirect(token, user, isNew = false) {
       const email = emailInput.value.trim();
       if (!email) {
         emailError.textContent = 'O email é obrigatório.';
+        return;
+      }
+      if (!isValidEmail(email)) {
+        emailError.textContent = 'Digite um email válido.';
         return;
       }
 
@@ -775,10 +819,19 @@ function saveAuthAndRedirect(token, user, isNew = false) {
         // Show reset code form
         emailForm.classList.add('hidden');
         resetForm.classList.remove('hidden');
+        setForgotPasswordStep(false);
+        codeInput.disabled = false;
+        setTimeout(() => codeInput?.focus(), 120);
 
         // Exibir alerta de sucesso
         const successAlert = document.getElementById('forgot-success-alert');
-        if (successAlert) successAlert.style.display = 'block';
+        if (successAlert) {
+          successAlert.style.display = 'block';
+          successAlert.innerHTML = `
+            <span style="font-weight: 700; display: block; font-size: 13px; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.5px;">Email enviado</span>
+            <span style="font-size: 12px; opacity: 0.9;">Enviamos um código para validar seu email. Confira também a caixa de Spam.</span>
+          `;
+        }
         
         // Populate dev_code if provided by backend bypass
         if (data.dev_code && devBox && devCodeEl) {
@@ -815,6 +868,39 @@ function saveAuthAndRedirect(token, user, isNew = false) {
         codeError.textContent = 'Código inválido. Deve possuir 6 caracteres.';
         hasError = true;
       }
+      if (hasError) return;
+
+      const submitBtn = document.getElementById('forgot-submit-btn');
+      if (!resetCodeVerified && submitBtn) {
+        submitBtn.classList.add('loading');
+        submitBtn.disabled = true;
+      }
+
+      if (!resetCodeVerified) {
+        try {
+          const response = await fetch('/api/auth/verify-reset-code', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: recoveryEmail, code })
+          });
+
+          const data = await response.json();
+          if (!response.ok) {
+            throw new Error(data.error || 'Código inválido.');
+          }
+
+          setForgotPasswordStep(true);
+        } catch (err) {
+          codeError.textContent = err.message;
+        } finally {
+          if (submitBtn) {
+            submitBtn.classList.remove('loading');
+            submitBtn.disabled = false;
+          }
+        }
+        return;
+      }
+
       if (!newPassword || newPassword.length < 8) {
         newPassError.textContent = 'A senha deve possuir no mínimo 8 caracteres.';
         hasError = true;
@@ -826,7 +912,6 @@ function saveAuthAndRedirect(token, user, isNew = false) {
 
       if (hasError) return;
 
-      const submitBtn = document.getElementById('forgot-submit-btn');
       if (submitBtn) {
         submitBtn.classList.add('loading');
         submitBtn.disabled = true;
@@ -892,5 +977,3 @@ function saveAuthAndRedirect(token, user, isNew = false) {
 
 // ---- INIT ----
 createParticles();
-
-

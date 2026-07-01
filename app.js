@@ -23,6 +23,7 @@ let MOVIES = { trending: [], new: [], action: [], series: [] };
 let TOP10_MOVIES = [];
 let TOP10_SERIES = [];
 let HERO_SLIDES = [];
+const SERIES_EPISODES_CACHE = new Map();
 
 // ---- STATE ----
 let currentHeroSlide = 0;
@@ -989,6 +990,107 @@ function groupEpisodesBySeason(episodes) {
     }));
 }
 
+function flattenSeriesEpisodes(seasons) {
+  return (seasons || [])
+    .flatMap(group => (group.episodes || []).map(ep => ({
+      ...ep,
+      season: Number(ep.season || group.season) || 1,
+      number: Number(ep.number) || 1
+    })))
+    .sort((a, b) => (a.season - b.season) || (a.number - b.number));
+}
+
+function cacheSeriesSeasons(seriesId, seasons) {
+  if (!seriesId || !Array.isArray(seasons)) return;
+  SERIES_EPISODES_CACHE.set(String(seriesId), seasons);
+}
+
+async function getSeriesSeasons(seriesId) {
+  if (!seriesId) return [];
+  const key = String(seriesId);
+  if (SERIES_EPISODES_CACHE.has(key)) return SERIES_EPISODES_CACHE.get(key);
+
+  const res = await fetch(`/api/movies/${seriesId}/episodes`);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Erro ao carregar episodios');
+
+  const seasons = data.seasons || groupEpisodesBySeason(data.episodes || []);
+  cacheSeriesSeasons(seriesId, seasons);
+  return seasons;
+}
+
+function getSeriesBaseMovie(seriesId, fallback = {}) {
+  const movie = findMovieById(Number(seriesId) || seriesId);
+  if (movie) return movie;
+
+  return {
+    ...fallback,
+    id: seriesId || fallback.id || fallback.movieId,
+    title: fallback.seriesTitle || fallback.title,
+    poster: fallback.parentPoster || fallback.poster,
+    backdrop: fallback.parentBackdrop || fallback.backdrop
+  };
+}
+
+function buildEpisodePlaybackItem(seriesMovie, episode, seasons) {
+  const season = Number(episode.season) || 1;
+  const number = Number(episode.number) || 1;
+
+  return {
+    ...seriesMovie,
+    title: `${seriesMovie.title} - T${season}:E${number} ${episode.title || ''}`.trim(),
+    type: 'series',
+    seriesId: seriesMovie.id,
+    seriesTitle: seriesMovie.title,
+    episodeId: episode.id,
+    season,
+    episodeNumber: number,
+    episodeTitle: episode.title || '',
+    parentPoster: seriesMovie.poster,
+    parentBackdrop: seriesMovie.backdrop,
+    duration: episode.duration || '',
+    desc: episode.desc || seriesMovie.desc || '',
+    videoUrl: episode.videoUrl || episode.videourl || '',
+    subtitlesUrl: episode.subtitlesUrl || episode.subtitlesurl || '',
+    seriesSeasons: seasons,
+    seriesEpisodes: flattenSeriesEpisodes(seasons)
+  };
+}
+
+async function enrichSeriesPlaybackItem(item) {
+  if (!item?.episodeId) return item;
+  const seriesId = item.seriesId || item.movieId || item.id;
+  if (!seriesId) return item;
+
+  let seasons = item.seriesSeasons;
+  if (!seasons) {
+    try {
+      seasons = await getSeriesSeasons(seriesId);
+    } catch (err) {
+      console.warn('Nao foi possivel carregar a lista de episodios no player:', err);
+      seasons = [];
+    }
+  }
+  const baseMovie = getSeriesBaseMovie(seriesId, item);
+
+  return {
+    ...item,
+    seriesId,
+    seriesTitle: item.seriesTitle || baseMovie.title,
+    parentPoster: item.parentPoster || baseMovie.poster,
+    parentBackdrop: item.parentBackdrop || baseMovie.backdrop,
+    seriesSeasons: seasons,
+    seriesEpisodes: item.seriesEpisodes || flattenSeriesEpisodes(seasons)
+  };
+}
+
+function findNextEpisode(item) {
+  if (!item?.episodeId || !Array.isArray(item.seriesEpisodes)) return null;
+  const episodes = item.seriesEpisodes;
+  const index = episodes.findIndex(ep => String(ep.id) === String(item.episodeId));
+  return index >= 0 ? episodes[index + 1] || null : null;
+}
+
 function formatSeconds(seconds) {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
@@ -999,7 +1101,7 @@ function formatSeconds(seconds) {
   return `${m}:${String(s).padStart(2, '0')}`;
 }
 
-function renderSeason(seasonGroup, movie) {
+function renderSeason(seasonGroup, movie, seasons = []) {
   const episodeList = $('episode-list-user');
   if (!episodeList || !seasonGroup) return;
 
@@ -1048,23 +1150,7 @@ function renderSeason(seasonGroup, movie) {
       const ep = seasonGroup.episodes.find(item => String(item.id) === card.dataset.episodeId);
       if (!ep) return;
       closeModal();
-      openVideoPlayer({
-        ...movie,
-        title: `${movie.title} - T${ep.season}:E${ep.number} ${ep.title}`,
-        type: 'series',
-        seriesId: movie.id,
-        seriesTitle: movie.title,
-        episodeId: ep.id,
-        season: ep.season || seasonGroup.season,
-        episodeNumber: ep.number,
-        episodeTitle: ep.title,
-        parentPoster: movie.poster,
-        parentBackdrop: movie.backdrop,
-        duration: ep.duration,
-        desc: ep.desc || movie.desc,
-        videoUrl: ep.videoUrl || ep.videourl,
-        subtitlesUrl: ep.subtitlesUrl || ep.subtitlesurl
-      });
+      openVideoPlayer(buildEpisodePlaybackItem(movie, { ...ep, season: ep.season || seasonGroup.season }, seasons));
     });
   });
 }
@@ -1086,6 +1172,7 @@ async function loadSeriesEpisodes(movie) {
     if (currentModalMovie?.id !== movie.id) return;
 
     const seasons = data.seasons || groupEpisodesBySeason(data.episodes || []);
+    cacheSeriesSeasons(movie.id, seasons);
     if (seasons.length === 0) {
       episodeList.innerHTML = '<div class="episode-desc-user">Nenhum episodio cadastrado ainda.</div>';
       return;
@@ -1102,11 +1189,11 @@ async function loadSeriesEpisodes(movie) {
         seasonTabs.querySelectorAll('.season-tab').forEach(item => item.classList.remove('active'));
         tab.classList.add('active');
         const selected = seasons.find(group => String(group.season) === tab.dataset.season);
-        renderSeason(selected, movie);
+        renderSeason(selected, movie, seasons);
       });
     });
 
-    renderSeason(seasons[0], movie);
+    renderSeason(seasons[0], movie, seasons);
   } catch (err) {
     console.error('[SERIES EPISODES ERROR]', err);
     episodeList.innerHTML = '<div class="episode-desc-user">Nao foi possivel carregar os episodios.</div>';
@@ -1247,6 +1334,16 @@ function initVideoPlayer() {
   const speedMenu = $('speed-menu');
   const fullscreenBtn = $('ctrl-fullscreen');
   const subtitlesBtn = $('ctrl-subtitles');
+  const episodesBtn = $('ctrl-episodes');
+  const episodesPanel = $('player-episodes-panel');
+  const episodesPanelClose = $('player-episodes-close');
+  const episodesList = $('player-episodes-list');
+  const episodesPanelTitle = $('player-episodes-title');
+  const nextEpisodePrompt = $('player-next-episode');
+  const nextEpisodeTitle = $('next-episode-title');
+  const nextEpisodeMeta = $('next-episode-meta');
+  const nextEpisodePlay = $('next-episode-play');
+  const nextEpisodeDismiss = $('next-episode-dismiss');
   const subtitlesOverlay = $('player-subtitles-overlay');
   const backBtn = $('player-back-btn');
   let subtitleCues = [];
@@ -1254,6 +1351,9 @@ function initVideoPlayer() {
   let subtitlesLoadToken = 0;
   let currentPlaybackItem = null;
   let lastProgressSaveAt = 0;
+  let nextEpisodeTimer = null;
+  let nextPromptEpisodeId = null;
+  let dismissedNextPromptFor = null;
 
   if (!playerOverlay) return;
 
@@ -1466,10 +1566,151 @@ function initVideoPlayer() {
     saveWatchProgress(currentPlaybackItem, video.currentTime, video.duration);
   }
 
+  function clearNextEpisodePrompt() {
+    clearTimeout(nextEpisodeTimer);
+    nextEpisodeTimer = null;
+    nextPromptEpisodeId = null;
+
+    if (nextEpisodePrompt) {
+      nextEpisodePrompt.hidden = true;
+      nextEpisodePrompt.classList.remove('show', 'auto-next');
+    }
+  }
+
+  function hideEpisodePanel() {
+    if (episodesPanel) {
+      episodesPanel.hidden = true;
+      episodesPanel.classList.remove('show');
+    }
+    if (episodesBtn) {
+      episodesBtn.classList.remove('active');
+      episodesBtn.setAttribute('aria-expanded', 'false');
+    }
+  }
+
+  function getCurrentSeriesSeasons() {
+    if (currentPlaybackItem?.seriesSeasons) return currentPlaybackItem.seriesSeasons;
+    if (currentPlaybackItem?.seriesEpisodes) return groupEpisodesBySeason(currentPlaybackItem.seriesEpisodes);
+    return [];
+  }
+
+  function getEpisodeButtonLabel(ep) {
+    return `T${Number(ep.season) || 1}:E${Number(ep.number) || 1}`;
+  }
+
+  function buildPlaybackItemFromPlayerEpisode(ep) {
+    const seriesId = currentPlaybackItem?.seriesId || currentPlaybackItem?.movieId || currentPlaybackItem?.id;
+    const baseMovie = getSeriesBaseMovie(seriesId, currentPlaybackItem || {});
+    return buildEpisodePlaybackItem(baseMovie, ep, getCurrentSeriesSeasons());
+  }
+
+  function playPlayerEpisode(ep) {
+    if (!ep) return;
+    trackPlaybackProgress(true);
+    clearNextEpisodePrompt();
+    hideEpisodePanel();
+    window.openVideoPlayer(buildPlaybackItemFromPlayerEpisode(ep));
+  }
+
+  function renderPlayerEpisodes() {
+    if (!episodesBtn || !episodesList || !currentPlaybackItem?.episodeId || !Array.isArray(currentPlaybackItem.seriesEpisodes)) {
+      if (episodesBtn) episodesBtn.style.display = 'none';
+      hideEpisodePanel();
+      return;
+    }
+
+    const episodes = currentPlaybackItem.seriesEpisodes;
+    if (episodes.length === 0) {
+      episodesBtn.style.display = 'none';
+      hideEpisodePanel();
+      return;
+    }
+
+    episodesBtn.style.display = 'inline-flex';
+    if (episodesPanelTitle) {
+      episodesPanelTitle.textContent = currentPlaybackItem.seriesTitle || 'Serie';
+    }
+
+    const watchedSet = readWatchedEpisodes();
+    const progress = readWatchProgress();
+    episodesList.innerHTML = episodes.map(ep => {
+      const isCurrent = String(ep.id) === String(currentPlaybackItem.episodeId);
+      const isWatched = watchedSet.has(String(ep.id));
+      const saved = progress[`episode:${ep.id}`];
+      const progressTime = Number(saved?.currentTime) || 0;
+      const progressDuration = Number(saved?.durationSeconds) || 0;
+      const hasProgress = !isWatched && progressTime > 0 && progressDuration > 0;
+      const pct = hasProgress ? Math.min(100, Math.max(0, (progressTime / progressDuration) * 100)) : 0;
+      const stateLabel = isCurrent ? 'Assistindo agora' : (isWatched ? 'Assistido' : (hasProgress ? `Parou em ${formatSeconds(progressTime)}` : (ep.duration || '')));
+
+      return `
+        <button class="player-episode-item ${isCurrent ? 'active' : ''} ${isWatched ? 'watched' : ''}" type="button" data-episode-id="${ep.id}">
+          <span class="player-episode-index">${getEpisodeButtonLabel(ep)}</span>
+          <span class="player-episode-main">
+            <strong>${escapeHtml(ep.title || 'Episodio')}</strong>
+            <small>${escapeHtml(stateLabel)}</small>
+            ${hasProgress ? `<span class="player-episode-progress"><i style="width:${pct}%"></i></span>` : ''}
+          </span>
+          ${isWatched ? '<i class="fa-solid fa-circle-check player-episode-check"></i>' : ''}
+        </button>
+      `;
+    }).join('');
+
+    episodesList.querySelectorAll('.player-episode-item').forEach(button => {
+      button.addEventListener('click', () => {
+        const ep = episodes.find(item => String(item.id) === String(button.dataset.episodeId));
+        if (ep && String(ep.id) !== String(currentPlaybackItem.episodeId)) {
+          playPlayerEpisode(ep);
+        }
+      });
+    });
+  }
+
+  function showNextEpisodePrompt(nextEpisode, autoplay = false) {
+    if (!nextEpisodePrompt || !nextEpisode) return;
+
+    clearTimeout(nextEpisodeTimer);
+    nextPromptEpisodeId = nextEpisode.id;
+    nextEpisodePrompt.hidden = false;
+    nextEpisodePrompt.classList.add('show');
+    nextEpisodePrompt.classList.toggle('auto-next', autoplay);
+
+    if (nextEpisodeTitle) {
+      nextEpisodeTitle.textContent = `${getEpisodeButtonLabel(nextEpisode)} ${nextEpisode.title || ''}`.trim();
+    }
+    if (nextEpisodeMeta) {
+      nextEpisodeMeta.textContent = autoplay ? 'Reproduzindo automaticamente em alguns segundos' : 'Clique para ir para o proximo';
+    }
+
+    if (autoplay) {
+      nextEpisodeTimer = setTimeout(() => {
+        playPlayerEpisode(nextEpisode);
+      }, 6000);
+    }
+  }
+
+  function maybeShowNextEpisodePrompt() {
+    if (!currentPlaybackItem || !video.duration || dismissedNextPromptFor === String(currentPlaybackItem.episodeId)) return;
+
+    const nextEpisode = findNextEpisode(currentPlaybackItem);
+    if (!nextEpisode || nextPromptEpisodeId === nextEpisode.id) return;
+
+    const remaining = video.duration - video.currentTime;
+    const watchedPct = video.currentTime / video.duration;
+    if (remaining <= 35 && watchedPct >= 0.75) {
+      showNextEpisodePrompt(nextEpisode, false);
+    }
+  }
+
   // Global open function
   window.openVideoPlayer = async function(movie) {
     const allowed = await checkSubscriptionAndScreens();
     if (!allowed) return;
+
+    movie = await enrichSeriesPlaybackItem(movie);
+    clearNextEpisodePrompt();
+    hideEpisodePanel();
+    dismissedNextPromptFor = null;
 
     $('player-controls-title').textContent = movie.title;
     playerOverlay.classList.add('show');
@@ -1481,6 +1722,7 @@ function initVideoPlayer() {
     const url = getPlayableUrl(rawUrl);
     currentPlaybackItem = { ...movie, videoUrl: rawUrl };
     lastProgressSaveAt = 0;
+    renderPlayerEpisodes();
     
     const cleanUrl = url.toLowerCase().split('?')[0];
     const isDirectVideo = cleanUrl.endsWith('.mp4') || 
@@ -1496,6 +1738,7 @@ function initVideoPlayer() {
 
     if (!isDirectVideo || url.includes('youtube.com') || url.includes('youtu.be') || url.includes('vimeo.com') || url.includes('drive.google.com')) {
       currentPlaybackItem = null;
+      renderPlayerEpisodes();
       // Configurar modo Iframe
       video.style.display = 'none';
       iframeWrapper.classList.add('active');
@@ -1682,6 +1925,8 @@ function initVideoPlayer() {
   window.closeVideoPlayer = function() {
     trackPlaybackProgress(true);
     currentPlaybackItem = null;
+    clearNextEpisodePrompt();
+    hideEpisodePanel();
     playerOverlay.classList.remove('show');
     playerOverlay.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
@@ -1705,6 +1950,38 @@ function initVideoPlayer() {
   };
 
   backBtn.addEventListener('click', closeVideoPlayer);
+
+  if (episodesBtn) {
+    episodesBtn.addEventListener('click', () => {
+      if (!episodesPanel || episodesBtn.style.display === 'none') return;
+      const willOpen = episodesPanel.hidden;
+      episodesPanel.hidden = !willOpen;
+      episodesPanel.classList.toggle('show', willOpen);
+      episodesBtn.classList.toggle('active', willOpen);
+      episodesBtn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+      if (willOpen) renderPlayerEpisodes();
+      resetControlsTimer();
+    });
+  }
+
+  if (episodesPanelClose) {
+    episodesPanelClose.addEventListener('click', hideEpisodePanel);
+  }
+
+  if (nextEpisodePlay) {
+    nextEpisodePlay.addEventListener('click', () => {
+      const nextEpisode = findNextEpisode(currentPlaybackItem);
+      if (nextEpisode) playPlayerEpisode(nextEpisode);
+    });
+  }
+
+  if (nextEpisodeDismiss) {
+    nextEpisodeDismiss.addEventListener('click', () => {
+      dismissedNextPromptFor = currentPlaybackItem?.episodeId ? String(currentPlaybackItem.episodeId) : null;
+      clearNextEpisodePrompt();
+      resetControlsTimer();
+    });
+  }
 
   // Play / Pause Toggle
   function togglePlay() {
@@ -1771,6 +2048,7 @@ function initVideoPlayer() {
     updateCustomSubtitles();
     if (!video.duration) return;
     trackPlaybackProgress();
+    maybeShowNextEpisodePrompt();
     const pct = (video.currentTime / video.duration) * 100;
     progressFill.style.width = `${pct}%`;
     progressHandle.style.left = `${pct}%`;
@@ -1783,8 +2061,15 @@ function initVideoPlayer() {
   });
 
   video.addEventListener('ended', () => {
+    const completedItem = currentPlaybackItem;
+    const nextEpisode = findNextEpisode(completedItem);
     markPlaybackCompleted(currentPlaybackItem);
-    currentPlaybackItem = null;
+    renderPlayerEpisodes();
+    if (nextEpisode) {
+      showNextEpisodePrompt(nextEpisode, true);
+    } else {
+      currentPlaybackItem = null;
+    }
   });
 
   // Scrubbing/Seeking on click / touch

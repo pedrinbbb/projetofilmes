@@ -605,6 +605,34 @@
       <!-- Custom Subtitles Display Overlay -->
       <div class="player-subtitles-overlay" id="player-subtitles-overlay" style="display: none;"></div>
 
+      <div class="player-next-episode" id="player-next-episode" hidden>
+        <div class="next-episode-copy">
+          <span>Proximo episodio</span>
+          <strong id="next-episode-title">T1:E2</strong>
+          <small id="next-episode-meta">Continuar assistindo</small>
+        </div>
+        <div class="next-episode-actions">
+          <button class="next-episode-dismiss" id="next-episode-dismiss" type="button">Agora nao</button>
+          <button class="next-episode-play" id="next-episode-play" type="button">
+            <i class="fa-solid fa-forward-step"></i>
+            Assistir
+          </button>
+        </div>
+      </div>
+
+      <aside class="player-episodes-panel" id="player-episodes-panel" aria-label="Episodios da serie" hidden>
+        <div class="player-episodes-header">
+          <div>
+            <span>Episodios</span>
+            <strong id="player-episodes-title">Temporadas</strong>
+          </div>
+          <button class="player-episodes-close" id="player-episodes-close" type="button" aria-label="Fechar episodios">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div class="player-episodes-list" id="player-episodes-list"></div>
+      </aside>
+
       <!-- Iframe wrapper (for YouTube / Vimeo) -->
       <div class="iframe-element-wrapper" id="iframe-element-wrapper">
         <iframe class="iframe-element" id="iframe-element" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
@@ -698,6 +726,11 @@
             <button class="control-btn subtitle-toggle" id="ctrl-subtitles" aria-label="Legendas ativadas" aria-pressed="true" title="Legendas" style="display: none;">
               <span class="subtitle-toggle-cc" aria-hidden="true">CC</span>
               <span class="subtitle-toggle-text">Legenda</span>
+            </button>
+
+            <button class="control-btn episodes-toggle" id="ctrl-episodes" aria-label="Escolher episodio" aria-expanded="false" style="display: none;">
+              <i class="fa-solid fa-list-ul"></i>
+              <span>Episodios</span>
             </button>
 
             <!-- Fullscreen -->

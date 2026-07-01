@@ -19,7 +19,18 @@
 })();
 
 // Top 10, Hero Slides e Categoria de Filmes carregadas dinamicamente da API
-let MOVIES = { trending: [], new: [], action: [], series: [] };
+let MOVIES = {
+  recommended: [],
+  trending: [],
+  top10: [],
+  releases: [],
+  new: [],
+  because: [],
+  genre: [],
+  popular: [],
+  action: [],
+  series: []
+};
 let ALL_CATALOG = [];
 let TOP10_MOVIES = [];
 let TOP10_SERIES = [];
@@ -385,7 +396,18 @@ function uniqueById(items) {
 function getAllCatalog() {
   return uniqueById(ALL_CATALOG.length
     ? ALL_CATALOG
-    : [...MOVIES.trending, ...MOVIES.new, ...MOVIES.action, ...MOVIES.series]);
+    : [
+        ...MOVIES.recommended,
+        ...MOVIES.trending,
+        ...MOVIES.top10,
+        ...MOVIES.releases,
+        ...MOVIES.new,
+        ...MOVIES.because,
+        ...MOVIES.genre,
+        ...MOVIES.popular,
+        ...MOVIES.action,
+        ...MOVIES.series
+      ]);
 }
 
 function getPrimaryGenre(movie) {
@@ -445,6 +467,7 @@ function buildPremiumCollections() {
   const becauseSource = favoriteGenre
     ? all.filter(item => String(item.genre || '').includes(favoriteGenre))
     : byRating;
+  const top10Source = MOVIES.top10.length ? MOVIES.top10 : TOP10_MOVIES;
   const recommended = uniqueById([
     ...getMyListItems(),
     ...becauseSource,
@@ -455,7 +478,7 @@ function buildPremiumCollections() {
     {
       id: 'recommended-row',
       title: 'Recomendados para Você',
-      items: takeLoop(recommended, 8)
+      items: takeLoop(MOVIES.recommended.length ? MOVIES.recommended : recommended, 8)
     },
     {
       id: 'filmes',
@@ -465,7 +488,7 @@ function buildPremiumCollections() {
     {
       id: 'top10-brasil',
       title: 'Top 10 Brasil',
-      items: takeLoop((TOP10_MOVIES.length ? TOP10_MOVIES : byRating).map((movie, index) => ({
+      items: takeLoop((top10Source.length ? top10Source : byRating).map((movie, index) => ({
         ...movie,
         homeRank: index + 1
       })), 10)
@@ -473,7 +496,7 @@ function buildPremiumCollections() {
     {
       id: 'lancamentos',
       title: 'Lançamentos',
-      items: takeLoop(byYear, 8)
+      items: takeLoop(MOVIES.releases.length ? MOVIES.releases : byYear, 8)
     },
     {
       id: 'novidades',
@@ -483,17 +506,17 @@ function buildPremiumCollections() {
     {
       id: 'because-row',
       title: lastWatched?.title ? `Porque você assistiu ${lastWatched.title}` : 'Porque você assistiu...',
-      items: takeLoop(becauseSource, 8)
+      items: takeLoop(MOVIES.because.length ? MOVIES.because : becauseSource, 8)
     },
     {
       id: 'genre-row',
       title: 'Por gênero',
-      items: buildGenreCollection(all)
+      items: MOVIES.genre.length ? takeLoop(MOVIES.genre, 8) : buildGenreCollection(all)
     },
     {
       id: 'popular-row',
       title: 'Mais Populares',
-      items: takeLoop(byRating, 8)
+      items: takeLoop(MOVIES.popular.length ? MOVIES.popular : byRating, 8)
     },
     {
       id: 'series',
@@ -503,7 +526,7 @@ function buildPremiumCollections() {
     {
       id: 'weekly-trends',
       title: 'Tendências da Semana',
-      items: takeLoop(uniqueById([...MOVIES.action, ...MOVIES.trending, ...newest, ...byRating]), 8)
+      items: takeLoop(MOVIES.action.length ? MOVIES.action : uniqueById([...MOVIES.trending, ...newest, ...byRating]), 8)
     }
   ].filter(row => row.items.length > 0);
 }
@@ -619,7 +642,7 @@ function renderPremiumHomeRows() {
   const premiumRows = $('premium-rows');
   if (!premiumRows) return;
 
-  const collections = buildPremiumCollections().slice(0, 6);
+  const collections = buildPremiumCollections();
   premiumRows.innerHTML = '';
   collections.forEach(row => premiumRows.appendChild(createPremiumRow(row)));
 }
@@ -647,13 +670,20 @@ async function initApp() {
     ALL_CATALOG = [...movieList, ...seriesList];
 
     // Organizar filmes por categorias e séries em uma prateleira própria
-    MOVIES.trending = movieList.filter(m => m.category === 'trending');
-    MOVIES.new = movieList.filter(m => m.category === 'new');
-    MOVIES.action = movieList.filter(m => m.category === 'action');
-    MOVIES.series = seriesList;
+    MOVIES.recommended = list.filter(m => m.category === 'recommended');
+    MOVIES.trending = list.filter(m => m.category === 'trending');
+    MOVIES.top10 = list.filter(m => m.category === 'top10_movies').sort((a, b) => a.position - b.position);
+    MOVIES.releases = list.filter(m => m.category === 'releases');
+    MOVIES.new = list.filter(m => m.category === 'new');
+    MOVIES.because = list.filter(m => m.category === 'because');
+    MOVIES.genre = list.filter(m => m.category === 'genre');
+    MOVIES.popular = list.filter(m => m.category === 'popular');
+    MOVIES.action = list.filter(m => m.category === 'action');
+    MOVIES.series = seriesList.filter(m => m.category === 'series');
+    if (MOVIES.series.length === 0) MOVIES.series = seriesList;
 
     // Gerar Top 10 dinâmico para Filmes e Séries (respeitando ordenação manual se houver)
-    TOP10_MOVIES = movieList.filter(m => m.category === 'top10_movies').sort((a, b) => a.position - b.position);
+    TOP10_MOVIES = MOVIES.top10;
     if (TOP10_MOVIES.length === 0) {
       TOP10_MOVIES = [...movieList].sort((a, b) => b.rating - a.rating).slice(0, 10);
     }

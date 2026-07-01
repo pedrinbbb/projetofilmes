@@ -50,6 +50,19 @@ let plans = [];
 let paymentLogs = [];
 let activeUsersTimer = null;
 
+const HOME_REORDER_TOPICS = [
+  { category: 'recommended', title: 'Recomendados para Você' },
+  { category: 'trending', title: 'Em Alta Hoje' },
+  { category: 'top10_movies', title: 'Top 10 Brasil' },
+  { category: 'releases', title: 'Lançamentos' },
+  { category: 'new', title: 'Adicionados Recentemente' },
+  { category: 'because', title: 'Porque você assistiu...' },
+  { category: 'genre', title: 'Por gênero' },
+  { category: 'popular', title: 'Mais Populares' },
+  { category: 'series', title: 'Séries em destaque' },
+  { category: 'action', title: 'Tendências da Semana' }
+];
+
 // Seletores do Plano
 const plansTbody = $('plans-list-tbody');
 const planModal = $('plan-modal');
@@ -1470,7 +1483,17 @@ function renderPaymentsTable() {
   });
 }
 
+function syncHomepageCategorySelect() {
+  const select = $('m-category');
+  if (!select) return;
+
+  select.innerHTML = HOME_REORDER_TOPICS
+    .map(topic => `<option value="${topic.category}">${topic.title} (${topic.category})</option>`)
+    .join('');
+}
+
 // ---- INIT ----
+syncHomepageCategorySelect();
 createParticles();
 checkAdminAuth();
 window.addEventListener('storage', checkAdminAuth);
@@ -1592,9 +1615,17 @@ $('search-payments')?.addEventListener('input', renderPaymentsTable);
 //  ABA ORDENAR: REORDER BOARD & DRAG & DROP
 // =============================================
 function renderReorderBoard() {
-  const categories = ['trending', 'new', 'action', 'series', 'top10_movies', 'top10_series'];
+  const board = $('reorder-board');
+  if (!board) return;
+
+  board.innerHTML = HOME_REORDER_TOPICS.map(topic => `
+    <div class="reorder-column" data-category="${topic.category}" style="flex: 1; min-width: 250px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+      <h3 style="color: var(--color-gold-bright); font-size: 1rem; border-bottom: 1px solid rgba(255,215,0,0.1); padding-bottom: 8px; margin-bottom: 4px;">${topic.title}</h3>
+      <div class="reorder-list" data-category="${topic.category}" style="display: flex; flex-direction: column; gap: 10px; flex-grow: 1; min-height: 400px;"></div>
+    </div>
+  `).join('');
   
-  categories.forEach(cat => {
+  HOME_REORDER_TOPICS.forEach(({ category: cat }) => {
     const listContainer = document.querySelector(`.reorder-list[data-category="${cat}"]`);
     if (!listContainer) return;
     

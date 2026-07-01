@@ -408,7 +408,7 @@ function getMyListItems() {
   return all.filter(item => myList.has(String(item.id)));
 }
 
-function takeLoop(items, count = 12) {
+function takeLoop(items, count = 8) {
   const source = uniqueById(items);
   if (source.length <= count) return source;
   return source.slice(0, count);
@@ -425,7 +425,7 @@ function buildGenreCollection(all) {
 
   return Array.from(byGenre.entries())
     .sort((a, b) => b[1].length - a[1].length)
-    .slice(0, 12)
+    .slice(0, 8)
     .map(([genre, movies]) => ({
       ...movies.sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0))[0],
       homeBadge: genre
@@ -455,12 +455,12 @@ function buildPremiumCollections() {
     {
       id: 'recommended-row',
       title: '⭐ Recomendados para Você',
-      items: takeLoop(recommended, 16)
+      items: takeLoop(recommended, 8)
     },
     {
       id: 'filmes',
       title: '🔥 Em Alta Hoje',
-      items: takeLoop(MOVIES.trending.length ? MOVIES.trending : byRating, 16)
+      items: takeLoop(MOVIES.trending.length ? MOVIES.trending : byRating, 8)
     },
     {
       id: 'top10-brasil',
@@ -473,17 +473,17 @@ function buildPremiumCollections() {
     {
       id: 'lancamentos',
       title: '🎬 Lançamentos',
-      items: takeLoop(byYear, 16)
+      items: takeLoop(byYear, 8)
     },
     {
       id: 'novidades',
       title: '🆕 Adicionados Recentemente',
-      items: takeLoop(newest, 16)
+      items: takeLoop(newest, 8)
     },
     {
       id: 'because-row',
       title: lastWatched?.title ? `❤️ Porque você assistiu ${lastWatched.title}` : '❤️ Porque você assistiu...',
-      items: takeLoop(becauseSource, 16)
+      items: takeLoop(becauseSource, 8)
     },
     {
       id: 'genre-row',
@@ -493,17 +493,17 @@ function buildPremiumCollections() {
     {
       id: 'popular-row',
       title: '👑 Mais Populares',
-      items: takeLoop(byRating, 16)
+      items: takeLoop(byRating, 8)
     },
     {
       id: 'series',
       title: '📺 Séries em destaque',
-      items: takeLoop(series.length ? series : byRating, 16)
+      items: takeLoop(series.length ? series : byRating, 8)
     },
     {
       id: 'weekly-trends',
       title: '📈 Tendências da Semana',
-      items: takeLoop(uniqueById([...MOVIES.action, ...MOVIES.trending, ...newest, ...byRating]), 16)
+      items: takeLoop(uniqueById([...MOVIES.action, ...MOVIES.trending, ...newest, ...byRating]), 8)
     }
   ].filter(row => row.items.length > 0);
 }
@@ -619,7 +619,7 @@ function renderPremiumHomeRows() {
   const premiumRows = $('premium-rows');
   if (!premiumRows) return;
 
-  const collections = buildPremiumCollections();
+  const collections = buildPremiumCollections().slice(0, 6);
   premiumRows.innerHTML = '';
   collections.forEach(row => premiumRows.appendChild(createPremiumRow(row)));
 }
@@ -1844,9 +1844,37 @@ function initVideoPlayer() {
     hideCustomSubtitles();
 
     if (subtitlesBtn) {
-      subtitlesBtn.style.display = 'none';
+      subtitlesBtn.disabled = false;
+      subtitlesBtn.classList.remove('is-loading');
+      subtitlesBtn.classList.add('is-unavailable');
+      subtitlesBtn.style.display = 'inline-flex';
       syncSubtitlesButton();
+      subtitlesBtn.disabled = true;
+      subtitlesBtn.setAttribute('aria-label', 'Legenda indisponivel');
+      subtitlesBtn.title = 'Legenda indisponivel';
     }
+  }
+
+  function showSubtitlesLoadingState() {
+    if (!subtitlesBtn) return;
+    subtitlesBtn.style.display = 'inline-flex';
+    subtitlesBtn.disabled = true;
+    subtitlesBtn.classList.add('is-loading');
+    subtitlesBtn.classList.remove('is-unavailable');
+    subtitlesBtn.setAttribute('aria-pressed', 'false');
+    subtitlesBtn.setAttribute('aria-label', 'Carregando legendas');
+    subtitlesBtn.title = 'Carregando legendas';
+  }
+
+  function showSubtitlesUnavailableState() {
+    if (!subtitlesBtn) return;
+    subtitlesBtn.style.display = 'inline-flex';
+    subtitlesBtn.disabled = true;
+    subtitlesBtn.classList.remove('is-loading');
+    subtitlesBtn.classList.add('is-unavailable');
+    subtitlesBtn.setAttribute('aria-pressed', 'false');
+    subtitlesBtn.setAttribute('aria-label', 'Legenda indisponivel');
+    subtitlesBtn.title = 'Legenda indisponivel';
   }
 
   function updateCustomSubtitles() {
@@ -1878,6 +1906,7 @@ function initVideoPlayer() {
     const loadToken = ++subtitlesLoadToken;
     const normalizedUrl = normalizeSubtitleUrl(subtitlesUrl);
     if (!normalizedUrl) return;
+    showSubtitlesLoadingState();
 
     try {
       const res = await fetch(normalizedUrl, { cache: 'no-store' });
@@ -1897,6 +1926,8 @@ function initVideoPlayer() {
 
       if (subtitlesBtn && cues.length > 0) {
         subtitlesBtn.style.display = 'inline-flex';
+        subtitlesBtn.disabled = false;
+        subtitlesBtn.classList.remove('is-loading', 'is-unavailable');
         syncSubtitlesButton();
       }
 
@@ -1904,7 +1935,10 @@ function initVideoPlayer() {
     } catch (err) {
       if (loadToken !== subtitlesLoadToken) return;
       console.error('Erro ao carregar legendas customizadas:', err);
-      resetCustomSubtitles();
+      subtitleCues = [];
+      subtitlesEnabled = false;
+      hideCustomSubtitles();
+      showSubtitlesUnavailableState();
       showToast('Nao foi possivel carregar a legenda');
     }
   }

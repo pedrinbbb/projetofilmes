@@ -1381,7 +1381,8 @@ function sendOptimizedStatic(req, res, next) {
     const output = shouldCompress ? zlib.gzipSync(body, { level: 6 }) : body;
 
     res.setHeader('Content-Type', contentType);
-    res.setHeader('Cache-Control', ext === '.html' ? 'no-cache' : 'public, max-age=3600');
+    const noCacheExts = new Set(['.html', '.css', '.js']);
+    res.setHeader('Cache-Control', noCacheExts.has(ext) ? 'no-cache' : 'public, max-age=3600');
     res.setHeader('Content-Length', output.length);
     res.setHeader('Vary', 'Accept-Encoding');
     if (shouldCompress) res.setHeader('Content-Encoding', 'gzip');

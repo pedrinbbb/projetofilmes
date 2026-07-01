@@ -907,20 +907,20 @@ ul {
   aspect-ratio: 2/3;
   width: 100%;
   background: var(--bg-card);
-  transition: box-shadow 260ms ease, border-color 260ms ease;
+  transition: box-shadow 220ms ease, border-color 220ms ease;
 }
 
 .movie-card:hover,
 .movie-card:focus-within,
 .movie-card.touch-active {
   z-index: 10;
-  transform: translateY(-8px) scale(1.08);
+  transform: translateY(-5px) scale(1.04);
 }
 
 .movie-card:hover .card-poster-wrapper,
 .movie-card:focus-within .card-poster-wrapper,
 .movie-card.touch-active .card-poster-wrapper {
-  box-shadow: 0 20px 44px rgba(0, 0, 0, 0.68), 0 0 24px rgba(255, 215, 0, 0.5);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.55), 0 0 16px rgba(255, 215, 0, 0.36);
 }
 
 .movie-card:hover .card-poster,
@@ -948,7 +948,7 @@ ul {
     linear-gradient(to right, rgba(0,0,0,0.58), transparent 58%);
   opacity: 0;
   transform: translateY(8px);
-  transition: opacity 240ms ease 250ms, transform 240ms ease 250ms;
+  transition: opacity 220ms ease 180ms, transform 220ms ease 180ms;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -2920,6 +2920,30 @@ ul {
 .subtitle-toggle:hover {
   transform: translateY(-1px);
   background: rgba(255, 255, 255, 0.13);
+}
+
+.subtitle-toggle:disabled {
+  cursor: default;
+  transform: none;
+}
+
+.subtitle-toggle.is-loading {
+  opacity: 0.78;
+  border-color: rgba(255, 215, 0, 0.28);
+  color: var(--gold-primary);
+}
+
+.subtitle-toggle.is-loading .subtitle-toggle-text {
+  font-size: 0;
+}
+
+.subtitle-toggle.is-loading .subtitle-toggle-text::after {
+  content: 'Carregando';
+  font-size: 12px;
+}
+
+.subtitle-toggle.is-unavailable {
+  opacity: 0.55;
 }
 
 .subtitle-toggle-cc {

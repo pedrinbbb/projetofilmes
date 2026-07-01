@@ -183,6 +183,17 @@ function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+async function fetchWithTimeout(url, options = {}, timeoutMs = 14000) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 // Global API error toast (no group)
 function showApiError(msg) {
   // Inject a toast at top of auth container if not exists
@@ -799,11 +810,11 @@ function saveAuthAndRedirect(token, user, isNew = false) {
       }
 
       try {
-        const response = await fetch('/api/auth/forgot-password', {
+        const response = await fetchWithTimeout('/api/auth/forgot-password', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email })
-        });
+        }, 14000);
         
         const data = await response.json();
         if (!response.ok) {
@@ -829,7 +840,9 @@ function saveAuthAndRedirect(token, user, isNew = false) {
           `;
         }
       } catch (err) {
-        emailError.textContent = err.message;
+        emailError.textContent = err.name === 'AbortError'
+          ? 'O envio demorou demais. Verifique a configuração do e-mail e tente novamente.'
+          : err.message;
       } finally {
         if (sendBtn) {
           sendBtn.classList.remove('loading');
@@ -865,11 +878,11 @@ function saveAuthAndRedirect(token, user, isNew = false) {
 
       if (!resetCodeVerified) {
         try {
-          const response = await fetch('/api/auth/verify-reset-code', {
+          const response = await fetchWithTimeout('/api/auth/verify-reset-code', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: recoveryEmail, code })
-          });
+          }, 10000);
 
           const data = await response.json();
           if (!response.ok) {
@@ -878,7 +891,9 @@ function saveAuthAndRedirect(token, user, isNew = false) {
 
           setForgotPasswordStep(true);
         } catch (err) {
-          codeError.textContent = err.message;
+          codeError.textContent = err.name === 'AbortError'
+            ? 'A validação demorou demais. Tente novamente.'
+            : err.message;
         } finally {
           if (submitBtn) {
             submitBtn.classList.remove('loading');
@@ -905,11 +920,11 @@ function saveAuthAndRedirect(token, user, isNew = false) {
       }
 
       try {
-        const response = await fetch('/api/auth/reset-password', {
+        const response = await fetchWithTimeout('/api/auth/reset-password', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: recoveryEmail, code, password: newPassword })
-        });
+        }, 10000);
 
         const data = await response.json();
         if (!response.ok) {
@@ -951,7 +966,9 @@ function saveAuthAndRedirect(token, user, isNew = false) {
         }
 
       } catch (err) {
-        codeError.textContent = err.message;
+        codeError.textContent = err.name === 'AbortError'
+          ? 'A redefinição demorou demais. Tente novamente.'
+          : err.message;
       } finally {
         if (submitBtn) {
           submitBtn.classList.remove('loading');

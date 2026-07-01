@@ -44,10 +44,15 @@ const activeUsers = new Map();
 // =============================================
 //  EMAIL TRANSPORTER
 // =============================================
+const EMAIL_HOST = process.env.EMAIL_HOST || 'smtp.gmail.com';
+const EMAIL_PORT = Number(process.env.EMAIL_PORT || 587);
+const EMAIL_SECURE = String(process.env.EMAIL_SECURE || '').toLowerCase() === 'true' || EMAIL_PORT === 465;
+const EMAIL_TIMEOUT_MS = Number(process.env.EMAIL_TIMEOUT_MS || 10000);
+
 const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false, 
+  host: EMAIL_HOST,
+  port: EMAIL_PORT,
+  secure: EMAIL_SECURE,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
@@ -56,15 +61,24 @@ const transporter = nodemailer.createTransport({
     ciphers: 'SSLv3',
     rejectUnauthorized: false
   },
-  connectionTimeout: 15000, 
-  greetingTimeout: 15000,
-  socketTimeout: 15000
+  connectionTimeout: EMAIL_TIMEOUT_MS,
+  greetingTimeout: EMAIL_TIMEOUT_MS,
+  socketTimeout: EMAIL_TIMEOUT_MS
 });
 
 function isEmailConfigured() {
   return process.env.EMAIL_USER &&
          process.env.EMAIL_PASS &&
          process.env.EMAIL_USER !== 'seu_email@gmail.com';
+}
+
+function sendMailWithTimeout(mailOptions) {
+  return Promise.race([
+    transporter.sendMail(mailOptions),
+    new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Tempo limite ao enviar e-mail pelo SMTP')), EMAIL_TIMEOUT_MS + 2000);
+    })
+  ]);
 }
 
 async function sendVerificationEmail(to, name, code) {
@@ -125,7 +139,7 @@ async function sendVerificationEmail(to, name, code) {
 </html>
   `;
 
-  await transporter.sendMail({
+  await sendMailWithTimeout({
     from:    process.env.EMAIL_FROM || `GOATCINE <${process.env.EMAIL_USER}>`,
     to,
     subject: `${code} — Seu código GOATCINE`,
@@ -191,7 +205,7 @@ async function sendResetPasswordEmail(to, name, code) {
 </html>
   `;
 
-  await transporter.sendMail({
+  await sendMailWithTimeout({
     from:    process.env.EMAIL_FROM || `GOATCINE <${process.env.EMAIL_USER}>`,
     to,
     subject: `${code} — Código de redefinição GOATCINE`,

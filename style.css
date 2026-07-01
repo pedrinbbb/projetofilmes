@@ -1622,6 +1622,16 @@ ul {
   transform: translateX(3px);
 }
 
+.episode-card-user.is-progress {
+  border-left: 3px solid var(--gold-primary, #ffd700);
+  background: linear-gradient(90deg, rgba(255, 215, 0, 0.08), rgba(255, 255, 255, 0.035) 34%);
+}
+
+.episode-card-user.is-watched {
+  border-left: 3px solid #2ecc71;
+  background: linear-gradient(90deg, rgba(46, 204, 113, 0.08), rgba(255, 255, 255, 0.035) 34%);
+}
+
 .episode-number-user {
   width: 42px;
   height: 42px;

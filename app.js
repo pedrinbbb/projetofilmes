@@ -175,7 +175,6 @@ function saveWatchProgress(item, currentTime, durationSeconds) {
   }
 
   const movieId = item.seriesId || item.movieId || item.id;
-  const isEpisode = Boolean(item.episodeId);
   const episodeLabel = isEpisode
     ? `T${item.season || 1}:E${item.episodeNumber || item.number || 1} ${item.episodeTitle || ''}`.trim()
     : '';
@@ -226,6 +225,16 @@ function clearWatchProgress(item) {
   delete progress[progressId];
   writeWatchProgress(progress);
   scheduleContinueWatchingRender();
+}
+
+function markPlaybackCompleted(item) {
+  if (!item) return;
+
+  if (item.episodeId) {
+    markEpisodeAsWatched(item.episodeId);
+  }
+
+  clearWatchProgress(item);
 }
 
 function getSavedWatchProgress(item) {
@@ -1000,28 +1009,29 @@ function renderSeason(seasonGroup, movie) {
   episodeList.innerHTML = seasonGroup.episodes.map(ep => {
     const isWatched = watchedSet.has(String(ep.id));
     const progEntry = progress[`episode:${ep.id}`];
+    const progressTime = Number(progEntry?.currentTime) || 0;
+    const progressDuration = Number(progEntry?.durationSeconds) || 0;
+    const hasProgress = !isWatched && progressTime > 0 && progressDuration > 0;
     
     let indicatorHtml = '';
-    let cardStyle = '';
+    const statusClass = isWatched ? 'is-watched' : (hasProgress ? 'is-progress' : '');
     
     if (isWatched) {
-      indicatorHtml = `<span class="episode-status-badge watched"><i class="fas fa-check-circle"></i> Assistido</span>`;
-      cardStyle = 'border-left: 3px solid #2ecc71;';
-    } else if (progEntry && progEntry.currentTime && progEntry.durationSeconds) {
-      const pct = Math.min(100, Math.max(0, (progEntry.currentTime / progEntry.durationSeconds) * 100));
+      indicatorHtml = `<span class="episode-status-badge watched"><i class="fa-solid fa-circle-check"></i> Assistido</span>`;
+    } else if (hasProgress) {
+      const pct = Math.min(100, Math.max(0, (progressTime / progressDuration) * 100));
       indicatorHtml = `
         <div class="episode-progress-container">
           <div class="episode-progress-bar">
             <div class="episode-progress-fill" style="width: ${pct}%"></div>
           </div>
-          <span class="episode-status-text">Parou em ${formatSeconds(progEntry.currentTime)}</span>
+          <span class="episode-status-text">Parou em ${formatSeconds(progressTime)}</span>
         </div>
       `;
-      cardStyle = 'border-left: 3px solid var(--gold-primary, #ffd700);';
     }
 
     return `
-      <button class="episode-card-user" type="button" data-episode-id="${ep.id}" style="${cardStyle}">
+      <button class="episode-card-user ${statusClass}" type="button" data-episode-id="${ep.id}">
         <span class="episode-number-user">${ep.number}</span>
         <div style="flex: 1; text-align: left; display: flex; flex-direction: column; gap: 4px;">
           <span class="episode-name-user">${escapeHtml(ep.title)}</span>
@@ -1773,7 +1783,7 @@ function initVideoPlayer() {
   });
 
   video.addEventListener('ended', () => {
-    clearWatchProgress(currentPlaybackItem);
+    markPlaybackCompleted(currentPlaybackItem);
     currentPlaybackItem = null;
   });
 

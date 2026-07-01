@@ -252,10 +252,13 @@ a { color: inherit; text-decoration: none; }
 .settings-content {
   min-width: 0;
   padding-right: 0;
+  display: flex;
+  justify-content: center;
 }
 
 .settings-view {
   display: none;
+  width: min(100%, 880px);
 }
 
 .settings-view.active {

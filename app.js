@@ -1412,6 +1412,30 @@ function initVideoPlayer() {
       .trim();
   }
 
+  function decodeSubtitleBuffer(buffer) {
+    const bytes = new Uint8Array(buffer);
+
+    if (bytes.length >= 3 && bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF) {
+      return new TextDecoder('utf-8').decode(bytes);
+    }
+    if (bytes.length >= 2 && bytes[0] === 0xFF && bytes[1] === 0xFE) {
+      return new TextDecoder('utf-16le').decode(bytes);
+    }
+    if (bytes.length >= 2 && bytes[0] === 0xFE && bytes[1] === 0xFF) {
+      return new TextDecoder('utf-16be').decode(bytes);
+    }
+
+    try {
+      return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+    } catch {
+      try {
+        return new TextDecoder('windows-1252').decode(bytes);
+      } catch {
+        return new TextDecoder('iso-8859-1').decode(bytes);
+      }
+    }
+  }
+
   function parseVtt(text) {
     return text
       .replace(/^\uFEFF/, '')
@@ -1503,7 +1527,8 @@ function initVideoPlayer() {
       const res = await fetch(normalizedUrl, { cache: 'no-store' });
       if (!res.ok) throw new Error('Nao foi possivel carregar a legenda');
 
-      const text = await res.text();
+      const buffer = await res.arrayBuffer();
+      const text = decodeSubtitleBuffer(buffer);
       const cues = parseVtt(text);
       if (loadToken !== subtitlesLoadToken) return;
 

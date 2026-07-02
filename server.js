@@ -4166,6 +4166,95 @@ app.get('/api/hls-proxy/:host/*', (req, res) => {
   proxyReq.end();
 });
 
+// =============================================
+//  PROXY: RedetToons / GoatCine MP4 Streaming
+//  Faz pipe do vídeo externo com suporte a Range
+//  requests, permitindo seek no player nativo.
+// =============================================
+app.options('/api/redetoons-proxy', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', 'Range, If-Range, If-Modified-Since');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+  res.sendStatus(200);
+});
+
+app.get('/api/redetoons-proxy', async (req, res) => {
+  const targetUrl = req.query.url;
+  if (!targetUrl) return res.status(400).json({ error: 'Parâmetro url ausente' });
+
+  // Aceitar apenas URLs do redetoons.fun por segurança
+  let parsedUrl;
+  try {
+    parsedUrl = new URL(targetUrl);
+  } catch {
+    return res.status(400).json({ error: 'URL inválida' });
+  }
+
+  if (!parsedUrl.hostname.endsWith('redetoons.fun')) {
+    return res.status(403).json({ error: 'Domínio não permitido no proxy' });
+  }
+
+  const https = require('https');
+
+  // Passar Range header do cliente ao servidor de origem
+  const upstreamHeaders = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+    'Referer': 'https://redetoons.fun/',
+    'Origin': 'https://redetoons.fun'
+  };
+  if (req.headers['range']) {
+    upstreamHeaders['Range'] = req.headers['range'];
+  }
+  if (req.headers['if-range']) {
+    upstreamHeaders['If-Range'] = req.headers['if-range'];
+  }
+
+  const options = {
+    method: req.method === 'HEAD' ? 'HEAD' : 'GET',
+    headers: upstreamHeaders
+  };
+
+  const proxyReq = https.request(targetUrl, options, (proxyRes) => {
+    const statusCode = proxyRes.statusCode;
+    res.status(statusCode);
+
+    // Repassar headers relevantes para streaming
+    const forwardHeaders = [
+      'content-type', 'content-length', 'content-range',
+      'accept-ranges', 'etag', 'last-modified', 'cache-control'
+    ];
+    forwardHeaders.forEach(h => {
+      if (proxyRes.headers[h]) res.setHeader(h, proxyRes.headers[h]);
+    });
+
+    // Garantir content-type como video para evitar download
+    if (!proxyRes.headers['content-type'] || !proxyRes.headers['content-type'].startsWith('video')) {
+      res.setHeader('Content-Type', 'video/mp4');
+    }
+
+    // Remover Content-Disposition para evitar download forçado
+    res.removeHeader('Content-Disposition');
+
+    // CORS
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Headers', 'Range, If-Range');
+    res.setHeader('Access-Control-Expose-Headers', 'Content-Length, Content-Range, Accept-Ranges, Content-Type');
+
+    if (options.method === 'HEAD') {
+      res.end();
+    } else {
+      proxyRes.pipe(res);
+    }
+  });
+
+  proxyReq.on('error', (err) => {
+    console.error('[REDETOONS PROXY ERROR]', err.message);
+    if (!res.headersSent) res.status(502).json({ error: 'Erro no proxy de vídeo' });
+  });
+
+  proxyReq.end();
+});
+
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });

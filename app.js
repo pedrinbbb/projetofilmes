@@ -1784,6 +1784,10 @@ function initVideoPlayer() {
   function getPlayableUrl(url) {
     if (!url) return '';
     let targetUrl = extractVideoUrl(url);
+    // RedetToons serve MP4 direto — rotear pelo proxy local para suporte a Range requests e seek
+    if (targetUrl.includes('redetoons.fun')) {
+      return `/api/redetoons-proxy?url=${encodeURIComponent(targetUrl)}`;
+    }
     if (targetUrl.includes('.m3u8') && targetUrl.startsWith('http')) {
       try {
         const urlObj = new URL(targetUrl);
@@ -2182,7 +2186,7 @@ function initVideoPlayer() {
     playerOverlay.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
 
-    // Determinar se o link é Iframe (YouTube/Vimeo/Google Drive/Axplay/RedetToons) ou vídeo direto (.mp4, .webm, .m3u8)
+    // Determinar se o link é Iframe (YouTube/Vimeo/Google Drive) ou vídeo direto (.mp4, .webm, .m3u8, redetoons.fun)
     const rawUrl = movie.videoUrl || movie.videourl || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
     const url = getPlayableUrl(rawUrl);
     currentPlaybackItem = isTrailerPlayback ? null : { ...movie, videoUrl: rawUrl };
@@ -2190,6 +2194,7 @@ function initVideoPlayer() {
     renderPlayerEpisodes();
     
     const cleanUrl = url.toLowerCase().split('?')[0];
+    // redetoons.fun serve MP4 diretamente (Content-Type: video/mp4) — tratar como vídeo nativo
     const isDirectVideo = cleanUrl.endsWith('.mp4') || 
                           cleanUrl.endsWith('.webm') || 
                           cleanUrl.endsWith('.mkv') || 
@@ -2197,11 +2202,11 @@ function initVideoPlayer() {
                           cleanUrl.endsWith('.ogv') || 
                           cleanUrl.endsWith('.m3u8') ||
                           url.includes('.m3u8?') ||
-                          url.includes('/api/video/stream');
+                          url.includes('/api/video/stream') ||
+                          url.includes('redetoons.fun');
 
     const isIframeSource = url.includes('youtube.com') || url.includes('youtu.be') ||
-                           url.includes('vimeo.com') || url.includes('drive.google.com') ||
-                           url.includes('redetoons.fun');
+                           url.includes('vimeo.com') || url.includes('drive.google.com');
 
     resetCustomSubtitles();
 
@@ -2225,9 +2230,6 @@ function initVideoPlayer() {
       } else if (url.includes('drive.google.com')) {
         // Tratar link do Google Drive (/preview)
         embedUrl = url.replace('/view', '/preview').replace('?usp=sharing', '');
-      } else if (url.includes('redetoons.fun')) {
-        // Usar o player original do GoatCine/RedetToons diretamente no iframe
-        embedUrl = url;
       }
       
       iframe.src = embedUrl;

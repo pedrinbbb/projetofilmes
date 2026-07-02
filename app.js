@@ -360,45 +360,9 @@ function buildPlaybackItemFromProgress(entry) {
 }
 
 function bindCardTouchScrollGuard(card) {
-  let startX = 0;
-  let startY = 0;
-  let moved = false;
-  let trackingTouch = false;
-
-  card.addEventListener('pointerdown', (event) => {
-    if (event.pointerType !== 'touch' && event.pointerType !== 'pen') return;
-    trackingTouch = true;
-    moved = false;
-    startX = event.clientX;
-    startY = event.clientY;
-  }, { passive: true });
-
-  card.addEventListener('pointermove', (event) => {
-    if (!trackingTouch) return;
-    const deltaX = Math.abs(event.clientX - startX);
-    const deltaY = Math.abs(event.clientY - startY);
-    if (Math.hypot(deltaX, deltaY) > 12) {
-      moved = true;
-      card.classList.remove('touch-active');
-    }
-  }, { passive: true });
-
-  card.addEventListener('pointerup', () => {
-    trackingTouch = false;
-  }, { passive: true });
-
-  card.addEventListener('pointercancel', () => {
-    trackingTouch = false;
-    moved = false;
+  card.addEventListener('touchcancel', () => {
     card.classList.remove('touch-active');
   }, { passive: true });
-
-  card.addEventListener('click', (event) => {
-    if (!moved) return;
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    moved = false;
-  }, true);
 }
 
 function initMobileSectionScrollFix() {
@@ -1162,7 +1126,28 @@ function initHeroButtons() {
 }
 
 // ---- NAVBAR ----
+function syncNavActionsMount() {
+  const navActions = $('nav-actions');
+  const navContainer = document.querySelector('.nav-container');
+  if (!navActions || !navContainer) return;
+
+  if (isMobileViewport()) {
+    if (navActions.parentElement !== document.body) {
+      document.body.appendChild(navActions);
+    }
+    return;
+  }
+
+  if (navActions.parentElement !== navContainer) {
+    navContainer.appendChild(navActions);
+  }
+}
+
 function initNavbar() {
+  syncNavActionsMount();
+  window.addEventListener('resize', debounce(syncNavActionsMount, 120));
+  window.addEventListener('orientationchange', () => setTimeout(syncNavActionsMount, 120));
+
   window.addEventListener('scroll', () => {
     navbar.classList.toggle('scrolled', window.scrollY > 60);
   });

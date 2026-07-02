@@ -1054,7 +1054,7 @@ async function runMigrationsAndSeeds() {
     let movieId;
     if (movie) {
       movieId = movie.id;
-      await dbRunAsync("UPDATE movies SET duration = '1 Temporada' WHERE id = ?", [movieId]);
+      await dbRunAsync("UPDATE movies SET duration = '2 Temporadas' WHERE id = ?", [movieId]);
     } else {
       await dbRunAsync(`
         INSERT INTO movies (title, year, duration, rating, genre, "desc", poster, backdrop, director, "cast", category, type, videoUrl, subtitlesUrl, trailerUrl)
@@ -1062,7 +1062,7 @@ async function runMigrationsAndSeeds() {
       `, [
         "The Last of Us",
         2023,
-        "1 Temporada",
+        "2 Temporadas",
         8.7,
         "Ação / Drama / Ficção Científica",
         "Uma série dramática baseada no aclamado videogame de mesmo nome, onde um sobrevivente endurecido assume a responsabilidade de contrabandear uma garota de 14 anos para fora de uma zona de quarentena opressiva.",
@@ -1157,11 +1157,74 @@ async function runMigrationsAndSeeds() {
           `, [movieId, 1, ep.number, ep.title, ep.duration, ep.videoUrl, ep.desc, ""]);
         }
       }
+
+      const season2Episodes = [
+        {
+          number: 1,
+          title: "Dias Futuros",
+          duration: "59 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-last-of-us%2F02-temporada%2F01%2Fstream.m3u8&slug=the-last-of-us&temporada=2&numero_episodio=1&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Joel e Ellie tentam se adaptar à vida estável em Jackson, mas o passado de Joel começa a retornar na forma de novas ameaças, abalando a confiança entre eles."
+        },
+        {
+          number: 2,
+          title: "Através do Vale",
+          duration: "57 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-last-of-us%2F02-temporada%2F02%2Fstream.m3u8&slug=the-last-of-us&temporada=2&numero_episodio=2&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "A comunidade de Jackson se depara com uma patrulha perigosa, enquanto Abby e seu grupo se aproximam da cidade em busca de respostas."
+        },
+        {
+          number: 3,
+          title: "O Caminho",
+          duration: "57 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-last-of-us%2F02-temporada%2F03%2Fstream.m3u8&slug=the-last-of-us&temporada=2&numero_episodio=3&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Ellie toma uma decisão crucial que altera o rumo de sua vida em Jackson, enquanto um grupo misterioso foge da devastação em Seattle."
+        },
+        {
+          number: 4,
+          title: "Dia Um",
+          duration: "53 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-last-of-us%2F02-temporada%2F04%2Fstream.m3u8&slug=the-last-of-us&temporada=2&numero_episodio=4&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Ellie chega a Seattle em busca de vingança e se vê em meio a um violento conflito territorial entre a Frente de Libertação de Washington (WLF) e os Serafitas."
+        },
+        {
+          number: 5,
+          title: "Sinta o Amor Dela",
+          duration: "45 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-last-of-us%2F02-temporada%2F05%2Fstream.m3u8&slug=the-last-of-us&temporada=2&numero_episodio=5&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Ellie e Dina enfrentam os perigos ocultos de Seattle, enquanto segredos do passado revelam o preço das escolhas que fizeram."
+        },
+        {
+          number: 6,
+          title: "O Preço",
+          duration: "1h 00min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-last-of-us%2F02-temporada%2F06%2Fstream.m3u8&slug=the-last-of-us&temporada=2&numero_episodio=6&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Confrontando novos dilemas morais, Ellie é levada ao limite psicológico ao descobrir pistas sobre o paradeiro de Abby."
+        },
+        {
+          number: 7,
+          title: "Convergência",
+          duration: "50 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-last-of-us%2F02-temporada%2F07%2Fstream.m3u8&slug=the-last-of-us&temporada=2&numero_episodio=7&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "O confronto final de Seattle coloca Ellie frente a frente com as consequências devastadoras de sua própria busca por vingança."
+        }
+      ];
+
+      for (const ep of season2Episodes) {
+        const existing = await dbGetAsync("SELECT id FROM episodes WHERE movie_id = ? AND season = 2 AND number = ?", [movieId, ep.number]);
+        if (!existing) {
+          await dbRunAsync(`
+            INSERT INTO episodes (movie_id, season, number, title, duration, videoUrl, "desc", subtitlesUrl)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          `, [movieId, 2, ep.number, ep.title, ep.duration, ep.videoUrl, ep.desc, ""]);
+        }
+      }
+
       if (!IS_POSTGRES) saveDb();
-      console.log("[DB SEED] ✅ Temporada 1 de The Last of Us semeada com sucesso.");
+      console.log("[DB SEED] ✅ Temporada 1 e 2 de The Last of Us semeadas com sucesso.");
     }
   } catch (err) {
-    console.error("[DB SEED ERROR] Erro ao semear Temporada 1 de The Last of Us:", err);
+    console.error("[DB SEED ERROR] Erro ao semear Temporadas de The Last of Us:", err);
   }
 
   // --- GARANTIR QUE CREED: III SEJA ADICIONADO SE ESTIVER AUSENTE ---

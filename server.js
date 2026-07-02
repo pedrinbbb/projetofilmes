@@ -1227,6 +1227,115 @@ async function runMigrationsAndSeeds() {
     console.error("[DB SEED ERROR] Erro ao semear Temporadas de The Last of Us:", err);
   }
 
+  // --- SEED SEASONS FOR THE BOYS AUTOMATICALLY ---
+  try {
+    const movie = await dbGetAsync("SELECT id FROM movies WHERE title = ?", ["The Boys"]);
+    let movieId;
+    if (movie) {
+      movieId = movie.id;
+      await dbRunAsync("UPDATE movies SET duration = '1 Temporada' WHERE id = ?", [movieId]);
+    } else {
+      await dbRunAsync(`
+        INSERT INTO movies (title, year, duration, rating, genre, "desc", poster, backdrop, director, "cast", category, type, videoUrl, subtitlesUrl, trailerUrl)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        "The Boys",
+        2019,
+        "1 Temporada",
+        8.5,
+        "Ação / Drama / Ficção Científica / Sátira",
+        "Em um mundo onde super-heróis são gerenciados por uma corporação gananciosa e abusam de seus poderes, um grupo de vigilantes busca expor a verdade sobre eles.",
+        "https://i.postimg.cc/vHnSwtMj/image.png",
+        "https://i.postimg.cc/xC7gWcZD/image.png",
+        "Eric Kripke",
+        "Karl Urban, Jack Quaid, Antony Starr, Erin Moriarty",
+        "series",
+        "series",
+        "",
+        "",
+        "https://www.youtube.com/watch?v=tcrNsIaQkb4"
+      ]);
+      const row = await dbGetAsync("SELECT id FROM movies WHERE title = ?", ["The Boys"]);
+      movieId = row?.id;
+      if (!IS_POSTGRES) saveDb();
+    }
+
+    if (movieId) {
+      const season1Episodes = [
+        {
+          number: 1,
+          title: "O Nome do Jogo",
+          duration: "1h 00min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F01-temporada%2F01%2Fstream.m3u8&slug=the-boys&temporada=1&numero_episodio=1&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "A vida de Hughie muda drasticamente quando sua namorada é morta por um super-herói (A-Train). Ele é recrutado por Billy Bruto para se vingar."
+        },
+        {
+          number: 2,
+          title: "Cherry",
+          duration: "55 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F01-temporada%2F02%2Fstream.m3u8&slug=the-boys&temporada=1&numero_episodio=2&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Os Rapazes (The Boys) tentam capturar um super-herói, enquanto Luz-Estrela (Starlight) tenta lidar com sua nova realidade nos Sete."
+        },
+        {
+          number: 3,
+          title: "Na Fissura",
+          duration: "57 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F01-temporada%2F03%2Fstream.m3u8&slug=the-boys&temporada=1&numero_episodio=3&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "O grupo investiga as conexões entre a Vought e o Composto V, enquanto a tensão aumenta entre os membros dos Sete."
+        },
+        {
+          number: 4,
+          title: "A Fêmea da Espécie",
+          duration: "55 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F01-temporada%2F04%2Fstream.m3u8&slug=the-boys&temporada=1&numero_episodio=4&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Os Boys encontram uma mulher misteriosa com superpoderes (a Fêmea), que estava sendo mantida em cativeiro."
+        },
+        {
+          number: 5,
+          title: "Bom para a Alma",
+          duration: "56 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F01-temporada%2F05%2Fstream.m3u8&slug=the-boys&temporada=1&numero_episodio=5&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Durante um evento religioso, Starlight descobre mais sobre as manipulações da Vought, enquanto o passado de Billy Bruto é explorado."
+        },
+        {
+          number: 6,
+          title: "Os Inocentes",
+          duration: "57 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F01-temporada%2F06%2Fstream.m3u8&slug=the-boys&temporada=1&numero_episodio=6&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "A equipe tenta descobrir segredos obscuros escondidos pela Vought, enquanto Hughie e Starlight se aproximam cada vez mais."
+        },
+        {
+          number: 7,
+          title: "A Sociedade da Autopreservação",
+          duration: "57 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F01-temporada%2F07%2Fstream.m3u8&slug=the-boys&temporada=1&numero_episodio=7&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "O cerco contra os Sete aperta e os conflitos internos na Vought começam a vir à tona."
+        },
+        {
+          number: 8,
+          title: "Você me Encontrou",
+          duration: "1h 02min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F01-temporada%2F08%2Fstream.m3u8&slug=the-boys&temporada=1&numero_episodio=8&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "O confronto final da temporada, revelando verdades impactantes sobre o Capitão Pátria e o destino de Becca Bruto."
+        }
+      ];
+
+      for (const ep of season1Episodes) {
+        const existing = await dbGetAsync("SELECT id FROM episodes WHERE movie_id = ? AND season = 1 AND number = ?", [movieId, ep.number]);
+        if (!existing) {
+          await dbRunAsync(`
+            INSERT INTO episodes (movie_id, season, number, title, duration, videoUrl, "desc", subtitlesUrl)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          `, [movieId, 1, ep.number, ep.title, ep.duration, ep.videoUrl, ep.desc, ""]);
+        }
+      }
+      if (!IS_POSTGRES) saveDb();
+      console.log("[DB SEED] ✅ Temporada 1 de The Boys semeada com sucesso.");
+    }
+  } catch (err) {
+    console.error("[DB SEED ERROR] Erro ao semear Temporadas de The Boys:", err);
+  }
+
   // --- GARANTIR QUE CREED: III SEJA ADICIONADO SE ESTIVER AUSENTE ---
   try {
     const existingCreed3 = await dbGetAsync("SELECT id FROM movies WHERE title = ?", ["Creed: III"]);

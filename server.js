@@ -1233,7 +1233,7 @@ async function runMigrationsAndSeeds() {
     let movieId;
     if (movie) {
       movieId = movie.id;
-      await dbRunAsync("UPDATE movies SET duration = '1 Temporada' WHERE id = ?", [movieId]);
+      await dbRunAsync("UPDATE movies SET duration = '2 Temporadas' WHERE id = ?", [movieId]);
     } else {
       await dbRunAsync(`
         INSERT INTO movies (title, year, duration, rating, genre, "desc", poster, backdrop, director, "cast", category, type, videoUrl, subtitlesUrl, trailerUrl)
@@ -1241,7 +1241,7 @@ async function runMigrationsAndSeeds() {
       `, [
         "The Boys",
         2019,
-        "1 Temporada",
+        "2 Temporadas",
         8.5,
         "Ação / Drama / Ficção Científica / Sátira",
         "Em um mundo onde super-heróis são gerenciados por uma corporação gananciosa e abusam de seus poderes, um grupo de vigilantes busca expor a verdade sobre eles.",
@@ -1329,8 +1329,78 @@ async function runMigrationsAndSeeds() {
           `, [movieId, 1, ep.number, ep.title, ep.duration, ep.videoUrl, ep.desc, ""]);
         }
       }
+
+      const season2Episodes = [
+        {
+          number: 1,
+          title: "O Grande Momento",
+          duration: "1h 00min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F02-temporada%2F01%2Fstream.m3u8&slug=the-boys&temporada=2&numero_episodio=1&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Bruto está foragido e os Rapazes tentam se ajustar a um novo normal enquanto são procurados pela polícia e vigiados pela Vought."
+        },
+        {
+          number: 2,
+          title: "Preparação e Planejamento Adequados",
+          duration: "1h 00min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F02-temporada%2F02%2Fstream.m3u8&slug=the-boys&temporada=2&numero_episodio=2&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Bruto retorna para liderar os Rapazes na busca por Becca, enquanto o Capitão Pátria tenta estreitar laços com o filho."
+        },
+        {
+          number: 3,
+          title: "Lá no Alto com as Espadas de Mil Homens",
+          duration: "1h 00min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F02-temporada%2F03%2Fstream.m3u8&slug=the-boys&temporada=2&numero_episodio=3&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Os Rapazes tentam contrabandear o superterrorista Kenji para as autoridades, mas os Sete e Tempesta iniciam uma caçada implacável."
+        },
+        {
+          number: 4,
+          title: "Sem Igual no Mundo",
+          duration: "1h 00min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F02-temporada%2F04%2Fstream.m3u8&slug=the-boys&temporada=2&numero_episodio=4&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Bruto planeja o resgate de Becca, enquanto Hughie, Leitinho e Annie viajam em busca de pistas sobre a misteriosa super-heroína Liberdade."
+        },
+        {
+          number: 5,
+          title: "Temos que Ir Agora",
+          duration: "1h 00min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F02-temporada%2F05%2Fstream.m3u8&slug=the-boys&temporada=2&numero_episodio=5&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "O Capitão Pátria se isola após ver sua popularidade despencar, enquanto Bruto e os Rapazes enfrentam problemas internos na equipe."
+        },
+        {
+          number: 6,
+          title: "As Portas Sangrentas",
+          duration: "1h 00min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F02-temporada%2F06%2Fstream.m3u8&slug=the-boys&temporada=2&numero_episodio=6&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Os Rapazes infiltram-se no Hospital Sage Grove, uma instituição secreta da Vought, onde descobrem segredos perturbadores sobre o Composto V."
+        },
+        {
+          number: 7,
+          title: "Carniceiro, Padeiro, Fabricante de Velas",
+          duration: "1h 00min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F02-temporada%2F07%2Fstream.m3u8&slug=the-boys&temporada=2&numero_episodio=7&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Bruto tenta obter a ajuda de seu antigo mentor da CIA para depor contra a Vought em uma audiência pública no Congresso."
+        },
+        {
+          number: 8,
+          title: "O que eu Sei",
+          duration: "1h 06min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F02-temporada%2F08%2Fstream.m3u8&slug=the-boys&temporada=2&numero_episodio=8&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Becca foge da Vought em busca da ajuda de Bruto para salvar seu filho, culminando em um confronto trágico e brutal contra o Capitão Pátria."
+        }
+      ];
+
+      for (const ep of season2Episodes) {
+        const existing = await dbGetAsync("SELECT id FROM episodes WHERE movie_id = ? AND season = 2 AND number = ?", [movieId, ep.number]);
+        if (!existing) {
+          await dbRunAsync(`
+            INSERT INTO episodes (movie_id, season, number, title, duration, videoUrl, "desc", subtitlesUrl)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          `, [movieId, 2, ep.number, ep.title, ep.duration, ep.videoUrl, ep.desc, ""]);
+        }
+      }
+
       if (!IS_POSTGRES) saveDb();
-      console.log("[DB SEED] ✅ Temporada 1 de The Boys semeada com sucesso.");
+      console.log("[DB SEED] ✅ Temporada 1 e 2 de The Boys semeadas com sucesso.");
     }
   } catch (err) {
     console.error("[DB SEED ERROR] Erro ao semear Temporadas de The Boys:", err);

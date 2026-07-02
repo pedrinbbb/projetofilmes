@@ -52,7 +52,8 @@ const DEFAULT_TRAILER_URLS = {
   'The Fall Guy': 'https://www.youtube.com/watch?v=j7jPnwVGdZ8',
   'Thor: Love and Thunder': 'https://www.youtube.com/watch?v=Go8nTmfrQd8',
   Origem: 'https://www.youtube.com/watch?v=pDHqAj4eJcM',
-  'Creed: III': 'https://www.youtube.com/watch?v=AHmCH7iB_IM'
+  'Creed: III': 'https://www.youtube.com/watch?v=AHmCH7iB_IM',
+  '60 Segundos': 'https://www.youtube.com/watch?v=ap5RqRzjS6g'
 };
 
 // URL de conexão do PostgreSQL
@@ -1792,6 +1793,78 @@ async function runMigrationsAndSeeds() {
     }
   } catch (err) {
     console.error("[DB SEED ERROR] Erro ao garantir Interestelar:", err);
+  }
+
+  // --- GARANTIR QUE 60 SEGUNDOS SEJA ADICIONADO SE ESTIVER AUSENTE ---
+  try {
+    const sixtySecondsData = {
+      title: "60 Segundos",
+      year: 2000,
+      duration: "1h 58min",
+      rating: 6.5,
+      genre: "A\u00e7\u00e3o / Crime / Thriller",
+      desc: "Randall \"Memphis\" Raines, um lend\u00e1rio ladr\u00e3o de carros aposentado, precisa reunir sua antiga equipe e roubar 50 carros de luxo em uma \u00fanica noite para salvar a vida do irm\u00e3o.",
+      poster: "https://i.postimg.cc/pTjpHJJv/image.png",
+      backdrop: "https://i.postimg.cc/bwvrJh9Y/image.png",
+      director: "Dominic Sena",
+      cast: "Nicolas Cage, Angelina Jolie, Giovanni Ribisi, Robert Duvall, Delroy Lindo, Will Patton, Christopher Eccleston, Vinnie Jones",
+      category: "action",
+      type: "movie",
+      videoUrl: "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/60%20Segundos%20%20-%20ToTTi9.mp4",
+      subtitlesUrl: null,
+      trailerUrl: DEFAULT_TRAILER_URLS["60 Segundos"]
+    };
+    const existingSixtySeconds = await dbGetAsync("SELECT id FROM movies WHERE title = ?", [sixtySecondsData.title]);
+    if (existingSixtySeconds) {
+      await dbRunAsync(`
+        UPDATE movies
+        SET year=?, duration=?, rating=?, genre=?, "desc"=?, poster=?, backdrop=?, director=?, "cast"=?, category=?, type=?, videoUrl=?, subtitlesUrl=?, trailerUrl=?
+        WHERE id=?
+      `, [
+        sixtySecondsData.year,
+        sixtySecondsData.duration,
+        sixtySecondsData.rating,
+        sixtySecondsData.genre,
+        sixtySecondsData.desc,
+        sixtySecondsData.poster,
+        sixtySecondsData.backdrop,
+        sixtySecondsData.director,
+        sixtySecondsData.cast,
+        sixtySecondsData.category,
+        sixtySecondsData.type,
+        sixtySecondsData.videoUrl,
+        sixtySecondsData.subtitlesUrl,
+        sixtySecondsData.trailerUrl,
+        existingSixtySeconds.id
+      ]);
+      console.log("  \u2705 60 Segundos atualizado no cat\u00e1logo.");
+    } else {
+      console.log("  \ud83d\udce6 Adicionando 60 Segundos ao cat\u00e1logo...");
+      await dbRunAsync(`
+        INSERT INTO movies (title, year, duration, rating, genre, "desc", poster, backdrop, director, "cast", category, type, videoUrl, subtitlesUrl, trailerUrl)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        sixtySecondsData.title,
+        sixtySecondsData.year,
+        sixtySecondsData.duration,
+        sixtySecondsData.rating,
+        sixtySecondsData.genre,
+        sixtySecondsData.desc,
+        sixtySecondsData.poster,
+        sixtySecondsData.backdrop,
+        sixtySecondsData.director,
+        sixtySecondsData.cast,
+        sixtySecondsData.category,
+        sixtySecondsData.type,
+        sixtySecondsData.videoUrl,
+        sixtySecondsData.subtitlesUrl,
+        sixtySecondsData.trailerUrl
+      ]);
+      console.log("  \u2705 60 Segundos adicionado com sucesso!");
+    }
+    if (!IS_POSTGRES) saveDb();
+  } catch (err) {
+    console.error("[DB SEED ERROR] Erro ao garantir 60 Segundos:", err);
   }
 
   try {

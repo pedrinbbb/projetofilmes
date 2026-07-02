@@ -3235,9 +3235,9 @@ function sendOptimizedStatic(req, res, next) {
     const ext = path.extname(filePath).toLowerCase();
     const contentType = staticContentTypes[ext] || 'application/octet-stream';
     res.setHeader('Content-Type', contentType);
-    if (ext === '.html') {
+    if (ext === '.html' || ext === '.css' || ext === '.js') {
       res.setHeader('Cache-Control', 'no-cache');
-    } else if (['.css', '.js', '.svg', '.woff', '.woff2', '.ttf', '.json'].includes(ext)) {
+    } else if (['.svg', '.woff', '.woff2', '.ttf', '.json'].includes(ext)) {
       res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
     } else {
       res.setHeader('Cache-Control', 'public, max-age=86400');

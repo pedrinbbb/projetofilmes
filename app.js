@@ -1313,12 +1313,10 @@ function performSearch(q) {
   const heroSection = $('hero');
   const clearBtn = $('search-pill-clear');
   const mobileSearchInput = $('mobile-search-input');
-  const mobileTopSearchInput = $('mobile-top-search-input');
 
   if (!q) {
     if (clearBtn) clearBtn.classList.add('hidden');
     if (mobileSearchInput) mobileSearchInput.value = '';
-    if (mobileTopSearchInput) mobileTopSearchInput.value = '';
     if (searchResultsSection) searchResultsSection.classList.add('hidden');
     if (searchResultsGrid) searchResultsGrid.innerHTML = '';
     
@@ -1374,14 +1372,12 @@ function performSearch(q) {
 function initSearch() {
   const searchInput = $('search-input');
   const mobileSearchInput = $('mobile-search-input');
-  const mobileTopSearchInput = $('mobile-top-search-input');
-  const mobileTopSearchForm = $('mobile-top-search-form');
   const mobileSearchForm = $('mobile-home-search-form');
   const clearBtn = $('search-pill-clear');
   const searchContainer = $('nav-search-container');
   const searchPill = searchContainer?.querySelector('.search-pill');
 
-  if (!searchInput && !mobileSearchInput && !mobileTopSearchInput) return;
+  if (!searchInput && !mobileSearchInput) return;
 
   function syncSearchPlaceholder() {
     if (searchInput) {
@@ -1403,7 +1399,6 @@ function initSearch() {
   function runSearchFrom(input, value) {
     if (input !== searchInput && searchInput) searchInput.value = value;
     if (input !== mobileSearchInput && mobileSearchInput) mobileSearchInput.value = value;
-    if (input !== mobileTopSearchInput && mobileTopSearchInput) mobileTopSearchInput.value = value;
     performSearch(value.trim());
   }
 
@@ -1415,29 +1410,14 @@ function initSearch() {
     runSearchFrom(mobileSearchInput, e.target.value);
   }, 300));
 
-  mobileTopSearchInput?.addEventListener('input', debounce((e) => {
-    runSearchFrom(mobileTopSearchInput, e.target.value);
-  }, 300));
-
   mobileSearchForm?.addEventListener('click', () => {
     mobileSearchForm.classList.add('search-open');
     setTimeout(() => mobileSearchInput?.focus(), 40);
   });
 
-  mobileTopSearchForm?.addEventListener('click', () => {
-    mobileTopSearchForm.classList.add('search-open');
-    setTimeout(() => mobileTopSearchInput?.focus(), 40);
-  });
-
   mobileSearchInput?.addEventListener('blur', () => {
     if (!mobileSearchInput.value.trim()) {
       mobileSearchForm?.classList.remove('search-open');
-    }
-  });
-
-  mobileTopSearchInput?.addEventListener('blur', () => {
-    if (!mobileTopSearchInput.value.trim()) {
-      mobileTopSearchForm?.classList.remove('search-open');
     }
   });
 
@@ -1447,20 +1427,12 @@ function initSearch() {
     mobileSearchInput?.blur();
   });
 
-  mobileTopSearchForm?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    runSearchFrom(mobileTopSearchInput, mobileTopSearchInput?.value || '');
-    mobileTopSearchInput?.blur();
-  });
-
   // Limpar busca
   if (clearBtn) {
     clearBtn.addEventListener('click', () => {
       if (searchInput) searchInput.value = '';
       if (mobileSearchInput) mobileSearchInput.value = '';
-      if (mobileTopSearchInput) mobileTopSearchInput.value = '';
       mobileSearchForm?.classList.remove('search-open');
-      mobileTopSearchForm?.classList.remove('search-open');
       performSearch('');
       searchInput?.focus();
     });
@@ -1470,13 +1442,10 @@ function initSearch() {
     if (e.key === 'Escape') {
       if (searchInput) searchInput.value = '';
       if (mobileSearchInput) mobileSearchInput.value = '';
-      if (mobileTopSearchInput) mobileTopSearchInput.value = '';
       mobileSearchForm?.classList.remove('search-open');
-      mobileTopSearchForm?.classList.remove('search-open');
       performSearch('');
       searchInput?.blur();
       mobileSearchInput?.blur();
-      mobileTopSearchInput?.blur();
     }
   });
 }
@@ -1485,13 +1454,11 @@ function applyPendingSearch() {
   const pendingSearch = localStorage.getItem('goatcine_pending_search');
   const searchInput = $('search-input');
   const mobileSearchInput = $('mobile-search-input');
-  const mobileTopSearchInput = $('mobile-top-search-input');
-  if (!pendingSearch || (!searchInput && !mobileSearchInput && !mobileTopSearchInput)) return;
+  if (!pendingSearch || (!searchInput && !mobileSearchInput)) return;
 
   localStorage.removeItem('goatcine_pending_search');
   if (searchInput) searchInput.value = pendingSearch;
   if (mobileSearchInput) mobileSearchInput.value = pendingSearch;
-  if (mobileTopSearchInput) mobileTopSearchInput.value = pendingSearch;
   performSearch(pendingSearch);
 }
 
@@ -3058,7 +3025,6 @@ function initUserSession() {
     if (!user) return;
 
     const navAvatar = $('nav-avatar');
-    const mobileTopAvatar = $('mobile-top-avatar');
     const menuAvatarCircle = $('menu-avatar-circle');
     const menuUserName = $('menu-user-name');
     const menuUserEmail = $('menu-user-email');
@@ -3079,11 +3045,6 @@ function initUserSession() {
           navAvatar.style.background = '#111111';
           navAvatar.style.borderColor = profile.avatar_color + '88';
         }
-        if (mobileTopAvatar) {
-          mobileTopAvatar.innerHTML = imageMarkup;
-          mobileTopAvatar.style.background = '#111111';
-          mobileTopAvatar.style.borderColor = profile.avatar_color + '88';
-        }
         if (menuAvatarCircle) {
           menuAvatarCircle.innerHTML = imageMarkup;
           menuAvatarCircle.style.background = '#111111';
@@ -3100,11 +3061,6 @@ function initUserSession() {
           navAvatar.style.background = profile.avatar_color + '22';
           navAvatar.style.borderColor = profile.avatar_color + '88';
         }
-        if (mobileTopAvatar) {
-          mobileTopAvatar.innerHTML = `<span style="${emojiStyle}">${profile.avatar_icon}</span>`;
-          mobileTopAvatar.style.background = profile.avatar_color + '22';
-          mobileTopAvatar.style.borderColor = profile.avatar_color + '88';
-        }
         if (menuAvatarCircle) {
           menuAvatarCircle.innerHTML = `<span style="${emojiStyle}; font-size:26px;">${profile.avatar_icon}</span>`;
           menuAvatarCircle.style.background = profile.avatar_color + '22';
@@ -3115,32 +3071,19 @@ function initUserSession() {
       if (navAvatar) {
         navAvatar.innerHTML = `<img src="${user.avatar}" alt="${user.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" />`;
       }
-      if (mobileTopAvatar) {
-        mobileTopAvatar.innerHTML = `<img src="${user.avatar}" alt="${user.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" />`;
-      }
       if (menuAvatarCircle) {
         menuAvatarCircle.innerHTML = `<img src="${user.avatar}" alt="${user.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" />`;
       }
     } else {
       const letter = (profile ? profile.name[0] : user.name?.[0] || 'G').toUpperCase();
       if (navAvatar) navAvatar.innerHTML = `<span id="nav-avatar-letter">${letter}</span>`;
-      if (mobileTopAvatar) mobileTopAvatar.innerHTML = `<span id="mobile-top-avatar-letter">${letter}</span>`;
       if (menuAvatarCircle) menuAvatarCircle.innerHTML = `<span id="menu-avatar-letter">${letter}</span>`;
     }
-
-    mobileTopAvatar?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      window.location.href = '/my-goat.html';
-    });
 
     // Toggle dropdown
     if (navAvatar && dropdown) {
       navAvatar.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (isMobileViewport()) {
-          window.location.href = '/my-goat.html';
-          return;
-        }
         dropdown.classList.toggle('show');
         dropdown.setAttribute('aria-hidden', dropdown.classList.contains('show') ? 'false' : 'true');
       });

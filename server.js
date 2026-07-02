@@ -64,7 +64,13 @@ const DEFAULT_TRAILER_URLS = {
   'Invoca\u00e7\u00e3o do Mal': 'https://www.youtube.com/watch?v=k10ETZ41q5o',
   'Invoca\u00e7\u00e3o do Mal 2': 'https://www.youtube.com/watch?v=VFsmuRPClr4',
   'Invoca\u00e7\u00e3o do Mal 3: A Ordem do Dem\u00f4nio': 'https://www.youtube.com/watch?v=h9Q4zZS2v1k',
-  'O Exorcista do Papa': 'https://www.youtube.com/watch?v=YJXqvnT_rsk'
+  'O Exorcista do Papa': 'https://www.youtube.com/watch?v=YJXqvnT_rsk',
+  'Karate Kid': 'https://www.youtube.com/watch?v=XY8amUImEu0',
+  'Velozes e Furiosos 4': 'https://www.youtube.com/watch?v=BCg9R_MGZKg',
+  'Velozes e Furiosos 5: Opera\u00e7\u00e3o Rio': 'https://www.youtube.com/watch?v=mw2AqdB5EVA',
+  'Velozes e Furiosos': 'https://www.youtube.com/watch?v=2TAOizOnNPo',
+  'Invoca\u00e7\u00e3o do Mal 4: O \u00daltimo Ritual': 'https://www.youtube.com/watch?v=bMgfsdYoEEo',
+  'Talento e F\u00e9': 'https://www.youtube.com/watch?v=BRQaEJv9qIk'
 };
 
 // URL de conexão do PostgreSQL
@@ -2560,6 +2566,165 @@ async function runMigrationsAndSeeds() {
     if (!IS_POSTGRES) saveDb();
   } catch (err) {
     console.error("[DB SEED ERROR] Erro ao garantir filmes de terror adicionais:", err);
+  }
+
+  // --- GARANTIR FILMES ADICIONADOS PELO CATALOGO SE ESTIVEREM AUSENTES ---
+  try {
+    const catalogMovieSeeds = [
+      {
+        title: "Karate Kid",
+        year: 2010,
+        duration: "2h 20min",
+        rating: 6.2,
+        genre: "A\u00e7\u00e3o / Drama / Fam\u00edlia",
+        desc: "Ao se mudar para a China com a m\u00e3e, Dre Parker sofre nas m\u00e3os de valent\u00f5es locais e encontra em Mr. Han um mentor improv\u00e1vel para aprender kung fu e enfrentar seus medos.",
+        poster: "https://media.themoviedb.org/t/p/w600_and_h900_face/uC57SSZAkkLBCuWVsEfbqYkRda5.jpg",
+        backdrop: "https://media.themoviedb.org/t/p/w1920_and_h800_multi_faces/v8DepuF6gizphLzIyNZeQiB0hij.jpg",
+        director: "Harald Zwart",
+        cast: "Jaden Smith, Jackie Chan, Taraji P. Henson, Wenwen Han, Zhenwei Wang",
+        category: "new",
+        type: "movie",
+        videoUrl: "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/karate-kid-2010.mp4",
+        subtitlesUrl: null,
+        trailerUrl: DEFAULT_TRAILER_URLS["Karate Kid"]
+      },
+      {
+        title: "Velozes e Furiosos 4",
+        year: 2009,
+        duration: "1h 47min",
+        rating: 6.5,
+        genre: "A\u00e7\u00e3o / Crime / Thriller",
+        desc: "Dominic Toretto retorna a Los Angeles e cruza novamente o caminho de Brian O'Conner enquanto ambos perseguem um inimigo comum ligado ao tr\u00e1fico internacional.",
+        poster: "https://media.themoviedb.org/t/p/w600_and_h900_face/7sjbAOmNFtfTyZ6KFC9t9FDDOcK.jpg",
+        backdrop: "https://media.themoviedb.org/t/p/w1920_and_h800_multi_faces/25HepicRtrzZ3MVCqhfoxGDbHjw.jpg",
+        director: "Justin Lin",
+        cast: "Vin Diesel, Paul Walker, Michelle Rodriguez, Jordana Brewster, John Ortiz, Laz Alonso",
+        category: "new",
+        type: "movie",
+        videoUrl: "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/velozes-e-furiosos-4-2009.mp4",
+        subtitlesUrl: null,
+        trailerUrl: DEFAULT_TRAILER_URLS["Velozes e Furiosos 4"]
+      },
+      {
+        title: "Velozes e Furiosos 5: Opera\u00e7\u00e3o Rio",
+        year: 2011,
+        duration: "2h 10min",
+        rating: 7.3,
+        genre: "A\u00e7\u00e3o / Crime / Thriller",
+        desc: "No Rio de Janeiro, Dom, Brian e sua equipe planejam um grande golpe contra um poderoso criminoso enquanto s\u00e3o ca\u00e7ados por um agente federal incans\u00e1vel.",
+        poster: "https://media.themoviedb.org/t/p/w600_and_h900_face/5BKmQMUPOEtDFDCBW8jrUCI9ZbI.jpg",
+        backdrop: "https://media.themoviedb.org/t/p/w1920_and_h800_multi_faces/c1Q8jLoaruQ9m5lCrVlXOaJJtu7.jpg",
+        director: "Justin Lin",
+        cast: "Vin Diesel, Paul Walker, Jordana Brewster, Dwayne Johnson, Tyrese Gibson, Ludacris, Gal Gadot, Sung Kang",
+        category: "new",
+        type: "movie",
+        videoUrl: "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/velozes-furiosos-5-operacao-rio-2011.mp4",
+        subtitlesUrl: null,
+        trailerUrl: DEFAULT_TRAILER_URLS["Velozes e Furiosos 5: Opera\u00e7\u00e3o Rio"]
+      },
+      {
+        title: "Velozes e Furiosos",
+        year: 2001,
+        duration: "1h 47min",
+        rating: 6.8,
+        genre: "A\u00e7\u00e3o / Crime / Thriller",
+        desc: "O policial Brian O'Conner se infiltra no mundo das corridas de rua de Los Angeles e se aproxima de Dominic Toretto, ficando dividido entre o dever e a lealdade.",
+        poster: "https://media.themoviedb.org/t/p/w600_and_h900_face/rKaaYM4CtuJZFdOA0SZWbaMNHbn.jpg",
+        backdrop: "https://media.themoviedb.org/t/p/w1920_and_h800_multi_faces/jY9ef5nqY4xIIMu3yzW3qamUCoi.jpg",
+        director: "Rob Cohen",
+        cast: "Paul Walker, Vin Diesel, Michelle Rodriguez, Jordana Brewster, Rick Yune, Chad Lindberg, Johnny Strong, Ted Levine",
+        category: "new",
+        type: "movie",
+        videoUrl: "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/velozes-e-furiosos-2001.mp4",
+        subtitlesUrl: null,
+        trailerUrl: DEFAULT_TRAILER_URLS["Velozes e Furiosos"]
+      },
+      {
+        title: "Invoca\u00e7\u00e3o do Mal 4: O \u00daltimo Ritual",
+        year: 2025,
+        duration: "2h 15min",
+        rating: 6.2,
+        genre: "Terror / Mist\u00e9rio / Thriller",
+        desc: "Ed e Lorraine Warren enfrentam um \u00faltimo caso aterrorizante envolvendo entidades misteriosas e uma assombra\u00e7\u00e3o que coloca sua fam\u00edlia diante do mal definitivo.",
+        poster: "https://media.themoviedb.org/t/p/w600_and_h900_face/40nHGUfypLhlr7gJx8At1IbYkaK.jpg",
+        backdrop: "https://media.themoviedb.org/t/p/w1920_and_h800_multi_faces/i8MupUe4xgmYXoRNAQMYvuoexSU.jpg",
+        director: "Michael Chaves",
+        cast: "Vera Farmiga, Patrick Wilson, Mia Tomlinson, Ben Hardy, Steve Coulter, Rebecca Calder, Elliot Cowan",
+        category: "new",
+        type: "movie",
+        videoUrl: "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/invocacao-do-mal-4-o-ultimo-ritual-2025.mp4",
+        subtitlesUrl: null,
+        trailerUrl: DEFAULT_TRAILER_URLS["Invoca\u00e7\u00e3o do Mal 4: O \u00daltimo Ritual"]
+      },
+      {
+        title: "Talento e F\u00e9",
+        year: 2015,
+        duration: "2h 4min",
+        rating: 6.4,
+        genre: "Drama / Esporte / F\u00e9",
+        desc: "Baseado em uma hist\u00f3ria real, um talentoso jogador de futebol americano enfrenta tens\u00f5es raciais e desafios pessoais enquanto descobre for\u00e7a na f\u00e9 e na uni\u00e3o.",
+        poster: "https://media.themoviedb.org/t/p/w600_and_h900_face/6uAVDyWhkXfaMo09hNpyqR0xkFp.jpg",
+        backdrop: "https://media.themoviedb.org/t/p/w1920_and_h800_multi_faces/1ee7AmCE5S40A8kCinvhFtNMLYD.jpg",
+        director: "Andrew Erwin, Jon Erwin",
+        cast: "Caleb Castille, Sean Astin, Jon Voight, Nic Bishop, Sherri Shepherd, C. Thomas Howell",
+        category: "new",
+        type: "movie",
+        videoUrl: "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/talento-e-fe-2015.mp4",
+        subtitlesUrl: null,
+        trailerUrl: DEFAULT_TRAILER_URLS["Talento e F\u00e9"]
+      }
+    ];
+
+    for (const seedMovie of catalogMovieSeeds) {
+      const existingMovie = await dbGetAsync("SELECT id FROM movies WHERE title = ?", [seedMovie.title]);
+      if (existingMovie) {
+        await dbRunAsync(`
+          UPDATE movies
+          SET year=?, duration=?, rating=?, genre=?, "desc"=?, poster=?, backdrop=?, director=?, "cast"=?, category=?, type=?, videoUrl=?, subtitlesUrl=?, trailerUrl=?
+          WHERE id=?
+        `, [
+          seedMovie.year,
+          seedMovie.duration,
+          seedMovie.rating,
+          seedMovie.genre,
+          seedMovie.desc,
+          seedMovie.poster,
+          seedMovie.backdrop,
+          seedMovie.director,
+          seedMovie.cast,
+          seedMovie.category,
+          seedMovie.type,
+          seedMovie.videoUrl,
+          seedMovie.subtitlesUrl,
+          seedMovie.trailerUrl,
+          existingMovie.id
+        ]);
+      } else {
+        await dbRunAsync(`
+          INSERT INTO movies (title, year, duration, rating, genre, "desc", poster, backdrop, director, "cast", category, type, videoUrl, subtitlesUrl, trailerUrl)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `, [
+          seedMovie.title,
+          seedMovie.year,
+          seedMovie.duration,
+          seedMovie.rating,
+          seedMovie.genre,
+          seedMovie.desc,
+          seedMovie.poster,
+          seedMovie.backdrop,
+          seedMovie.director,
+          seedMovie.cast,
+          seedMovie.category,
+          seedMovie.type,
+          seedMovie.videoUrl,
+          seedMovie.subtitlesUrl,
+          seedMovie.trailerUrl
+        ]);
+      }
+    }
+    if (!IS_POSTGRES) saveDb();
+  } catch (err) {
+    console.error("[DB SEED ERROR] Erro ao garantir filmes adicionados pelo catalogo:", err);
   }
 
   try {

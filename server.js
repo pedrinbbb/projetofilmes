@@ -1233,7 +1233,7 @@ async function runMigrationsAndSeeds() {
     let movieId;
     if (movie) {
       movieId = movie.id;
-      await dbRunAsync("UPDATE movies SET duration = '2 Temporadas' WHERE id = ?", [movieId]);
+      await dbRunAsync("UPDATE movies SET duration = '5 Temporadas' WHERE id = ?", [movieId]);
     } else {
       await dbRunAsync(`
         INSERT INTO movies (title, year, duration, rating, genre, "desc", poster, backdrop, director, "cast", category, type, videoUrl, subtitlesUrl, trailerUrl)
@@ -1241,7 +1241,7 @@ async function runMigrationsAndSeeds() {
       `, [
         "The Boys",
         2019,
-        "2 Temporadas",
+        "5 Temporadas",
         8.5,
         "Ação / Drama / Ficção Científica / Sátira",
         "Em um mundo onde super-heróis são gerenciados por uma corporação gananciosa e abusam de seus poderes, um grupo de vigilantes busca expor a verdade sobre eles.",
@@ -1385,7 +1385,7 @@ async function runMigrationsAndSeeds() {
           title: "O que eu Sei",
           duration: "1h 06min",
           videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F02-temporada%2F08%2Fstream.m3u8&slug=the-boys&temporada=2&numero_episodio=8&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
-          desc: "Becca foge da Vought em busca da ajuda de Bruto para salvar seu filho, culminando em um confronto trágico e brutal contra o Capitão Pátria."
+          desc: "Becca fuge da Vought em busca da ajuda de Bruto para salvar seu filho, culminando em um confronto trágico e brutal contra o Capitão Pátria."
         }
       ];
 
@@ -1399,8 +1399,215 @@ async function runMigrationsAndSeeds() {
         }
       }
 
+      const season3Episodes = [
+        {
+          number: 1,
+          title: "Revanche",
+          duration: "1h 03min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F03-temporada%2F01%2Fstream.m3u8&slug=the-boys&temporada=3&numero_episodio=1&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Após um ano de calmaria, Billy Bruto trabalha para o governo sob a supervisão de Hughie. Mas a paz dura pouco quando eles descobrem uma pista sobre a misteriosa arma que matou o Soldier Boy."
+        },
+        {
+          number: 2,
+          title: "O Único Homem No Céu",
+          duration: "1h 01min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F03-temporada%2F02%2Fstream.m3u8&slug=the-boys&temporada=3&numero_episodio=2&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "A estabilidade mental do Capitão Pátria é questionada enquanto Billy Bruto começa a investigar a lenda do Soldier Boy e usa o Composto V temporário pela primeira vez."
+        },
+        {
+          number: 3,
+          title: "Costa Bárbara",
+          duration: "1h 02min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F03-temporada%2F03%2Fstream.m3u8&slug=the-boys&temporada=3&numero_episodio=3&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "A equipe dos Boys viaja para obter informações sobre a equipe Revanche e o Soldier Boy, revivendo flashbacks de uma missão desastrosa na Nicarágua em 1984."
+        },
+        {
+          number: 4,
+          title: "O Glorioso Plano de Cinco Anos",
+          duration: "1h 04min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F03-temporada%2F04%2Fstream.m3u8&slug=the-boys&temporada=3&numero_episodio=4&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Os Boys viajam para a Rússia em busca da arma secreta que supostamente matou o Soldier Boy, mas acabam fazendo uma descoberta inesperada e perigosa."
+        },
+        {
+          number: 5,
+          title: "A Última Oportunidade para Olhar Este Mundo de Mentiras",
+          duration: "1h 00min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F03-temporada%2F05%2Fstream.m3u8&slug=the-boys&temporada=3&numero_episodio=5&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Hughie e Bruto lidam com os efeitos colaterais do Composto V temporário, enquanto o Soldier Boy solto em solo americano busca vingança contra seus antigos companheiros."
+        },
+        {
+          number: 6,
+          title: "Supersuruba (Herogasm)",
+          duration: "1h 00min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F03-temporada%2F06%2Fstream.m3u8&slug=the-boys&temporada=3&numero_episodio=6&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Billy Bruto, Hughie e Soldier Boy localizam os gêmeos TNT no evento anual Herogasm, resultando em um confronto massivo e caótico contra o Capitão Pátria."
+        },
+        {
+          number: 7,
+          title: "Uma Vela para Iluminar Seu Caminho até a Cama",
+          duration: "59 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F03-temporada%2F07%2Fstream.m3u8&slug=the-boys&temporada=3&numero_episodio=7&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Revelações chocantes sobre o passado do Soldier Boy e do Capitão Pátria vêm à tona, enquanto Mind-Storm confronta Bruto com seus piores pesadelos."
+        },
+        {
+          number: 8,
+          title: "O Quente Deserto Instantâneo",
+          duration: "1h 05min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F03-temporada%2F08%2Fstream.m3u8&slug=the-boys&temporada=3&numero_episodio=8&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "No confronto decisivo da temporada, os caminhos de Billy Bruto, Soldier Boy, Capitão Pátria e os Boys colidem na Vought Tower com consequências devastadoras."
+        }
+      ];
+
+      for (const ep of season3Episodes) {
+        const existing = await dbGetAsync("SELECT id FROM episodes WHERE movie_id = ? AND season = 3 AND number = ?", [movieId, ep.number]);
+        if (!existing) {
+          await dbRunAsync(`
+            INSERT INTO episodes (movie_id, season, number, title, duration, videoUrl, "desc", subtitlesUrl)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          `, [movieId, 3, ep.number, ep.title, ep.duration, ep.videoUrl, ep.desc, ""]);
+        }
+      }
+
+      const season4Episodes = [
+        {
+          number: 1,
+          title: "Departamento de Truques Sujos",
+          duration: "59 min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F04-temporada%2F01%2Fstream.m3u8&slug=the-boys&temporada=4&numero_episodio=1&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "A equipe tenta interferir nos planos políticos de Victoria Neuman enquanto o Capitão Pátria busca consolidar seu poder. Billy Bruto lida com sua saúde debilitada."
+        },
+        {
+          number: 2,
+          title: "A Vida Entre os Cépticos",
+          duration: "1h 02min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F04-temporada%2F02%2Fstream.m3u8&slug=the-boys&temporada=4&numero_episodio=2&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Os Boys tentam rastrear um novo aliado enquanto a Vought inicia uma campanha de manipulação da opinião pública, e o Capitão Pátria introduz Mana Sábia nos Sete."
+        },
+        {
+          number: 3,
+          title: "Manteremos a Bandeira Vermelha Hasteada Aqui",
+          duration: "1h 04min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F04-temporada%2F03%2Fstream.m3u8&slug=the-boys&temporada=4&numero_episodio=3&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Capitão Pátria tenta moldar Ryan à sua imagem, enquanto os Boys tentam resgatar a família de um aliado político em uma missão de alto risco."
+        },
+        {
+          number: 4,
+          title: "A Sabedoria das Eras",
+          duration: "1h 03min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F04-temporada%2F04%2Fstream.m3u8&slug=the-boys&temporada=4&numero_episodio=4&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "O Capitão Pátria retorna ao laboratório secreto de sua infância para confrontar seus antigos torturadores e superar seus traumas mais profundos."
+        },
+        {
+          number: 5,
+          title: "Cuidado com o Jaguadarte, Meu Filho",
+          duration: "1h 01min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F04-temporada%2F05%2Fstream.m3u8&slug=the-boys&temporada=4&numero_episodio=5&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "O Composto V administrado ao pai de Hughie causa uma tragédia no hospital, enquanto os Boys buscam um vírus capaz de conter ou matar super-heróis."
+        },
+        {
+          number: 6,
+          title: "Negócios Sujos",
+          duration: "1h 02min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F04-temporada%2F06%2Fstream.m3u8&slug=the-boys&temporada=4&numero_episodio=6&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Leitinho, Annie e Kimiko se infiltram em uma festa na mansão de Tek Knight para expor os segredos de seus planos de prisões privadas."
+        },
+        {
+          number: 7,
+          title: "O Infiltrado",
+          duration: "1h 03min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F04-temporada%2F07%2Fstream.m3u8&slug=the-boys&temporada=4&numero_episodio=7&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Trem-Bala corre perigo extremo após ser exposto como o informante dos Boys, forçando-o a tomar uma decisão drástica para salvar sua própria vida."
+        },
+        {
+          number: 8,
+          title: "Final da Temporada 4",
+          duration: "1h 08min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F04-temporada%2F08%2Fstream.m3u8&slug=the-boys&temporada=4&numero_episodio=8&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "O plano de assassinato político atinge seu clímax em uma corrida desesperada contra o tempo. O destino dos Boys e do país é selado após a intervenção da Vought."
+        }
+      ];
+
+      for (const ep of season4Episodes) {
+        const existing = await dbGetAsync("SELECT id FROM episodes WHERE movie_id = ? AND season = 4 AND number = ?", [movieId, ep.number]);
+        if (!existing) {
+          await dbRunAsync(`
+            INSERT INTO episodes (movie_id, season, number, title, duration, videoUrl, "desc", subtitlesUrl)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          `, [movieId, 4, ep.number, ep.title, ep.duration, ep.videoUrl, ep.desc, ""]);
+        }
+      }
+
+      const season5Episodes = [
+        {
+          number: 1,
+          title: "Episódio 1",
+          duration: "1h 00min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F05-temporada%2F01%2Fstream.m3u8&slug=the-boys&temporada=5&numero_episodio=1&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Episódio 1 da quinta temporada de The Boys. Em breve."
+        },
+        {
+          number: 2,
+          title: "Episódio 2",
+          duration: "1h 00min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F05-temporada%2F02%2Fstream.m3u8&slug=the-boys&temporada=5&numero_episodio=2&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Episódio 2 da quinta temporada de The Boys. Em breve."
+        },
+        {
+          number: 3,
+          title: "Episódio 3",
+          duration: "1h 00min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F05-temporada%2F03%2Fstream.m3u8&slug=the-boys&temporada=5&numero_episodio=3&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Episódio 3 da quinta temporada de The Boys. Em breve."
+        },
+        {
+          number: 4,
+          title: "Episódio 4",
+          duration: "1h 00min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F05-temporada%2F04%2Fstream.m3u8&slug=the-boys&temporada=5&numero_episodio=4&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Episódio 4 da quinta temporada de The Boys. Em breve."
+        },
+        {
+          number: 5,
+          title: "Episódio 5",
+          duration: "1h 00min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F05-temporada%2F05%2Fstream.m3u8&slug=the-boys&temporada=5&numero_episodio=5&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Episódio 5 da quinta temporada de The Boys. Em breve."
+        },
+        {
+          number: 6,
+          title: "Episódio 6",
+          duration: "1h 00min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F05-temporada%2F06%2Fstream.m3u8&slug=the-boys&temporada=5&numero_episodio=6&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Episódio 6 da quinta temporada de The Boys. Em breve."
+        },
+        {
+          number: 7,
+          title: "Episódio 7",
+          duration: "1h 00min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F05-temporada%2F07%2Fstream.m3u8&slug=the-boys&temporada=5&numero_episodio=7&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Episódio 7 da quinta temporada de The Boys. Em breve."
+        },
+        {
+          number: 8,
+          title: "Episódio 8",
+          duration: "1h 00min",
+          videoUrl: "https://www.axplay.shop/goplayer.php?d=%2FT%2Fthe-boys%2F05-temporada%2F08%2Fstream.m3u8&slug=the-boys&temporada=5&numero_episodio=8&tipo=series&primaryURL=https%3A%2F%2Fondemand.telabrasil.shop&fallbackURL=https%3A%2F%2Fforks-series.telabrasil.shop&precacheEndpoint=https%3A%2F%2Fping-us-series.telabrasil.shop%2Fprecache",
+          desc: "Episódio 8 da quinta temporada de The Boys. Em breve."
+        }
+      ];
+
+      for (const ep of season5Episodes) {
+        const existing = await dbGetAsync("SELECT id FROM episodes WHERE movie_id = ? AND season = 5 AND number = ?", [movieId, ep.number]);
+        if (!existing) {
+          await dbRunAsync(`
+            INSERT INTO episodes (movie_id, season, number, title, duration, videoUrl, "desc", subtitlesUrl)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          `, [movieId, 5, ep.number, ep.title, ep.duration, ep.videoUrl, ep.desc, ""]);
+        }
+      }
+
       if (!IS_POSTGRES) saveDb();
-      console.log("[DB SEED] ✅ Temporada 1 e 2 de The Boys semeadas com sucesso.");
+      console.log("[DB SEED] ✅ Temporadas 1 a 5 de The Boys semeadas com sucesso.");
     }
   } catch (err) {
     console.error("[DB SEED ERROR] Erro ao semear Temporadas de The Boys:", err);

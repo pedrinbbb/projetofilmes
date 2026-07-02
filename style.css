@@ -1180,6 +1180,41 @@ ul {
   }
 }
 
+@media (max-width: 1024px) {
+  #continue-watching-carousel {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 14px 8px !important;
+    overflow: visible !important;
+    padding: 12px 0 18px !important;
+    scroll-snap-type: none !important;
+    overscroll-behavior: auto !important;
+    touch-action: pan-y !important;
+  }
+
+  #continue-watching-carousel .movie-card {
+    width: 100% !important;
+    scroll-snap-align: none !important;
+    touch-action: pan-y !important;
+  }
+
+  #continue-watching-carousel .card-poster-wrapper,
+  #continue-watching-carousel .card-poster,
+  #continue-watching-carousel .card-overlay,
+  #continue-watching-carousel .card-info {
+    touch-action: pan-y !important;
+  }
+
+  #continue-watching-section .carousel-wrapper {
+    overflow: visible !important;
+    touch-action: pan-y !important;
+  }
+
+  #continue-watching-section .carousel-arrow {
+    display: none !important;
+  }
+}
+
 .continue-card .continue-poster-wrap {
   position: relative;
   border-radius: var(--radius-md);

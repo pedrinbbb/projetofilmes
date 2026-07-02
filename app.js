@@ -418,7 +418,7 @@ function initMobileSectionScrollFix() {
     if (event.touches.length !== 1) return;
     if (event.target.closest('.player-overlay, .modal-overlay, .sub-modal-overlay, .user-menu-dropdown')) return;
 
-    const area = event.target.closest('.row-section, .top10-section, .premium-rows');
+    const area = event.target.closest('#continue-watching-carousel, #continue-watching-section, .row-section, .top10-section, .premium-rows');
     if (!area) return;
 
     const touch = event.touches[0];

@@ -401,6 +401,75 @@ function bindCardTouchScrollGuard(card) {
   }, true);
 }
 
+function initMobileSectionScrollFix() {
+  if (document.documentElement.dataset.mobileSectionScrollFix === 'true') return;
+  document.documentElement.dataset.mobileSectionScrollFix = 'true';
+
+  let activeArea = null;
+  let startX = 0;
+  let startY = 0;
+  let lastY = 0;
+  let isVerticalScroll = false;
+  let suppressNextClick = false;
+
+  const getScrollElement = () => document.scrollingElement || document.documentElement;
+
+  document.addEventListener('touchstart', (event) => {
+    if (event.touches.length !== 1) return;
+    if (event.target.closest('.player-overlay, .modal-overlay, .sub-modal-overlay, .user-menu-dropdown')) return;
+
+    const area = event.target.closest('.row-section, .top10-section, .premium-rows');
+    if (!area) return;
+
+    const touch = event.touches[0];
+    activeArea = area;
+    isVerticalScroll = false;
+    suppressNextClick = false;
+    startX = touch.clientX;
+    startY = touch.clientY;
+    lastY = touch.clientY;
+  }, { capture: true, passive: true });
+
+  document.addEventListener('touchmove', (event) => {
+    if (!activeArea || event.touches.length !== 1) return;
+
+    const touch = event.touches[0];
+    const deltaX = touch.clientX - startX;
+    const deltaY = touch.clientY - startY;
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
+
+    if (!isVerticalScroll && absY > 5 && absY >= absX) {
+      isVerticalScroll = true;
+      suppressNextClick = true;
+      activeArea.querySelectorAll('.touch-active').forEach(item => item.classList.remove('touch-active'));
+    }
+
+    if (!isVerticalScroll) return;
+
+    if (event.cancelable) event.preventDefault();
+    event.stopPropagation();
+
+    const scrollElement = getScrollElement();
+    scrollElement.scrollTop += lastY - touch.clientY;
+    lastY = touch.clientY;
+  }, { capture: true, passive: false });
+
+  const reset = () => {
+    activeArea = null;
+    isVerticalScroll = false;
+  };
+
+  document.addEventListener('touchend', reset, { capture: true, passive: true });
+  document.addEventListener('touchcancel', reset, { capture: true, passive: true });
+  document.addEventListener('click', (event) => {
+    if (!suppressNextClick) return;
+    suppressNextClick = false;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  }, true);
+}
+
 function createContinueWatchingCard(entry) {
   const card = document.createElement('div');
   const progressPct = Math.max(3, Math.min(100, ((entry.currentTime || 0) / (entry.durationSeconds || 1)) * 100));
@@ -791,6 +860,7 @@ async function initApp() {
   renderPremiumHomeRows();
   renderTop10();
   renderContinueWatching();
+  initMobileSectionScrollFix();
   refreshTop10SlideButtons();
   initCarouselArrows();
   initHeroSlider();

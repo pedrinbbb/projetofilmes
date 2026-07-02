@@ -70,7 +70,12 @@ const DEFAULT_TRAILER_URLS = {
   'Velozes e Furiosos 5: Opera\u00e7\u00e3o Rio': 'https://www.youtube.com/watch?v=mw2AqdB5EVA',
   'Velozes e Furiosos': 'https://www.youtube.com/watch?v=2TAOizOnNPo',
   'Invoca\u00e7\u00e3o do Mal 4: O \u00daltimo Ritual': 'https://www.youtube.com/watch?v=bMgfsdYoEEo',
-  'Talento e F\u00e9': 'https://www.youtube.com/watch?v=BRQaEJv9qIk'
+  'Talento e F\u00e9': 'https://www.youtube.com/watch?v=BRQaEJv9qIk',
+  'Arctic Dogs': 'https://www.youtube.com/watch?v=wQTDfl2rpqg',
+  'A Fant\u00e1stica F\u00e1brica de Chocolate': 'https://www.youtube.com/watch?v=OFVGCUIXJls',
+  'Sully: O Her\u00f3i do Rio Hudson': 'https://www.youtube.com/watch?v=mjKEXxO2KNE',
+  Thunderbolts: 'https://www.youtube.com/watch?v=v-94Snw-H4o',
+  'Amea\u00e7a Profunda': 'https://www.youtube.com/watch?v=jCFWEzIVILc'
 };
 
 // URL de conexão do PostgreSQL
@@ -2672,6 +2677,91 @@ async function runMigrationsAndSeeds() {
         videoUrl: "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/talento-e-fe-2015.mp4",
         subtitlesUrl: null,
         trailerUrl: DEFAULT_TRAILER_URLS["Talento e F\u00e9"]
+      },
+      {
+        title: "Arctic Dogs",
+        year: 2019,
+        duration: "1h 33min",
+        rating: 4.9,
+        genre: "Anima\u00e7\u00e3o / Aventura / Com\u00e9dia",
+        desc: "Swifty, uma raposa-do-\u00e1rtico que trabalha no correio, sonha em virar entregador estrela e precisa reunir seus amigos para impedir um plano que amea\u00e7a derreter o \u00c1rtico.",
+        poster: "https://media.themoviedb.org/t/p/w600_and_h900_face/ckHc0WcqX4lgo28tO8YRMaQQjxu.jpg",
+        backdrop: "https://media.themoviedb.org/t/p/w1920_and_h800_multi_faces/201mKrWi37SE1YkdqRP7rE3QamK.jpg",
+        director: "Aaron Woodley",
+        cast: "Jeremy Renner, Heidi Klum, James Franco, John Cleese, Omar Sy, Michael Madsen, Laurie Holden, Anjelica Huston, Alec Baldwin",
+        category: "new",
+        type: "movie",
+        videoUrl: "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/arctic-dogs-2019.mp4",
+        subtitlesUrl: null,
+        trailerUrl: DEFAULT_TRAILER_URLS["Arctic Dogs"]
+      },
+      {
+        title: "A Fant\u00e1stica F\u00e1brica de Chocolate",
+        year: 2005,
+        duration: "1h 55min",
+        rating: 6.7,
+        genre: "Aventura / Com\u00e9dia / Fantasia",
+        desc: "Charlie Bucket encontra um bilhete dourado e ganha a chance de visitar a misteriosa f\u00e1brica de Willy Wonka, onde cada sala revela maravilhas, perigos e li\u00e7\u00f5es inesperadas.",
+        poster: "https://media.themoviedb.org/t/p/w600_and_h900_face/vSl1u0z4TCKL4VPVyr6KDtZibYT.jpg",
+        backdrop: "https://media.themoviedb.org/t/p/w1920_and_h800_multi_faces/atoIgfAk2Ig2HFJLD0VUnjiPWEz.jpg",
+        director: "Tim Burton",
+        cast: "Johnny Depp, Freddie Highmore, David Kelly, Helena Bonham Carter, Noah Taylor, Missi Pyle, Christopher Lee",
+        category: "new",
+        type: "movie",
+        videoUrl: "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/a-fantastica-fabrica-de-chocolate-2005.mp4",
+        subtitlesUrl: null,
+        trailerUrl: DEFAULT_TRAILER_URLS["A Fant\u00e1stica F\u00e1brica de Chocolate"]
+      },
+      {
+        title: "Sully: O Her\u00f3i do Rio Hudson",
+        year: 2016,
+        duration: "1h 36min",
+        rating: 7.4,
+        genre: "Biografia / Drama",
+        desc: "Depois de pousar um avi\u00e3o no Rio Hudson e salvar 155 pessoas, o capit\u00e3o Chesley Sullenberger enfrenta uma investiga\u00e7\u00e3o que coloca sua decis\u00e3o heroica em xeque.",
+        poster: "https://media.themoviedb.org/t/p/w600_and_h900_face/b3jihGgsICgJbwJVvVwshoJ8TjJ.jpg",
+        backdrop: "https://media.themoviedb.org/t/p/w1920_and_h800_multi_faces/oQ024BtJgArg8WI4zfuc2vkCJno.jpg",
+        director: "Clint Eastwood",
+        cast: "Tom Hanks, Aaron Eckhart, Laura Linney, Anna Gunn, Autumn Reeser, Holt McCallany",
+        category: "new",
+        type: "movie",
+        videoUrl: "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/sully-o-heroi-do-rio-hudson-2016.mp4",
+        subtitlesUrl: null,
+        trailerUrl: DEFAULT_TRAILER_URLS["Sully: O Her\u00f3i do Rio Hudson"]
+      },
+      {
+        title: "Thunderbolts",
+        year: 2025,
+        duration: "2h 7min",
+        rating: 7.2,
+        genre: "A\u00e7\u00e3o / Aventura / Fic\u00e7\u00e3o Cient\u00edfica",
+        desc: "Um grupo nada convencional de anti-her\u00f3is se v\u00ea preso em uma armadilha mortal e precisa encarar seus passados para sobreviver a uma miss\u00e3o perigosa.",
+        poster: "https://media.themoviedb.org/t/p/w600_and_h900_face/3cME244QKWg5mAvcsmthmtx7VR1.jpg",
+        backdrop: "https://media.themoviedb.org/t/p/w1920_and_h800_multi_faces/rthMuZfFv4fqEU4JVbgSW9wQ8rs.jpg",
+        director: "Jake Schreier",
+        cast: "Florence Pugh, Sebastian Stan, Wyatt Russell, Olga Kurylenko, Lewis Pullman, David Harbour, Hannah John-Kamen, Julia Louis-Dreyfus",
+        category: "new",
+        type: "movie",
+        videoUrl: "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/thunderbolts-2025.mp4",
+        subtitlesUrl: null,
+        trailerUrl: DEFAULT_TRAILER_URLS["Thunderbolts"]
+      },
+      {
+        title: "Amea\u00e7a Profunda",
+        year: 2020,
+        duration: "1h 35min",
+        rating: 5.9,
+        genre: "Terror / Fic\u00e7\u00e3o Cient\u00edfica / A\u00e7\u00e3o",
+        desc: "Ap\u00f3s um terremoto destruir uma esta\u00e7\u00e3o de pesquisa no fundo do oceano, a tripula\u00e7\u00e3o precisa atravessar as profundezas enquanto algo desconhecido os persegue.",
+        poster: "https://media.themoviedb.org/t/p/w600_and_h900_face/k56yNPnwRj2vLGV9os3h26Gii8P.jpg",
+        backdrop: "https://media.themoviedb.org/t/p/w1920_and_h800_multi_faces/tya34K7D4jtDrVbvExyvTx97Aen.jpg",
+        director: "William Eubank",
+        cast: "Kristen Stewart, Vincent Cassel, Jessica Henwick, John Gallagher Jr., Mamoudou Athie, T.J. Miller",
+        category: "new",
+        type: "movie",
+        videoUrl: "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/ameaca-profunda-2020.mp4",
+        subtitlesUrl: null,
+        trailerUrl: DEFAULT_TRAILER_URLS["Amea\u00e7a Profunda"]
       }
     ];
 

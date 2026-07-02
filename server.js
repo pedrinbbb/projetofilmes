@@ -2590,7 +2590,7 @@ async function runMigrationsAndSeeds() {
         category: "new",
         type: "movie",
         videoUrl: "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/karate-kid-2010.mp4",
-        subtitlesUrl: null,
+        subtitlesUrl: "/legendas/The.Kung.Fu.Kid.2010.1080p.BluRay.x264.DTS-WiKi.srt",
         trailerUrl: DEFAULT_TRAILER_URLS["Karate Kid"]
       },
       {
@@ -2692,7 +2692,7 @@ async function runMigrationsAndSeeds() {
         category: "new",
         type: "movie",
         videoUrl: "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/arctic-dogs-2019.mp4",
-        subtitlesUrl: null,
+        subtitlesUrl: "/legendas/Arctic.Dogs.2019.1080p.NF.WEB-DL.H264.AC3-EVO-Portuguese_BR.srt",
         trailerUrl: DEFAULT_TRAILER_URLS["Arctic Dogs"]
       },
       {

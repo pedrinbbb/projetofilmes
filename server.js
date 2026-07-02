@@ -2625,37 +2625,37 @@ app.get('/auth/discord/callback', async (req, res) => {
       ? `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`
       : null;
 
-    let dbUser = dbGet('SELECT * FROM users WHERE discord_id = ?', [discordUser.id]);
+    let dbUser = await dbGetAsync('SELECT * FROM users WHERE discord_id = ?', [discordUser.id]);
 
     if (dbUser) {
       // Caso 1: já tem conta Discord — atualiza dados
-      dbRun(
+      await dbRunAsync(
         `UPDATE users SET name=?, discord_tag=?, avatar=?, updated_at=datetime('now') WHERE discord_id=?`,
         [discordName, discordTag, avatarUrl, discordUser.id]
       );
-      dbUser = dbGet('SELECT * FROM users WHERE discord_id = ?', [discordUser.id]);
+      dbUser = await dbGetAsync('SELECT * FROM users WHERE discord_id = ?', [discordUser.id]);
 
-    } else if (discordEmail && (dbUser = dbGet('SELECT * FROM users WHERE email = ?', [discordEmail]))) {
+    } else if (discordEmail && (dbUser = await dbGetAsync('SELECT * FROM users WHERE email = ?', [discordEmail]))) {
       // Caso 2: já existe conta com esse email (cadastro normal) — vincula Discord à conta existente
       console.log(`[DISCORD CB] Email ${discordEmail} já existe — vinculando Discord à conta existente.`);
-      dbRun(
+      await dbRunAsync(
         `UPDATE users SET discord_id=?, discord_tag=?, avatar=?, updated_at=datetime('now') WHERE email=?`,
         [discordUser.id, discordTag, avatarUrl || dbUser.avatar, discordEmail]
       );
-      dbUser = dbGet('SELECT * FROM users WHERE email = ?', [discordEmail]);
+      dbUser = await dbGetAsync('SELECT * FROM users WHERE email = ?', [discordEmail]);
 
     } else {
       // Caso 3: novo usuário — cria conta
-      const userId = dbRun(
+      const userId = await dbRunAsync(
         `INSERT INTO users (name, email, discord_id, discord_tag, avatar, method) VALUES (?, ?, ?, ?, ?, 'discord')`,
         [discordName, discordEmail, discordUser.id, discordTag, avatarUrl]
       );
-      dbUser = dbGet('SELECT * FROM users WHERE id = ?', [userId]);
+      dbUser = await dbGetAsync('SELECT * FROM users WHERE id = ?', [userId]);
     }
 
     const token     = generateToken(dbUser);
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-    dbRun('INSERT INTO sessions (user_id, token, expires_at) VALUES (?, ?, ?)', [dbUser.id, token, expiresAt]);
+    await dbRunAsync('INSERT INTO sessions (user_id, token, expires_at) VALUES (?, ?, ?)', [dbUser.id, token, expiresAt]);
 
     console.log(`[AUTH] ✅ Discord: ${discordName}`);
     res.redirect(`/auth-callback.html?token=${encodeURIComponent(token)}&name=${encodeURIComponent(discordName)}`);

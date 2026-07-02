@@ -359,6 +359,48 @@ function buildPlaybackItemFromProgress(entry) {
   };
 }
 
+function bindCardTouchScrollGuard(card) {
+  let startX = 0;
+  let startY = 0;
+  let moved = false;
+  let trackingTouch = false;
+
+  card.addEventListener('pointerdown', (event) => {
+    if (event.pointerType !== 'touch' && event.pointerType !== 'pen') return;
+    trackingTouch = true;
+    moved = false;
+    startX = event.clientX;
+    startY = event.clientY;
+  }, { passive: true });
+
+  card.addEventListener('pointermove', (event) => {
+    if (!trackingTouch) return;
+    const deltaX = Math.abs(event.clientX - startX);
+    const deltaY = Math.abs(event.clientY - startY);
+    if (Math.hypot(deltaX, deltaY) > 12) {
+      moved = true;
+      card.classList.remove('touch-active');
+    }
+  }, { passive: true });
+
+  card.addEventListener('pointerup', () => {
+    trackingTouch = false;
+  }, { passive: true });
+
+  card.addEventListener('pointercancel', () => {
+    trackingTouch = false;
+    moved = false;
+    card.classList.remove('touch-active');
+  }, { passive: true });
+
+  card.addEventListener('click', (event) => {
+    if (!moved) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    moved = false;
+  }, true);
+}
+
 function createContinueWatchingCard(entry) {
   const card = document.createElement('div');
   const progressPct = Math.max(3, Math.min(100, ((entry.currentTime || 0) / (entry.durationSeconds || 1)) * 100));
@@ -392,6 +434,7 @@ function createContinueWatchingCard(entry) {
     </div>
   `;
 
+  bindCardTouchScrollGuard(card);
   card.addEventListener('click', () => openVideoPlayer(buildPlaybackItemFromProgress(entry)));
   return card;
 }
@@ -818,6 +861,8 @@ function createMovieCard(movie) {
       <div class="card-year">${escapeHtml(movie.year || '')} · ${escapeHtml(movie.genre || typeLabel)}</div>
     </div>
   `;
+
+  bindCardTouchScrollGuard(card);
 
   function handleAction(action, targetButton) {
     if (action === 'watch') {

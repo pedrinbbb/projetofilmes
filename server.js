@@ -2409,7 +2409,7 @@ async function runMigrationsAndSeeds() {
       category: "new",
       type: "movie",
       videoUrl: "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/invocacao-do-mal-2013.mp4",
-      subtitlesUrl: null,
+      subtitlesUrl: "/legendas/The.Conjuring.2013.srt",
       trailerUrl: DEFAULT_TRAILER_URLS["Invoca\u00e7\u00e3o do Mal"]
     };
     const existingInvocacaoDoMal = await dbGetAsync("SELECT id FROM movies WHERE title = ?", [invocacaoDoMalData.title]);
@@ -2482,7 +2482,7 @@ async function runMigrationsAndSeeds() {
         category: "new",
         type: "movie",
         videoUrl: "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/invocacao-do-mal-2-2016.mp4",
-        subtitlesUrl: null,
+        subtitlesUrl: "/legendas/The.Conjuring.2.2016.720p.BluRay.x265.ShAaNiG.srt",
         trailerUrl: DEFAULT_TRAILER_URLS["Invoca\u00e7\u00e3o do Mal 2"]
       },
       {
@@ -2499,7 +2499,7 @@ async function runMigrationsAndSeeds() {
         category: "new",
         type: "movie",
         videoUrl: "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/invocacao-do-mal-3-a-ordem-do-demonio-2021.mp4",
-        subtitlesUrl: null,
+        subtitlesUrl: "/legendas/The.Conjuring.The.Devil.Made.Me.Do.It.2021.[WEB-DL+WEBRip+HDRip].srt",
         trailerUrl: DEFAULT_TRAILER_URLS["Invoca\u00e7\u00e3o do Mal 3: A Ordem do Dem\u00f4nio"]
       },
       {

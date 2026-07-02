@@ -110,6 +110,20 @@ async function sendMailWithTimeout(mailOptions) {
   if (RESEND_API_KEY && RESEND_API_KEY !== 'SUA_CHAVE_AQUI') {
     try {
       console.log('[EMAIL] Enviando via Resend HTTPS API...');
+      
+      // Resend não permite enviar de domínios públicos que não pertencem ao usuário (ex: gmail.com).
+      // Se for o caso, forçamos o uso do remetente gratuito do Resend (onboarding@resend.dev).
+      let fromSender = mailOptions.from || `GOATCINE <onboarding@resend.dev>`;
+      if (
+        fromSender.includes('@gmail.com') ||
+        fromSender.includes('@hotmail.com') ||
+        fromSender.includes('@outlook.com') ||
+        fromSender.includes('@yahoo.com') ||
+        fromSender.includes('@live.com')
+      ) {
+        fromSender = `GOATCINE <onboarding@resend.dev>`;
+      }
+
       const response = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
@@ -117,7 +131,7 @@ async function sendMailWithTimeout(mailOptions) {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          from: mailOptions.from || `GOATCINE <onboarding@resend.dev>`,
+          from: fromSender,
           to: mailOptions.to,
           subject: mailOptions.subject,
           html: mailOptions.html

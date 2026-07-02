@@ -1677,6 +1677,38 @@ async function runMigrationsAndSeeds() {
     console.error("[DB SEED ERROR] Erro ao garantir Avatar: Fogo e Cinzas:", err);
   }
 
+  // --- GARANTIR QUE INTERESTELAR SEJA ADICIONADO SE ESTIVER AUSENTE ---
+  try {
+    const existingInterstellar = await dbGetAsync("SELECT id FROM movies WHERE title = ?", ["Interestelar"]);
+    if (!existingInterstellar) {
+      console.log("  📦 Adicionando Interestelar ao catálogo...");
+      await dbRunAsync(`
+        INSERT INTO movies (title, year, duration, rating, genre, "desc", poster, backdrop, director, "cast", category, type, videoUrl, subtitlesUrl, trailerUrl)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        "Interestelar",
+        2014,
+        "2h 49min",
+        8.7,
+        "Ação / Ficção Científica / Drama",
+        "As reservas naturais da Terra estão chegando ao fim e um grupo de astronautas recebe a missão de verificar possíveis planetas para receberem a população mundial, possibilitando a continuação da espécie humana. Cooper é chamado para liderar o grupo e aceita a missão sabendo que pode nunca mais ver os filhos.",
+        "https://image.tmdb.org/t/p/w500/gEU2QpE6E5y3Qp2v2L9g4Q7Y.jpg",
+        "https://image.tmdb.org/t/p/w1280/rAiYTfPXjtEacIBB02zWfP15YfM.jpg",
+        "Christopher Nolan",
+        "Matthew McConaughey, Anne Hathaway, Jessica Chastain",
+        "new",
+        "movie",
+        "https://beam-ru.torrin.app/ba448d2ed8e70a92ce95c8599635317acba65eaa/file_0/Interestelar.2014.1080p.BluRay.5.1.x264.DUAL-SF.mkv?expires=1783042222&sig=10f478e3adaec8ed84135fcaf5646a747d9ebe5a1f2e4daee62e66d03b57d4d7",
+        null,
+        "https://www.youtube.com/watch?v=zSWdZVtXT7E"
+      ]);
+      if (!IS_POSTGRES) saveDb();
+      console.log("  ✅ Interestelar adicionado com sucesso!");
+    }
+  } catch (err) {
+    console.error("[DB SEED ERROR] Erro ao garantir Interestelar:", err);
+  }
+
   try {
     for (const [title, trailerUrl] of Object.entries(DEFAULT_TRAILER_URLS)) {
       await dbRunAsync(

@@ -1280,6 +1280,7 @@ function initSearch() {
   const searchInput = $('search-input');
   const mobileSearchInput = $('mobile-search-input');
   const mobileSearchForm = $('mobile-home-search-form');
+  const mobileSearchHeader = mobileSearchForm?.closest('.mobile-home-header');
   const clearBtn = $('search-pill-clear');
   const searchContainer = $('nav-search-container');
   const searchPill = searchContainer?.querySelector('.search-pill');
@@ -1297,8 +1298,25 @@ function initSearch() {
   syncSearchPlaceholder();
   window.addEventListener('resize', syncSearchPlaceholder);
 
+  function openMobileSearch() {
+    if (!mobileSearchForm || !mobileSearchInput) return;
+    mobileSearchHeader?.classList.add('search-active');
+    mobileSearchForm.classList.add('search-open');
+    setTimeout(() => mobileSearchInput.focus(), 40);
+  }
+
+  function closeMobileSearchIfEmpty() {
+    if (mobileSearchInput?.value.trim()) return;
+    mobileSearchForm?.classList.remove('search-open');
+    mobileSearchHeader?.classList.remove('search-active');
+  }
+
   if (searchPill) {
     searchPill.addEventListener('click', () => {
+      if (isMobileViewport()) {
+        openMobileSearch();
+        return;
+      }
       setTimeout(() => searchInput?.focus(), 30);
     });
   }
@@ -1318,14 +1336,11 @@ function initSearch() {
   }, 300));
 
   mobileSearchForm?.addEventListener('click', () => {
-    mobileSearchForm.classList.add('search-open');
-    setTimeout(() => mobileSearchInput?.focus(), 40);
+    openMobileSearch();
   });
 
   mobileSearchInput?.addEventListener('blur', () => {
-    if (!mobileSearchInput.value.trim()) {
-      mobileSearchForm?.classList.remove('search-open');
-    }
+    setTimeout(closeMobileSearchIfEmpty, 80);
   });
 
   mobileSearchForm?.addEventListener('submit', (e) => {
@@ -1340,6 +1355,7 @@ function initSearch() {
       if (searchInput) searchInput.value = '';
       if (mobileSearchInput) mobileSearchInput.value = '';
       mobileSearchForm?.classList.remove('search-open');
+      mobileSearchHeader?.classList.remove('search-active');
       performSearch('');
       searchInput?.focus();
     });
@@ -1350,6 +1366,7 @@ function initSearch() {
       if (searchInput) searchInput.value = '';
       if (mobileSearchInput) mobileSearchInput.value = '';
       mobileSearchForm?.classList.remove('search-open');
+      mobileSearchHeader?.classList.remove('search-active');
       performSearch('');
       searchInput?.blur();
       mobileSearchInput?.blur();

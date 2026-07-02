@@ -4636,6 +4636,30 @@ ul {
     padding-top: calc(118px + env(safe-area-inset-top)) !important;
   }
 
+  .mobile-home-header.search-active {
+    position: fixed !important;
+    top: calc(56px + env(safe-area-inset-top)) !important;
+    left: 10px !important;
+    right: 10px !important;
+    z-index: 1130 !important;
+    display: flex !important;
+    pointer-events: auto !important;
+  }
+
+  .mobile-home-header.search-active .mobile-home-search {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 42px !important;
+    padding: 0 13px !important;
+    gap: 9px !important;
+    border-radius: 15px !important;
+  }
+
+  .mobile-home-header.search-active .mobile-home-search input {
+    width: 100% !important;
+    opacity: 1 !important;
+  }
+
   .mobile-desktop-header {
     left: 10px !important;
     right: 104px !important;

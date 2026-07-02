@@ -2564,7 +2564,7 @@ app.post('/api/auth/login', async (req, res) => {
 //  ROUTES — DISCORD OAUTH2
 // =============================================
 app.get('/auth/discord', (req, res) => {
-  const CLIENT_ID    = process.env.DISCORD_CLIENT_ID;
+  const CLIENT_ID = String(process.env.DISCORD_CLIENT_ID || '').trim();
 
   if (!CLIENT_ID || CLIENT_ID === 'SEU_CLIENT_ID_AQUI')
     return res.redirect('/login.html?auth_error=discord_not_configured');
@@ -2572,7 +2572,7 @@ app.get('/auth/discord', (req, res) => {
   // Garante https em produção (Render usa proxy, x-forwarded-proto tem o protocolo real)
   const proto = req.headers['x-forwarded-proto'] || req.protocol;
   const host  = req.headers['x-forwarded-host']  || req.get('host');
-  const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI || `${proto}://${host}/auth/discord/callback`;
+  const REDIRECT_URI = String(process.env.DISCORD_REDIRECT_URI || `${proto}://${host}/auth/discord/callback`).trim();
   console.log(`[DISCORD] Redirect URI gerada: ${REDIRECT_URI}`);
 
   const params = new URLSearchParams({
@@ -2590,11 +2590,11 @@ app.get('/auth/discord/callback', async (req, res) => {
   if (error || !code) return res.redirect('/login.html?auth_error=discord_denied');
 
   try {
-    const CLIENT_ID     = process.env.DISCORD_CLIENT_ID;
-    const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
+    const CLIENT_ID     = String(process.env.DISCORD_CLIENT_ID || '').trim();
+    const CLIENT_SECRET = String(process.env.DISCORD_CLIENT_SECRET || '').trim();
     const proto = req.headers['x-forwarded-proto'] || req.protocol;
     const host  = req.headers['x-forwarded-host']  || req.get('host');
-    const REDIRECT_URI  = process.env.DISCORD_REDIRECT_URI || `${proto}://${host}/auth/discord/callback`;
+    const REDIRECT_URI  = String(process.env.DISCORD_REDIRECT_URI || `${proto}://${host}/auth/discord/callback`).trim();
 
     console.log(`[DISCORD CB] Iniciando callback. URI: ${REDIRECT_URI}`);
     console.log(`[DISCORD CB] CLIENT_ID existe: ${!!CLIENT_ID}, CLIENT_SECRET existe: ${!!CLIENT_SECRET}`);

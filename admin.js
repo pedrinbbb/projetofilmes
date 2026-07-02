@@ -1785,6 +1785,7 @@ function setupSubtitleUpload(btnId, fileInputId, urlInputId) {
   const btn = $(btnId);
   const fileInput = $(fileInputId);
   const urlInput = $(urlInputId);
+  const context = urlInputId.startsWith('e-') ? 'episode' : 'movie';
 
   if (!btn || !fileInput || !urlInput) return;
 
@@ -1797,7 +1798,7 @@ function setupSubtitleUpload(btnId, fileInputId, urlInputId) {
   // Handle file selection
   fileInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
-    if (file) handleSubtitleFileUpload(file, urlInput, btn);
+    if (file) handleSubtitleFileUpload(file, urlInput, btn, context);
   });
 
   // Drag and drop events on the entire form-group container
@@ -1818,7 +1819,7 @@ function setupSubtitleUpload(btnId, fileInputId, urlInputId) {
     if (file) {
       const ext = file.name.split('.').pop().toLowerCase();
       if (ext === 'vtt' || ext === 'srt') {
-        handleSubtitleFileUpload(file, urlInput, btn);
+        handleSubtitleFileUpload(file, urlInput, btn, context);
       } else {
         showToast('Erro: Apenas arquivos .vtt ou .srt são aceitos.');
       }
@@ -1826,7 +1827,65 @@ function setupSubtitleUpload(btnId, fileInputId, urlInputId) {
   });
 }
 
-async function handleSubtitleFileUpload(file, urlInput, btn) {
+async function autoSaveSubtitleUrl(context, subtitlesUrl) {
+  const token = getAdminToken();
+
+  if (context === 'episode') {
+    const episodeId = $('episode-id')?.value;
+    if (!episodeId) return false;
+    const payload = {
+      season: parseInt($('e-season').value),
+      number: parseInt($('e-number').value),
+      title: $('e-title').value.trim(),
+      duration: $('e-duration').value.trim(),
+      videoUrl: $('e-videoUrl').value.trim(),
+      desc: $('e-desc').value.trim(),
+      subtitlesUrl
+    };
+    const res = await fetch(`${API}/api/episodes/${episodeId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
+    });
+    return res.ok;
+  }
+
+  const movieId = $('movie-id')?.value;
+  if (!movieId) return false;
+  const type = $('m-type').value === 'series' ? 'series' : 'movie';
+  const isSeries = type === 'series';
+  const payload = {
+    type,
+    title: $('m-title').value.trim(),
+    year: parseInt($('m-year').value),
+    duration: isSeries ? ($('m-duration').value.trim() || 'Serie') : $('m-duration').value.trim(),
+    rating: parseFloat($('m-rating').value.replace(',', '.')),
+    genre: $('m-genre').value.trim(),
+    category: $('m-category').value,
+    poster: $('m-poster').value.trim(),
+    backdrop: $('m-backdrop').value.trim(),
+    director: $('m-director').value.trim(),
+    cast: $('m-cast').value.trim(),
+    videoUrl: isSeries ? '' : $('m-videoUrl').value.trim(),
+    trailerUrl: $('m-trailerUrl').value.trim(),
+    subtitlesUrl,
+    desc: $('m-desc').value.trim()
+  };
+  const res = await fetch(`${API}/api/movies/${movieId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify(payload)
+  });
+  return res.ok;
+}
+
+async function handleSubtitleFileUpload(file, urlInput, btn, context) {
   const originalText = btn.textContent;
   btn.disabled = true;
   btn.textContent = 'Enviando...';
@@ -1852,6 +1911,8 @@ async function handleSubtitleFileUpload(file, urlInput, btn) {
       const data = await res.json();
       if (res.ok && data.success) {
         urlInput.value = data.subtitlesUrl;
+        const linked = await autoSaveSubtitleUrl(context, data.subtitlesUrl);
+        if (linked) await loadDashboardData();
         showToast('✓ Legenda enviada com sucesso!');
       } else {
         showToast(data.error || 'Erro ao salvar legenda.');

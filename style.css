@@ -4402,3 +4402,75 @@ ul {
   0% { transform: scale(1); box-shadow: 0 0 20px rgba(255, 215, 0, 0.2); }
   100% { transform: scale(1.05); box-shadow: 0 0 35px rgba(255, 215, 0, 0.4); }
 }
+
+@media (max-width: 760px) {
+  .carousel-wrapper {
+    overflow: visible !important;
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+    touch-action: pan-y !important;
+  }
+
+  .carousel {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 14px 8px !important;
+    overflow: visible !important;
+    padding: 12px 0 18px !important;
+    scroll-snap-type: none !important;
+    overscroll-behavior: auto !important;
+    touch-action: pan-y !important;
+  }
+
+  .carousel .movie-card {
+    width: 100% !important;
+    scroll-snap-align: none !important;
+    touch-action: pan-y !important;
+  }
+
+  .carousel-arrow {
+    display: none !important;
+  }
+
+  .top10-scroll-shell {
+    overflow: visible !important;
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+    touch-action: pan-y !important;
+  }
+
+  .top10-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 14px 10px !important;
+    overflow: visible !important;
+    padding: 12px 0 18px !important;
+    scroll-snap-type: none !important;
+    overscroll-behavior: auto !important;
+    touch-action: pan-y !important;
+  }
+
+  .top10-grid .top10-card {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    flex: initial !important;
+    touch-action: pan-y !important;
+  }
+
+  .top10-poster {
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 2 / 3 !important;
+    right: auto !important;
+  }
+
+  .top10-number {
+    top: -6px !important;
+    left: -2px !important;
+    font-size: 58px !important;
+    letter-spacing: -2px !important;
+  }
+}

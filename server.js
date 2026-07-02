@@ -2376,7 +2376,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     const cleanEmail = email.toLowerCase().trim();
 
     // Usuário existe?
-    const user = dbGet('SELECT id, name FROM users WHERE email = ?', [cleanEmail]);
+    const user = await dbGetAsync('SELECT id, name FROM users WHERE email = ?', [cleanEmail]);
     if (!user) return res.status(404).json({ error: 'Nenhum usuário cadastrado com este email.' });
 
     // Gerar código de 6 dígitos
@@ -2384,8 +2384,8 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // 15 min
 
     // Salvar código de redefinição na tabela verification_codes com pass_hash vazio para satisfazer a restrição NOT NULL
-    dbRun('DELETE FROM verification_codes WHERE email = ?', [cleanEmail]);
-    dbRun(
+    await dbRunAsync('DELETE FROM verification_codes WHERE email = ?', [cleanEmail]);
+    await dbRunAsync(
       'INSERT INTO verification_codes (email, name, pass_hash, code, expires_at, attempts) VALUES (?, ?, ?, ?, ?, 0)',
       [cleanEmail, user.name, '', code, expiresAt]
     );
@@ -2393,7 +2393,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     console.log(`[FORGOT-PASSWORD] Solicitação de redefinição criada para ${cleanEmail}`);
 
     if (!isEmailConfigured()) {
-      dbRun('DELETE FROM verification_codes WHERE email = ?', [cleanEmail]);
+      await dbRunAsync('DELETE FROM verification_codes WHERE email = ?', [cleanEmail]);
       console.error('[EMAIL ERROR] SMTP nao configurado para redefinicao de senha.');
       return res.status(500).json({ error: 'Envio de e-mail não configurado. Tente novamente mais tarde.' });
     }
@@ -2406,7 +2406,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
         message: 'Código de redefinição de senha enviado para o seu e-mail.'
       });
     } catch (mailErr) {
-      dbRun('DELETE FROM verification_codes WHERE email = ?', [cleanEmail]);
+      await dbRunAsync('DELETE FROM verification_codes WHERE email = ?', [cleanEmail]);
       console.error(`[EMAIL ERROR] Falha no envio para ${cleanEmail}. Erro:`, mailErr.message);
       return res.status(500).json({ error: 'Não foi possível enviar o código por e-mail. Tente novamente.' });
     }
@@ -2429,22 +2429,22 @@ app.post('/api/auth/verify-reset-code', async (req, res) => {
       return res.status(400).json({ error: 'Email e código são obrigatórios' });
 
     const cleanEmail = email.toLowerCase().trim();
-    const record = dbGet('SELECT * FROM verification_codes WHERE email = ?', [cleanEmail]);
+    const record = await dbGetAsync('SELECT * FROM verification_codes WHERE email = ?', [cleanEmail]);
     if (!record)
       return res.status(400).json({ error: 'Nenhuma solicitação de redefinição pendente para este email.' });
 
     if (new Date() > new Date(record.expires_at)) {
-      dbRun('DELETE FROM verification_codes WHERE email = ?', [cleanEmail]);
+      await dbRunAsync('DELETE FROM verification_codes WHERE email = ?', [cleanEmail]);
       return res.status(400).json({ error: 'Código expirado. Solicite a redefinição novamente.' });
     }
 
     if (record.attempts >= 5) {
-      dbRun('DELETE FROM verification_codes WHERE email = ?', [cleanEmail]);
+      await dbRunAsync('DELETE FROM verification_codes WHERE email = ?', [cleanEmail]);
       return res.status(429).json({ error: 'Muitas tentativas incorretas. Solicite um novo código.' });
     }
 
     if (record.code !== String(code).trim()) {
-      dbRun('UPDATE verification_codes SET attempts = attempts + 1 WHERE email = ?', [cleanEmail]);
+      await dbRunAsync('UPDATE verification_codes SET attempts = attempts + 1 WHERE email = ?', [cleanEmail]);
       const remaining = Math.max(0, 4 - Number(record.attempts || 0));
       return res.status(400).json({
         error: `Código incorreto. Você tem ${remaining} tentativa(s) restante(s).`,
@@ -2477,24 +2477,24 @@ app.post('/api/auth/reset-password', async (req, res) => {
     const cleanEmail = email.toLowerCase().trim();
 
     // Buscar código no banco
-    const record = dbGet('SELECT * FROM verification_codes WHERE email = ?', [cleanEmail]);
+    const record = await dbGetAsync('SELECT * FROM verification_codes WHERE email = ?', [cleanEmail]);
     if (!record)
       return res.status(400).json({ error: 'Nenhuma solicitação de redefinição pendente para este email.' });
 
     // Expirado?
     if (new Date() > new Date(record.expires_at)) {
-      dbRun('DELETE FROM verification_codes WHERE email = ?', [cleanEmail]);
+      await dbRunAsync('DELETE FROM verification_codes WHERE email = ?', [cleanEmail]);
       return res.status(400).json({ error: 'Código expirado. Solicite a redefinição novamente.' });
     }
 
     if (record.attempts >= 5) {
-      dbRun('DELETE FROM verification_codes WHERE email = ?', [cleanEmail]);
+      await dbRunAsync('DELETE FROM verification_codes WHERE email = ?', [cleanEmail]);
       return res.status(429).json({ error: 'Muitas tentativas incorretas. Solicite um novo código.' });
     }
 
     // Código correto?
     if (record.code !== String(code).trim()) {
-      dbRun('UPDATE verification_codes SET attempts = attempts + 1 WHERE email = ?', [cleanEmail]);
+      await dbRunAsync('UPDATE verification_codes SET attempts = attempts + 1 WHERE email = ?', [cleanEmail]);
       const remaining = Math.max(0, 4 - Number(record.attempts || 0));
       return res.status(400).json({
         error: `Código de redefinição incorreto. Você tem ${remaining} tentativa(s) restante(s).`,
@@ -2504,10 +2504,10 @@ app.post('/api/auth/reset-password', async (req, res) => {
 
     // Gerar nova hash de senha e atualizar o usuário
     const pass_hash = await bcrypt.hash(password, 12);
-    dbRun('UPDATE users SET password_hash = ? WHERE email = ?', [pass_hash, cleanEmail]);
+    await dbRunAsync('UPDATE users SET password_hash = ? WHERE email = ?', [pass_hash, cleanEmail]);
     
     // Apagar código usado
-    dbRun('DELETE FROM verification_codes WHERE email = ?', [cleanEmail]);
+    await dbRunAsync('DELETE FROM verification_codes WHERE email = ?', [cleanEmail]);
 
     console.log(`[AUTH] 🔑 Senha alterada com sucesso via redefinição: ${cleanEmail}`);
     return res.json({ success: true, message: 'Senha atualizada com sucesso!' });

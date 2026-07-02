@@ -2353,7 +2353,7 @@ ul {
 
   .hero-content {
     padding: 0 20px;
-    padding-top: var(--nav-height);
+    padding-top: calc(var(--nav-height) + 54px);
   }
 
   .hero-title {
@@ -4628,6 +4628,14 @@ ul {
 }
 
 @media (max-width: 600px) {
+  .hero {
+    align-items: flex-start !important;
+  }
+
+  .hero-content {
+    padding-top: calc(118px + env(safe-area-inset-top)) !important;
+  }
+
   .mobile-desktop-header {
     left: 10px !important;
     right: 104px !important;

@@ -4632,8 +4632,17 @@ ul {
     align-items: flex-start !important;
   }
 
+  .hero-bg {
+    background-position: center center !important;
+  }
+
   .hero-content {
     padding-top: calc(118px + env(safe-area-inset-top)) !important;
+  }
+
+  .hero-indicators,
+  .hero-scroll-hint {
+    display: none !important;
   }
 
   .mobile-home-header.search-active {

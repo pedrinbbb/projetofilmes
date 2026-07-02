@@ -726,8 +726,10 @@ async function initApp() {
       TOP10_SERIES = [...seriesList].sort((a, b) => b.rating - a.rating).slice(0, 10);
     }
 
-    // Gerar Hero Slides com filmes e series melhor avaliados
-    const candidates = [...movieList, ...seriesList].sort((a, b) => b.rating - a.rating);
+    // Gerar Hero Slides aleatorios com filmes e series do catalogo
+    const candidates = [...movieList, ...seriesList]
+      .filter(item => item.backdrop || item.poster)
+      .sort(() => Math.random() - 0.5);
     HERO_SLIDES = candidates.slice(0, 5).map(m => ({
       title: m.title,
       year: m.year,
@@ -1029,7 +1031,9 @@ function updateHeroSlide(idx) {
     `
     : 'linear-gradient(135deg, #050505 0%, #101010 55%, #000 100%)';
   heroBg.style.backgroundSize = 'cover, cover, cover';
-  heroBg.style.backgroundPosition = 'center center, center center, center 28%';
+  heroBg.style.backgroundPosition = isMobileViewport()
+    ? 'center center, center center, center center'
+    : 'center center, center center, center 28%';
   heroBg.style.backgroundRepeat = 'no-repeat';
 
   // Animate content
@@ -1060,34 +1064,11 @@ function updateHeroSlide(idx) {
     content.style.transform = 'translateY(0)';
   }, 200);
 
-  // Update indicators
-  document.querySelectorAll('.indicator').forEach((ind, i) => {
-    ind.classList.toggle('active', i === idx);
-    ind.setAttribute('aria-pressed', i === idx ? 'true' : 'false');
-  });
-
   currentHeroSlide = idx;
 }
 
 function initHeroSlider() {
-  const indicators = $('hero-indicators');
-  if (indicators) {
-    indicators.innerHTML = HERO_SLIDES.map((_, i) => (
-      `<button class="indicator ${i === 0 ? 'active' : ''}" id="indicator-${i}" aria-label="Slide ${i + 1}" aria-pressed="${i === 0 ? 'true' : 'false'}"></button>`
-    )).join('');
-  }
-
   updateHeroSlide(0);
-
-  document.querySelectorAll('.indicator').forEach((ind, i) => {
-    ind.addEventListener('click', () => {
-      clearInterval(heroInterval);
-      updateHeroSlide(i);
-      heroInterval = setInterval(() => {
-        updateHeroSlide((currentHeroSlide + 1) % HERO_SLIDES.length);
-      }, 7000);
-    });
-  });
 
   heroInterval = setInterval(() => {
     updateHeroSlide((currentHeroSlide + 1) % HERO_SLIDES.length);

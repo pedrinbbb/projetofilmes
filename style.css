@@ -105,6 +105,10 @@ ul {
   display: none;
 }
 
+.mobile-desktop-header {
+  display: none;
+}
+
 /* =============================================
    LOADING SCREEN
    ============================================= */
@@ -1172,7 +1176,7 @@ ul {
   .card-action {
     min-height: 28px;
     padding: 0 8px;
-    font-size: 10px;
+    font-size: 9px;
   }
 
   .card-action.watch {
@@ -2005,31 +2009,93 @@ ul {
   }
 
   body {
-    padding-bottom: calc(82px + env(safe-area-inset-bottom));
+    padding-bottom: calc(70px + env(safe-area-inset-bottom));
   }
 
   .mobile-home-header {
+    display: none !important;
+  }
+
+  .mobile-desktop-header {
     position: fixed;
-    top: calc(10px + env(safe-area-inset-top));
-    left: 14px;
+    top: calc(8px + env(safe-area-inset-top));
+    left: 10px;
+    right: 10px;
     z-index: 1100;
     display: flex;
     align-items: center;
-    min-height: 44px;
-    pointer-events: none;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 42px;
+    pointer-events: auto;
+  }
+
+  .mobile-top-category-links {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: calc(100vw - 104px);
+    min-height: 40px;
+    padding: 3px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    border: 1px solid rgba(255, 215, 0, 0.16);
+    border-radius: 999px;
+    background: rgba(18, 18, 18, 0.78);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04), 0 12px 32px rgba(0, 0, 0, 0.34);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+
+  .mobile-top-category-links::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mobile-top-category-links .nav-category-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 32px;
+    padding: 0 10px;
+    border-radius: 999px;
+    color: var(--text-secondary);
+    background: transparent;
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 900;
+    line-height: 1;
+    white-space: nowrap;
+    transition: color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast);
+  }
+
+  .mobile-top-category-links .nav-category-link:hover,
+  .mobile-top-category-links .nav-category-link.active {
+    color: var(--gold-primary);
+    background: rgba(255, 215, 0, 0.1);
+    box-shadow: inset 0 0 0 1px rgba(255, 215, 0, 0.1);
+  }
+
+  .mobile-top-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 7px;
+    flex: 0 0 auto;
   }
 
   .mobile-home-search {
     display: flex;
-    width: 44px;
-    min-width: 44px;
-    height: 44px;
+    width: 38px;
+    min-width: 38px;
+    height: 38px;
     align-items: center;
     justify-content: flex-start;
-    gap: 8px;
-    padding: 0 13px;
+    gap: 7px;
+    padding: 0 11px;
     border: 1px solid rgba(255, 215, 0, 0.28);
-    border-radius: 16px;
+    border-radius: 14px;
     color: var(--gold-primary);
     background: linear-gradient(180deg, rgba(18, 14, 4, 0.94), rgba(7, 7, 7, 0.94));
     box-shadow: 0 14px 36px rgba(0, 0, 0, 0.44);
@@ -2042,8 +2108,8 @@ ul {
 
   .mobile-home-search:focus-within,
   .mobile-home-search.search-open {
-    width: min(188px, calc(100vw - 28px));
-    border-radius: 16px;
+    width: min(168px, calc(100vw - 28px));
+    border-radius: 14px;
     box-shadow: 0 16px 38px rgba(0, 0, 0, 0.5), 0 0 18px rgba(255, 215, 0, 0.12);
   }
 
@@ -2070,13 +2136,39 @@ ul {
     color: var(--text-muted);
   }
 
+  .mobile-top-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 215, 0, 0.5);
+    background: linear-gradient(135deg, var(--gold-dark), var(--gold-primary));
+    color: #050505;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 900;
+    overflow: hidden;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.36), 0 0 16px rgba(255, 215, 0, 0.22);
+  }
+
+  .mobile-top-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+  }
+
   .navbar {
     top: auto;
     left: 50%;
     right: auto;
-    bottom: calc(10px + env(safe-area-inset-bottom));
-    width: min(282px, calc(100% - 56px));
-    height: 60px;
+    bottom: calc(8px + env(safe-area-inset-bottom));
+    width: auto;
+    min-width: 142px;
+    max-width: calc(100% - 28px);
+    height: 50px;
+    padding: 0 4px;
     transform: translateX(-50%);
     border: 1px solid rgba(255, 215, 0, 0.18);
     border-radius: 999px;
@@ -2093,8 +2185,8 @@ ul {
 
   .nav-container {
     justify-content: center;
-    gap: 6px;
-    padding: 0 6px;
+    gap: 3px;
+    padding: 0 4px;
   }
 
   .nav-logo,
@@ -2118,10 +2210,10 @@ ul {
 
   .nav-link,
   .nav-avatar {
-    width: 58px;
-    height: 52px;
+    width: 50px;
+    height: 44px;
     padding: 0;
-    border-radius: 18px;
+    border-radius: 15px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -2130,7 +2222,7 @@ ul {
     color: var(--text-secondary);
     background: transparent;
     box-shadow: none;
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 800;
     line-height: 1;
   }
@@ -2138,7 +2230,7 @@ ul {
   .nav-link::before {
     font-family: "Font Awesome 7 Free", "Font Awesome 6 Free";
     font-weight: 900;
-    font-size: 17px;
+    font-size: 15px;
     line-height: 1;
   }
 
@@ -2219,7 +2311,7 @@ ul {
   .nav-avatar {
     position: relative;
     overflow: visible;
-    width: 92px;
+    width: 74px;
     color: var(--text-secondary);
     background: transparent !important;
     border: 0;
@@ -2229,13 +2321,13 @@ ul {
     content: "\f521";
     font-family: "Font Awesome 7 Free", "Font Awesome 6 Free";
     font-weight: 900;
-    font-size: 17px;
+    font-size: 15px;
     line-height: 1;
   }
 
   .nav-avatar::after {
     content: "Minha GOAT";
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 800;
     line-height: 1;
   }
@@ -2317,7 +2409,7 @@ ul {
   }
 
   .card-hover-actions {
-    gap: 4px;
+    gap: 3px;
   }
 
   .card-action {

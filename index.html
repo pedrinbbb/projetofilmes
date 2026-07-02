@@ -58,6 +58,25 @@
     </form>
   </header>
 
+  <header class="mobile-desktop-header" aria-label="Cabeçalho mobile">
+    <ul class="mobile-top-category-links" role="list" aria-label="Navegação mobile superior">
+      <li><a class="nav-category-link active" href="/" data-view="home">Início</a></li>
+      <li><a class="nav-category-link" href="/filmes" data-view="movies">Filmes</a></li>
+      <li><a class="nav-category-link" href="/series" data-view="series">Séries</a></li>
+      <li><a class="nav-category-link" href="/minha-lista">Minha lista</a></li>
+    </ul>
+
+    <div class="mobile-top-actions">
+      <form class="mobile-home-search mobile-desktop-search" id="mobile-top-search-form" role="search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input id="mobile-top-search-input" type="search" placeholder="Buscar..." autocomplete="off" />
+      </form>
+      <button class="mobile-top-avatar" id="mobile-top-avatar" type="button" aria-label="Abrir perfil">
+        <span id="mobile-top-avatar-letter">G</span>
+      </button>
+    </div>
+  </header>
+
   <!-- ========== NAVBAR ========== -->
   <nav class="navbar" id="navbar" role="navigation" aria-label="Navegação principal">
     <div class="nav-container">

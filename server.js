@@ -2592,7 +2592,7 @@ async function runMigrationsAndSeeds() {
         category: "new",
         type: "movie",
         videoUrl: "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/deadpool-2016.mp4",
-        subtitlesUrl: null,
+        subtitlesUrl: "/legendas/Deadpool.2016.1080p.BluRay.x264-SPARKS.srt",
         trailerUrl: DEFAULT_TRAILER_URLS.Deadpool
       },
       {
@@ -2609,7 +2609,7 @@ async function runMigrationsAndSeeds() {
         category: "new",
         type: "movie",
         videoUrl: "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/deadpool-2-2018.mp4",
-        subtitlesUrl: null,
+        subtitlesUrl: "/legendas/Deadpool 2 2018 NEW 720p HD-TC X264-CPG.srt",
         trailerUrl: DEFAULT_TRAILER_URLS["Deadpool 2"]
       },
       {
@@ -2626,7 +2626,7 @@ async function runMigrationsAndSeeds() {
         category: "new",
         type: "movie",
         videoUrl: "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/deadpool-wolverine-2024.mp4",
-        subtitlesUrl: null,
+        subtitlesUrl: "/legendas/Deadpool.and.Wolverine.2024.1080p.AMZN.WEBRip.DD5.1.x265.10bit-GalaxyRG265.srt",
         trailerUrl: DEFAULT_TRAILER_URLS["Deadpool & Wolverine"]
       },
       {

@@ -401,115 +401,6 @@ function bindCardTouchScrollGuard(card) {
   }, true);
 }
 
-function bindVerticalScrollPassthrough(scroller) {
-  if (!scroller || scroller.dataset.verticalScrollPassthrough === 'true') return;
-  scroller.dataset.verticalScrollPassthrough = 'true';
-
-  let startX = 0;
-  let startY = 0;
-  let lastY = 0;
-  let isVerticalGesture = false;
-  let tracking = false;
-
-  scroller.addEventListener('touchstart', (event) => {
-    if (event.touches.length !== 1) return;
-    const touch = event.touches[0];
-    tracking = true;
-    isVerticalGesture = false;
-    startX = touch.clientX;
-    startY = touch.clientY;
-    lastY = touch.clientY;
-  }, { passive: true });
-
-  scroller.addEventListener('touchmove', (event) => {
-    if (!tracking || event.touches.length !== 1) return;
-    const touch = event.touches[0];
-    const deltaX = touch.clientX - startX;
-    const deltaY = touch.clientY - startY;
-    const absX = Math.abs(deltaX);
-    const absY = Math.abs(deltaY);
-
-    if (!isVerticalGesture && absY > 8 && absY > absX * 1.15) {
-      isVerticalGesture = true;
-      scroller.querySelectorAll('.movie-card.touch-active').forEach(card => card.classList.remove('touch-active'));
-    }
-
-    if (!isVerticalGesture) return;
-    event.preventDefault();
-    window.scrollBy(0, lastY - touch.clientY);
-    lastY = touch.clientY;
-  }, { passive: false });
-
-  const stopTracking = () => {
-    tracking = false;
-    isVerticalGesture = false;
-  };
-
-  scroller.addEventListener('touchend', stopTracking, { passive: true });
-  scroller.addEventListener('touchcancel', stopTracking, { passive: true });
-}
-
-function bindHorizontalScrollAreas(root = document) {
-  root.querySelectorAll('.carousel, .top10-grid').forEach(bindVerticalScrollPassthrough);
-}
-
-function initGlobalCardTouchScrollFix() {
-  if (document.documentElement.dataset.cardTouchScrollFix === 'true') return;
-  document.documentElement.dataset.cardTouchScrollFix = 'true';
-
-  let activeCard = null;
-  let startX = 0;
-  let startY = 0;
-  let lastY = 0;
-  let verticalScrollMode = false;
-
-  document.addEventListener('touchstart', (event) => {
-    if (event.touches.length !== 1) return;
-    if (event.target.closest('.player-overlay, .modal-overlay, .sub-modal-overlay')) return;
-
-    const card = event.target.closest('.movie-card, .top10-card');
-    if (!card) return;
-
-    const touch = event.touches[0];
-    activeCard = card;
-    verticalScrollMode = false;
-    startX = touch.clientX;
-    startY = touch.clientY;
-    lastY = touch.clientY;
-  }, { capture: true, passive: true });
-
-  document.addEventListener('touchmove', (event) => {
-    if (!activeCard || event.touches.length !== 1) return;
-
-    const touch = event.touches[0];
-    const deltaX = touch.clientX - startX;
-    const deltaY = touch.clientY - startY;
-    const absX = Math.abs(deltaX);
-    const absY = Math.abs(deltaY);
-
-    if (!verticalScrollMode && absY > 6 && absY > absX * 1.05) {
-      verticalScrollMode = true;
-      activeCard.classList.remove('touch-active');
-      activeCard.closest('.carousel, .top10-grid')?.querySelectorAll('.touch-active').forEach(card => {
-        card.classList.remove('touch-active');
-      });
-    }
-
-    if (!verticalScrollMode) return;
-    if (event.cancelable) event.preventDefault();
-    window.scrollBy(0, lastY - touch.clientY);
-    lastY = touch.clientY;
-  }, { capture: true, passive: false });
-
-  const resetTouchScrollFix = () => {
-    activeCard = null;
-    verticalScrollMode = false;
-  };
-
-  document.addEventListener('touchend', resetTouchScrollFix, { capture: true, passive: true });
-  document.addEventListener('touchcancel', resetTouchScrollFix, { capture: true, passive: true });
-}
-
 function createContinueWatchingCard(entry) {
   const card = document.createElement('div');
   const progressPct = Math.max(3, Math.min(100, ((entry.currentTime || 0) / (entry.durationSeconds || 1)) * 100));
@@ -769,7 +660,6 @@ function createPremiumRow(row) {
 
   const carousel = section.querySelector('.premium-carousel');
   row.items.forEach(item => carousel.appendChild(createMovieCard(item)));
-  bindVerticalScrollPassthrough(carousel);
 
   const scrollCarousel = (direction) => {
     const amount = Math.max(320, Math.floor(carousel.clientWidth * 0.82));
@@ -901,8 +791,6 @@ async function initApp() {
   renderPremiumHomeRows();
   renderTop10();
   renderContinueWatching();
-  bindHorizontalScrollAreas();
-  initGlobalCardTouchScrollFix();
   refreshTop10SlideButtons();
   initCarouselArrows();
   initHeroSlider();

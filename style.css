@@ -1147,13 +1147,26 @@ ul {
 }
 
 @media (max-width: 760px) {
+  .row-section,
+  .carousel-wrapper,
+  .carousel,
+  .movie-card,
+  .card-poster-wrapper,
+  .card-poster,
+  .card-overlay,
+  .top10-scroll-shell,
+  .top10-grid,
+  .top10-grid .top10-card {
+    touch-action: pan-y;
+  }
+
   .carousel {
-    gap: 12px;
+    gap: 10px;
     padding-top: 12px;
   }
 
   .movie-card {
-    width: 172px;
+    width: 148px;
   }
 
   .card-action {
@@ -2224,8 +2237,8 @@ ul {
   .row-header,
   .carousel-wrapper,
   .top10-grid {
-    padding-left: 20px;
-    padding-right: 20px;
+    padding-left: 14px;
+    padding-right: 14px;
   }
 
   .originals-banner {
@@ -2242,7 +2255,55 @@ ul {
   }
 
   .movie-card {
-    width: 166px;
+    width: 136px;
+  }
+
+  .card-info {
+    padding-top: 7px;
+  }
+
+  .card-name {
+    font-size: 12px;
+  }
+
+  .card-year {
+    font-size: 10px;
+  }
+
+  .card-overlay {
+    padding: 9px;
+  }
+
+  .card-title {
+    font-size: 11px;
+    margin-bottom: 7px;
+  }
+
+  .card-hover-actions {
+    gap: 4px;
+  }
+
+  .card-action {
+    min-width: 26px;
+    min-height: 26px;
+    padding: 0 7px;
+    font-size: 9px;
+  }
+
+  .card-action.watch {
+    min-width: 66px;
+  }
+
+  .top10-grid .top10-card {
+    flex-basis: 210px;
+    width: 210px;
+    height: 188px;
+  }
+
+  .top10-poster {
+    width: 124px;
+    height: 182px;
+    right: 8px;
   }
 
   .modal-body {
@@ -2454,6 +2515,27 @@ ul {
     0 2px 2px rgba(0, 0, 0, 0.95),
     0 0 10px rgba(0, 0, 0, 0.8);
   pointer-events: none;
+}
+
+@media (max-width: 380px) {
+  .movie-card {
+    width: 124px;
+  }
+
+  .carousel {
+    gap: 9px;
+  }
+
+  .top10-grid .top10-card {
+    flex-basis: 192px;
+    width: 192px;
+    height: 174px;
+  }
+
+  .top10-poster {
+    width: 112px;
+    height: 164px;
+  }
 }
 
 .player-next-episode {

@@ -453,6 +453,63 @@ function bindHorizontalScrollAreas(root = document) {
   root.querySelectorAll('.carousel, .top10-grid').forEach(bindVerticalScrollPassthrough);
 }
 
+function initGlobalCardTouchScrollFix() {
+  if (document.documentElement.dataset.cardTouchScrollFix === 'true') return;
+  document.documentElement.dataset.cardTouchScrollFix = 'true';
+
+  let activeCard = null;
+  let startX = 0;
+  let startY = 0;
+  let lastY = 0;
+  let verticalScrollMode = false;
+
+  document.addEventListener('touchstart', (event) => {
+    if (event.touches.length !== 1) return;
+    if (event.target.closest('.player-overlay, .modal-overlay, .sub-modal-overlay')) return;
+
+    const card = event.target.closest('.movie-card, .top10-card');
+    if (!card) return;
+
+    const touch = event.touches[0];
+    activeCard = card;
+    verticalScrollMode = false;
+    startX = touch.clientX;
+    startY = touch.clientY;
+    lastY = touch.clientY;
+  }, { capture: true, passive: true });
+
+  document.addEventListener('touchmove', (event) => {
+    if (!activeCard || event.touches.length !== 1) return;
+
+    const touch = event.touches[0];
+    const deltaX = touch.clientX - startX;
+    const deltaY = touch.clientY - startY;
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
+
+    if (!verticalScrollMode && absY > 6 && absY > absX * 1.05) {
+      verticalScrollMode = true;
+      activeCard.classList.remove('touch-active');
+      activeCard.closest('.carousel, .top10-grid')?.querySelectorAll('.touch-active').forEach(card => {
+        card.classList.remove('touch-active');
+      });
+    }
+
+    if (!verticalScrollMode) return;
+    if (event.cancelable) event.preventDefault();
+    window.scrollBy(0, lastY - touch.clientY);
+    lastY = touch.clientY;
+  }, { capture: true, passive: false });
+
+  const resetTouchScrollFix = () => {
+    activeCard = null;
+    verticalScrollMode = false;
+  };
+
+  document.addEventListener('touchend', resetTouchScrollFix, { capture: true, passive: true });
+  document.addEventListener('touchcancel', resetTouchScrollFix, { capture: true, passive: true });
+}
+
 function createContinueWatchingCard(entry) {
   const card = document.createElement('div');
   const progressPct = Math.max(3, Math.min(100, ((entry.currentTime || 0) / (entry.durationSeconds || 1)) * 100));
@@ -471,6 +528,7 @@ function createContinueWatchingCard(entry) {
            src="${entry.poster || entry.backdrop || ''}"
            alt="Poster de ${escapeHtml(title)}"
            loading="lazy"
+           draggable="false"
            onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22180%22 height=%22270%22 viewBox=%220 0 180 270%22><rect width=%22180%22 height=%22270%22 fill=%22%23161616%22/></svg>'" />
       <div class="continue-progress-track" aria-hidden="true">
         <span style="width: ${progressPct}%"></span>
@@ -844,6 +902,7 @@ async function initApp() {
   renderTop10();
   renderContinueWatching();
   bindHorizontalScrollAreas();
+  initGlobalCardTouchScrollFix();
   refreshTop10SlideButtons();
   initCarouselArrows();
   initHeroSlider();
@@ -900,6 +959,7 @@ function createMovieCard(movie) {
            alt="Poster de ${escapeHtml(movie.title)}"
            loading="lazy"
            decoding="async"
+           draggable="false"
            onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22180%22 height=%22270%22 viewBox=%220 0 180 270%22><rect width=%22180%22 height=%22270%22 fill=%22%23161616%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 fill=%22%23FFD700%22 font-size=%2240%22>🎬</text></svg>'" />
       <div class="card-overlay">
         <div class="card-title">${escapeHtml(movie.title)}</div>

@@ -903,6 +903,9 @@ ul {
   transition: transform 260ms ease, filter 260ms ease;
   transform-origin: center bottom;
   touch-action: auto;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
 }
 
 .card-poster-wrapper {
@@ -913,6 +916,8 @@ ul {
   width: 100%;
   background: var(--bg-card);
   transition: box-shadow 220ms ease, border-color 220ms ease;
+  -webkit-touch-callout: none;
+  user-select: none;
 }
 
 .movie-card:hover,
@@ -942,6 +947,9 @@ ul {
   background: var(--bg-card);
   transition: transform 260ms ease, box-shadow 260ms ease;
   border: 1px solid var(--border-subtle);
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+  user-select: none;
 }
 
 .card-overlay {
@@ -3784,6 +3792,10 @@ ul {
   transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   display: flex;
   align-items: center;
+  touch-action: auto;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
 }
 
 .top10-slide-btn {

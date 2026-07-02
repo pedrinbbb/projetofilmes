@@ -418,6 +418,10 @@ async function runMigrationsAndSeeds() {
     try { db.run('ALTER TABLE users ADD COLUMN pending_txid TEXT DEFAULT NULL'); } catch (e) {}
     try { db.run('ALTER TABLE users ADD COLUMN pending_plan_id INTEGER DEFAULT NULL'); } catch (e) {}
     try { db.run('ALTER TABLE users ADD COLUMN has_used_trial INTEGER DEFAULT 0'); } catch (e) {}
+    try { db.run('ALTER TABLE users ADD COLUMN discord_id TEXT DEFAULT NULL'); } catch (e) {}
+    try { db.run('ALTER TABLE users ADD COLUMN discord_tag TEXT DEFAULT NULL'); } catch (e) {}
+    try { db.run('ALTER TABLE users ADD COLUMN avatar TEXT DEFAULT NULL'); } catch (e) {}
+    try { db.run("ALTER TABLE users ADD COLUMN method TEXT DEFAULT 'email'"); } catch (e) {}
   } else {
     await dbRunSync("ALTER TABLE movies ADD COLUMN IF NOT EXISTS type VARCHAR(50) DEFAULT 'movie'");
     await dbRunSync("ALTER TABLE movies ADD COLUMN IF NOT EXISTS subtitlesUrl VARCHAR(500) DEFAULT NULL");
@@ -426,6 +430,10 @@ async function runMigrationsAndSeeds() {
     await dbRunSync("ALTER TABLE movies ADD COLUMN IF NOT EXISTS position INTEGER DEFAULT 0");
     await dbRunSync("ALTER TABLE profiles ALTER COLUMN avatar_icon TYPE VARCHAR(500)");
     await dbRunSync("ALTER TABLE profiles ADD COLUMN IF NOT EXISTS pin_hash VARCHAR(255) DEFAULT NULL");
+    await dbRunSync("ALTER TABLE users ADD COLUMN IF NOT EXISTS discord_id VARCHAR(255) UNIQUE DEFAULT NULL");
+    await dbRunSync("ALTER TABLE users ADD COLUMN IF NOT EXISTS discord_tag VARCHAR(255) DEFAULT NULL");
+    await dbRunSync("ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar VARCHAR(255) DEFAULT NULL");
+    await dbRunSync("ALTER TABLE users ADD COLUMN IF NOT EXISTS method VARCHAR(50) DEFAULT 'email'");
   }
 
   await dbRunSync('CREATE INDEX IF NOT EXISTS idx_episodes_movie_season_number ON episodes (movie_id, season, number)');

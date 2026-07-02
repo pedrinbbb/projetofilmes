@@ -866,12 +866,6 @@ function createMovieCard(movie) {
       return;
     }
 
-    if (window.matchMedia('(hover: none)').matches && !card.classList.contains('touch-active')) {
-      document.querySelectorAll('.movie-card.touch-active').forEach(item => item.classList.remove('touch-active'));
-      card.classList.add('touch-active');
-      return;
-    }
-
     openModal(movie);
   });
 

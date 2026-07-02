@@ -1259,6 +1259,38 @@ async function runMigrationsAndSeeds() {
     console.error("[DB SEED ERROR] Erro ao garantir Creed: III:", err);
   }
 
+  // --- GARANTIR QUE AVATAR: FOGO E CINZAS SEJA ADICIONADO SE ESTIVER AUSENTE ---
+  try {
+    const existingAvatar3 = await dbGetAsync("SELECT id FROM movies WHERE title = ?", ["Avatar: Fogo e Cinzas"]);
+    if (!existingAvatar3) {
+      console.log("  📦 Adicionando Avatar: Fogo e Cinzas ao catálogo...");
+      await dbRunAsync(`
+        INSERT INTO movies (title, year, duration, rating, genre, "desc", poster, backdrop, director, "cast", category, type, videoUrl, subtitlesUrl, trailerUrl)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        "Avatar: Fogo e Cinzas",
+        2025,
+        "3h 17min",
+        8.2,
+        "Ação / Aventura / Ficção Científica",
+        "Jake Sully, Neytiri e a família Sully navegam por mais aventuras em Pandora, enfrentando um novo perigo: o Povo das Cinzas, uma agressiva tribo Na'vi que vive da fúria e do fogo.",
+        "https://i.postimg.cc/QCJDtJDy/image.png",
+        "https://i.postimg.cc/rFqcH3Cw/image.png",
+        "James Cameron",
+        "Sam Worthington, Zoe Saldaña, Sigourney Weaver, Kate Winslet",
+        "new",
+        "movie",
+        "https://ir.embedplay.info/e/9BNuyWbcuCR8GRxbl0j8CWqUikhTDTvJaydMW7SMYw7tLKkCMR_28WgZw2yyyvin6v6Fv5ZuilNQgVOx72oL7roCW-T38cfCZ09GVfApI1cCmaN1pX906z7todgTtUWhypXyI48yrMyZRLP3KL92RKaEwThbC3dzT0BfiEJrXAYwiR8N7q7SbWJmiG_E",
+        null,
+        "https://www.youtube.com/watch?v=F7P2X4223fI"
+      ]);
+      if (!IS_POSTGRES) saveDb();
+      console.log("  ✅ Avatar: Fogo e Cinzas adicionado com sucesso!");
+    }
+  } catch (err) {
+    console.error("[DB SEED ERROR] Erro ao garantir Avatar: Fogo e Cinzas:", err);
+  }
+
   try {
     for (const [title, trailerUrl] of Object.entries(DEFAULT_TRAILER_URLS)) {
       await dbRunAsync(

@@ -1729,6 +1729,7 @@ function initVideoPlayer() {
   const volumeBtn = $('ctrl-volume');
   const volumeSlider = $('volume-slider');
   const progressContainer = $('progress-container');
+  const progressHover = $('progress-bar-hover');
   const progressFill = $('progress-bar-fill');
   const progressHandle = $('progress-bar-handle');
   const timeCurrent = $('time-current');
@@ -2579,16 +2580,43 @@ function initVideoPlayer() {
     return `${formattedM}:${formattedS}`;
   }
 
+  let isScrubbingProgress = false;
+
+  function getProgressFromPointer(event) {
+    if (!progressContainer) return 0;
+    const rect = progressContainer.getBoundingClientRect();
+    if (!rect.width) return 0;
+    const clientX = event.clientX ?? 0;
+    return Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+  }
+
+  function updateProgressUi(seconds) {
+    if (!video.duration) return;
+    const pct = Math.max(0, Math.min(100, (seconds / video.duration) * 100));
+    progressFill.style.width = `${pct}%`;
+    progressHandle.style.left = `${pct}%`;
+    progressContainer.setAttribute('aria-valuenow', String(Math.round(pct)));
+    progressContainer.setAttribute('aria-valuetext', `${formatTime(seconds)} de ${formatTime(video.duration)}`);
+    timeCurrent.textContent = formatTime(seconds);
+  }
+
+  function seekToPointer(event) {
+    if (!video.duration) return;
+    const nextTime = getProgressFromPointer(event) * video.duration;
+    video.currentTime = nextTime;
+    updateProgressUi(nextTime);
+    resetControlsTimer();
+  }
+
   // Update progress bar
   video.addEventListener('timeupdate', () => {
     updateCustomSubtitles();
     if (!video.duration) return;
     trackPlaybackProgress();
     maybeShowNextEpisodePrompt();
-    const pct = (video.currentTime / video.duration) * 100;
-    progressFill.style.width = `${pct}%`;
-    progressHandle.style.left = `${pct}%`;
-    timeCurrent.textContent = formatTime(video.currentTime);
+    if (!isScrubbingProgress) {
+      updateProgressUi(video.currentTime);
+    }
   });
 
   // Load duration when metadata is ready
@@ -2608,46 +2636,64 @@ function initVideoPlayer() {
     }
   });
 
-  // Scrubbing/Seeking on click / touch
-  function seek(e) {
-    const rect = progressContainer.getBoundingClientRect();
-    // Suporte para obter o clientX correto tanto em cliques do mouse quanto toques de celular
-    const clientX = (e.touches && e.touches.length > 0) ? e.touches[0].clientX : e.clientX;
-    const pct = (clientX - rect.left) / rect.width;
-    const clampedPct = Math.max(0, Math.min(1, pct));
-    video.currentTime = clampedPct * video.duration;
+  progressContainer.addEventListener('pointerdown', (event) => {
+    if (!video.duration) return;
+    event.preventDefault();
+    isScrubbingProgress = true;
+    progressContainer.classList.add('is-scrubbing');
+    progressContainer.setPointerCapture?.(event.pointerId);
+    seekToPointer(event);
+  });
+
+  progressContainer.addEventListener('pointermove', (event) => {
+    const pct = getProgressFromPointer(event) * 100;
+    if (progressHover) progressHover.style.width = `${pct}%`;
+    if (isScrubbingProgress) {
+      event.preventDefault();
+      seekToPointer(event);
+    }
+  });
+
+  function stopProgressScrub(event) {
+    if (!isScrubbingProgress) return;
+    isScrubbingProgress = false;
+    progressContainer.classList.remove('is-scrubbing');
+    if (event?.pointerId !== undefined) {
+      try {
+        progressContainer.releasePointerCapture?.(event.pointerId);
+      } catch (_) {}
+    }
+    trackPlaybackProgress(true);
   }
 
-  let isDragging = false;
+  progressContainer.addEventListener('pointerup', stopProgressScrub);
+  progressContainer.addEventListener('pointercancel', stopProgressScrub);
+  progressContainer.addEventListener('lostpointercapture', stopProgressScrub);
 
-  // Eventos de Mouse
-  progressContainer.addEventListener('mousedown', (e) => {
-    isDragging = true;
-    seek(e);
+  progressContainer.addEventListener('pointerleave', () => {
+    if (!isScrubbingProgress && progressHover) progressHover.style.width = '0%';
   });
 
-  document.addEventListener('mousemove', (e) => {
-    if (isDragging) seek(e);
-  });
-
-  document.addEventListener('mouseup', () => {
-    isDragging = false;
-  });
-
-  // Eventos de Toque (Celular)
-  progressContainer.addEventListener('touchstart', (e) => {
-    isDragging = true;
-    seek(e);
-  }, { passive: true });
-
-  document.addEventListener('touchmove', (e) => {
-    if (isDragging) {
-      seek(e);
+  progressContainer.addEventListener('keydown', (event) => {
+    if (!video.duration) return;
+    const step = event.shiftKey ? 30 : 10;
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowDown') {
+      event.preventDefault();
+      video.currentTime = Math.max(0, video.currentTime - step);
+      updateProgressUi(video.currentTime);
+    } else if (event.key === 'ArrowRight' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      video.currentTime = Math.min(video.duration, video.currentTime + step);
+      updateProgressUi(video.currentTime);
+    } else if (event.key === 'Home') {
+      event.preventDefault();
+      video.currentTime = 0;
+      updateProgressUi(video.currentTime);
+    } else if (event.key === 'End') {
+      event.preventDefault();
+      video.currentTime = video.duration;
+      updateProgressUi(video.currentTime);
     }
-  }, { passive: true });
-
-  document.addEventListener('touchend', () => {
-    isDragging = false;
   });
 
   // Volume control
@@ -2785,7 +2831,7 @@ function initVideoPlayer() {
     clearTimeout(controlsTimeout);
     if (!video.paused) {
       controlsTimeout = setTimeout(() => {
-        if (!isDragging && !isSpeedMenuOpen) {
+        if (!isScrubbingProgress && !isSpeedMenuOpen) {
           playerOverlay.classList.add('controls-hidden');
         }
       }, 3500);

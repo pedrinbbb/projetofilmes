@@ -53,7 +53,10 @@ const DEFAULT_TRAILER_URLS = {
   'Thor: Love and Thunder': 'https://www.youtube.com/watch?v=Go8nTmfrQd8',
   Origem: 'https://www.youtube.com/watch?v=pDHqAj4eJcM',
   'Creed: III': 'https://www.youtube.com/watch?v=AHmCH7iB_IM',
-  '60 Segundos': 'https://www.youtube.com/watch?v=ap5RqRzjS6g'
+  '60 Segundos': 'https://www.youtube.com/watch?v=ap5RqRzjS6g',
+  'Enola Holmes': 'https://www.youtube.com/watch?v=1d0Zf9sXlHk',
+  'Enola Holmes 2': 'https://www.youtube.com/watch?v=KKXNmYoPkx0',
+  'Enola Holmes 3': 'https://www.youtube.com/watch?v=n_pEJjq-9xQ'
 };
 
 // URL de conexão do PostgreSQL
@@ -1865,6 +1868,222 @@ async function runMigrationsAndSeeds() {
     if (!IS_POSTGRES) saveDb();
   } catch (err) {
     console.error("[DB SEED ERROR] Erro ao garantir 60 Segundos:", err);
+  }
+
+  // --- GARANTIR QUE ENOLA HOLMES SEJA ADICIONADO SE ESTIVER AUSENTE ---
+  try {
+    const enolaHolmesData = {
+      title: "Enola Holmes",
+      year: 2020,
+      duration: "2h 3min",
+      rating: 6.6,
+      genre: "Mist\u00e9rio / Aventura / Crime",
+      desc: "Quando sua m\u00e3e desaparece, Enola Holmes parte para Londres em uma jornada pr\u00f3pria, desafiando seus irm\u00e3os famosos enquanto investiga um mist\u00e9rio que pode mudar o futuro do pa\u00eds.",
+      poster: "https://i.postimg.cc/K8NZtsJb/image.png",
+      backdrop: "https://i.postimg.cc/C1ZSTMYd/image.png",
+      director: "Harry Bradbeer",
+      cast: "Millie Bobby Brown, Henry Cavill, Sam Claflin, Helena Bonham Carter, Louis Partridge, Adeel Akhtar, Fiona Shaw",
+      category: "new",
+      type: "movie",
+      videoUrl: "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/enola-holmes-2020.mp4",
+      subtitlesUrl: null,
+      trailerUrl: DEFAULT_TRAILER_URLS["Enola Holmes"]
+    };
+    const existingEnolaHolmes = await dbGetAsync("SELECT id FROM movies WHERE title = ?", [enolaHolmesData.title]);
+    if (existingEnolaHolmes) {
+      await dbRunAsync(`
+        UPDATE movies
+        SET year=?, duration=?, rating=?, genre=?, "desc"=?, poster=?, backdrop=?, director=?, "cast"=?, category=?, type=?, videoUrl=?, subtitlesUrl=?, trailerUrl=?
+        WHERE id=?
+      `, [
+        enolaHolmesData.year,
+        enolaHolmesData.duration,
+        enolaHolmesData.rating,
+        enolaHolmesData.genre,
+        enolaHolmesData.desc,
+        enolaHolmesData.poster,
+        enolaHolmesData.backdrop,
+        enolaHolmesData.director,
+        enolaHolmesData.cast,
+        enolaHolmesData.category,
+        enolaHolmesData.type,
+        enolaHolmesData.videoUrl,
+        enolaHolmesData.subtitlesUrl,
+        enolaHolmesData.trailerUrl,
+        existingEnolaHolmes.id
+      ]);
+      console.log("  \u2705 Enola Holmes atualizado no cat\u00e1logo.");
+    } else {
+      console.log("  \ud83d\udce6 Adicionando Enola Holmes ao cat\u00e1logo...");
+      await dbRunAsync(`
+        INSERT INTO movies (title, year, duration, rating, genre, "desc", poster, backdrop, director, "cast", category, type, videoUrl, subtitlesUrl, trailerUrl)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        enolaHolmesData.title,
+        enolaHolmesData.year,
+        enolaHolmesData.duration,
+        enolaHolmesData.rating,
+        enolaHolmesData.genre,
+        enolaHolmesData.desc,
+        enolaHolmesData.poster,
+        enolaHolmesData.backdrop,
+        enolaHolmesData.director,
+        enolaHolmesData.cast,
+        enolaHolmesData.category,
+        enolaHolmesData.type,
+        enolaHolmesData.videoUrl,
+        enolaHolmesData.subtitlesUrl,
+        enolaHolmesData.trailerUrl
+      ]);
+      console.log("  \u2705 Enola Holmes adicionado com sucesso!");
+    }
+    if (!IS_POSTGRES) saveDb();
+  } catch (err) {
+    console.error("[DB SEED ERROR] Erro ao garantir Enola Holmes:", err);
+  }
+
+  // --- GARANTIR QUE ENOLA HOLMES 2 SEJA ADICIONADO SE ESTIVER AUSENTE ---
+  try {
+    const enolaHolmes2Data = {
+      title: "Enola Holmes 2",
+      year: 2022,
+      duration: "2h 9min",
+      rating: 6.8,
+      genre: "Mist\u00e9rio / Aventura / Crime",
+      desc: "Agora detetive de aluguel, Enola Holmes assume seu primeiro caso oficial para encontrar uma jovem desaparecida, enquanto sua investiga\u00e7\u00e3o se conecta a um mist\u00e9rio enfrentado por Sherlock.",
+      poster: "https://i.postimg.cc/rFTXgNdc/image.png",
+      backdrop: "https://i.postimg.cc/KjrWCCK1/image.png",
+      director: "Harry Bradbeer",
+      cast: "Millie Bobby Brown, Henry Cavill, David Thewlis, Louis Partridge, Helena Bonham Carter, Susan Wokoma, Adeel Akhtar, Sharon Duncan-Brewster",
+      category: "new",
+      type: "movie",
+      videoUrl: "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/enola-holmes-2-2022.mp4",
+      subtitlesUrl: null,
+      trailerUrl: DEFAULT_TRAILER_URLS["Enola Holmes 2"]
+    };
+    const existingEnolaHolmes2 = await dbGetAsync("SELECT id FROM movies WHERE title = ?", [enolaHolmes2Data.title]);
+    if (existingEnolaHolmes2) {
+      await dbRunAsync(`
+        UPDATE movies
+        SET year=?, duration=?, rating=?, genre=?, "desc"=?, poster=?, backdrop=?, director=?, "cast"=?, category=?, type=?, videoUrl=?, subtitlesUrl=?, trailerUrl=?
+        WHERE id=?
+      `, [
+        enolaHolmes2Data.year,
+        enolaHolmes2Data.duration,
+        enolaHolmes2Data.rating,
+        enolaHolmes2Data.genre,
+        enolaHolmes2Data.desc,
+        enolaHolmes2Data.poster,
+        enolaHolmes2Data.backdrop,
+        enolaHolmes2Data.director,
+        enolaHolmes2Data.cast,
+        enolaHolmes2Data.category,
+        enolaHolmes2Data.type,
+        enolaHolmes2Data.videoUrl,
+        enolaHolmes2Data.subtitlesUrl,
+        enolaHolmes2Data.trailerUrl,
+        existingEnolaHolmes2.id
+      ]);
+      console.log("  \u2705 Enola Holmes 2 atualizado no cat\u00e1logo.");
+    } else {
+      console.log("  \ud83d\udce6 Adicionando Enola Holmes 2 ao cat\u00e1logo...");
+      await dbRunAsync(`
+        INSERT INTO movies (title, year, duration, rating, genre, "desc", poster, backdrop, director, "cast", category, type, videoUrl, subtitlesUrl, trailerUrl)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        enolaHolmes2Data.title,
+        enolaHolmes2Data.year,
+        enolaHolmes2Data.duration,
+        enolaHolmes2Data.rating,
+        enolaHolmes2Data.genre,
+        enolaHolmes2Data.desc,
+        enolaHolmes2Data.poster,
+        enolaHolmes2Data.backdrop,
+        enolaHolmes2Data.director,
+        enolaHolmes2Data.cast,
+        enolaHolmes2Data.category,
+        enolaHolmes2Data.type,
+        enolaHolmes2Data.videoUrl,
+        enolaHolmes2Data.subtitlesUrl,
+        enolaHolmes2Data.trailerUrl
+      ]);
+      console.log("  \u2705 Enola Holmes 2 adicionado com sucesso!");
+    }
+    if (!IS_POSTGRES) saveDb();
+  } catch (err) {
+    console.error("[DB SEED ERROR] Erro ao garantir Enola Holmes 2:", err);
+  }
+
+  // --- GARANTIR QUE ENOLA HOLMES 3 SEJA ADICIONADO SE ESTIVER AUSENTE ---
+  try {
+    const enolaHolmes3Data = {
+      title: "Enola Holmes 3",
+      year: 2026,
+      duration: "1h 48min",
+      rating: 5.6,
+      genre: "Mist\u00e9rio / Aventura / Drama",
+      desc: "A aventura leva Enola Holmes a Malta, onde seus planos de casamento desandam quando o desaparecimento de Sherlock a joga em um caso perigoso e profundamente pessoal.",
+      poster: "https://i.postimg.cc/CM3D2zYT/image.png",
+      backdrop: "https://i.postimg.cc/rF5W2MFt/image.png",
+      director: "Philip Barantini",
+      cast: "Millie Bobby Brown, Louis Partridge, Henry Cavill, Himesh Patel, Helena Bonham Carter, Sharon Duncan-Brewster",
+      category: "releases",
+      type: "movie",
+      videoUrl: "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/enola-holmes-3-2026.mp4",
+      subtitlesUrl: null,
+      trailerUrl: DEFAULT_TRAILER_URLS["Enola Holmes 3"]
+    };
+    const existingEnolaHolmes3 = await dbGetAsync("SELECT id FROM movies WHERE title = ?", [enolaHolmes3Data.title]);
+    if (existingEnolaHolmes3) {
+      await dbRunAsync(`
+        UPDATE movies
+        SET year=?, duration=?, rating=?, genre=?, "desc"=?, poster=?, backdrop=?, director=?, "cast"=?, category=?, type=?, videoUrl=?, subtitlesUrl=?, trailerUrl=?
+        WHERE id=?
+      `, [
+        enolaHolmes3Data.year,
+        enolaHolmes3Data.duration,
+        enolaHolmes3Data.rating,
+        enolaHolmes3Data.genre,
+        enolaHolmes3Data.desc,
+        enolaHolmes3Data.poster,
+        enolaHolmes3Data.backdrop,
+        enolaHolmes3Data.director,
+        enolaHolmes3Data.cast,
+        enolaHolmes3Data.category,
+        enolaHolmes3Data.type,
+        enolaHolmes3Data.videoUrl,
+        enolaHolmes3Data.subtitlesUrl,
+        enolaHolmes3Data.trailerUrl,
+        existingEnolaHolmes3.id
+      ]);
+      console.log("  \u2705 Enola Holmes 3 atualizado no cat\u00e1logo.");
+    } else {
+      console.log("  \ud83d\udce6 Adicionando Enola Holmes 3 ao cat\u00e1logo...");
+      await dbRunAsync(`
+        INSERT INTO movies (title, year, duration, rating, genre, "desc", poster, backdrop, director, "cast", category, type, videoUrl, subtitlesUrl, trailerUrl)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        enolaHolmes3Data.title,
+        enolaHolmes3Data.year,
+        enolaHolmes3Data.duration,
+        enolaHolmes3Data.rating,
+        enolaHolmes3Data.genre,
+        enolaHolmes3Data.desc,
+        enolaHolmes3Data.poster,
+        enolaHolmes3Data.backdrop,
+        enolaHolmes3Data.director,
+        enolaHolmes3Data.cast,
+        enolaHolmes3Data.category,
+        enolaHolmes3Data.type,
+        enolaHolmes3Data.videoUrl,
+        enolaHolmes3Data.subtitlesUrl,
+        enolaHolmes3Data.trailerUrl
+      ]);
+      console.log("  \u2705 Enola Holmes 3 adicionado com sucesso!");
+    }
+    if (!IS_POSTGRES) saveDb();
+  } catch (err) {
+    console.error("[DB SEED ERROR] Erro ao garantir Enola Holmes 3:", err);
   }
 
   try {

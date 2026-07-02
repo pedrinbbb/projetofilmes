@@ -2937,6 +2937,26 @@ async function dbRunAsync(sql, params = []) {
 
 // ---- DB Helpers Síncronos compatíveis com deasync para PostgreSQL ----
 
+async function dbAllAsync(sql, params = []) {
+  const translated = translateQuery(sql);
+  if (IS_POSTGRES) {
+    const res = await pgPool.query(translated, params);
+    return res.rows || [];
+  }
+
+  try {
+    const stmt = db.prepare(translated);
+    stmt.bind(params);
+    const rows = [];
+    while (stmt.step()) rows.push(stmt.getAsObject());
+    stmt.free();
+    return rows;
+  } catch (err) {
+    console.error('[DB SQLITE ALL ASYNC ERROR]', err);
+    return [];
+  }
+}
+
 function dbGet(sql, params = []) {
   const translated = translateQuery(sql);
   
@@ -3119,6 +3139,9 @@ const staticContentTypes = {
   '.jpeg': 'image/jpeg',
   '.webp': 'image/webp',
   '.ico': 'image/x-icon',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
+  '.ttf': 'font/ttf',
   '.vtt': 'text/vtt; charset=utf-8',
   '.srt': 'text/plain; charset=utf-8'
 };
@@ -3158,19 +3181,15 @@ function sendOptimizedStatic(req, res, next) {
   try {
     const ext = path.extname(filePath).toLowerCase();
     const contentType = staticContentTypes[ext] || 'application/octet-stream';
-    const body = fs.readFileSync(filePath);
-    const acceptsGzip = /\bgzip\b/i.test(req.headers['accept-encoding'] || '');
-    const shouldCompress = acceptsGzip && ['.html', '.css', '.js', '.json', '.svg', '.vtt', '.srt'].includes(ext);
-    const output = shouldCompress ? zlib.gzipSync(body, { level: 6 }) : body;
-
     res.setHeader('Content-Type', contentType);
-    const noCacheExts = new Set(['.html', '.css', '.js']);
-    res.setHeader('Cache-Control', noCacheExts.has(ext) ? 'no-cache' : 'public, max-age=3600');
-    res.setHeader('Content-Length', output.length);
-    res.setHeader('Vary', 'Accept-Encoding');
-    if (shouldCompress) res.setHeader('Content-Encoding', 'gzip');
-    if (req.method === 'HEAD') return res.end();
-    return res.end(output);
+    if (ext === '.html') {
+      res.setHeader('Cache-Control', 'no-cache');
+    } else if (['.css', '.js', '.svg', '.woff', '.woff2', '.ttf', '.json'].includes(ext)) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    } else {
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+    }
+    return res.sendFile(filePath);
   } catch (err) {
     console.error('[STATIC OPTIMIZED ERROR]', err);
     return next();
@@ -4403,12 +4422,12 @@ app.post('/api/admin/subtitles/upload', requireAdminAuth, (req, res) => {
 // --- USER SUBSCRIPTION API ENDPOINTS (requireAuth) ---
 
 // Obter Assinatura do Usuário Logado
-app.get('/api/user/subscription', requireAuth, (req, res) => {
+app.get('/api/user/subscription', requireAuth, async (req, res) => {
   try {
-    const user = dbGet('SELECT sub_active, sub_plan_id, sub_expires_at, sub_activated_at, pending_txid, has_used_trial FROM users WHERE id = ?', [req.user.id]);
+    const user = await dbGetAsync('SELECT sub_active, sub_plan_id, sub_expires_at, sub_activated_at, pending_txid, has_used_trial FROM users WHERE id = ?', [req.user.id]);
     if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
     
-    const plans = dbAll('SELECT * FROM plans ORDER BY id ASC');
+    const plans = await dbAllAsync('SELECT * FROM plans ORDER BY id ASC');
     return res.json({ subscription: user, plans });
   } catch (err) {
     console.error('[USER GET SUB ERROR]', err);
@@ -4857,9 +4876,9 @@ app.all('/api/webhook/pix', (req, res) => {
 // =============================================
 
 // Listar todos os Filmes (Público)
-app.get('/api/movies', (req, res) => {
+app.get('/api/movies', async (req, res) => {
   try {
-    let movies = dbAll('SELECT * FROM movies ORDER BY position ASC, id DESC');
+    let movies = await dbAllAsync('SELECT * FROM movies ORDER BY position ASC, id DESC');
     movies = movies.map(m => {
       if (m.videourl !== undefined && m.videoUrl === undefined) {
         m.videoUrl = m.videourl;

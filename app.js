@@ -2182,7 +2182,7 @@ function initVideoPlayer() {
     playerOverlay.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
 
-    // Determinar se o link é Iframe (YouTube/Vimeo/Google Drive/Axplay) ou vídeo direto (.mp4, .webm, .m3u8)
+    // Determinar se o link é Iframe (YouTube/Vimeo/Google Drive/Axplay/RedetToons) ou vídeo direto (.mp4, .webm, .m3u8)
     const rawUrl = movie.videoUrl || movie.videourl || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
     const url = getPlayableUrl(rawUrl);
     currentPlaybackItem = isTrailerPlayback ? null : { ...movie, videoUrl: rawUrl };
@@ -2199,9 +2199,13 @@ function initVideoPlayer() {
                           url.includes('.m3u8?') ||
                           url.includes('/api/video/stream');
 
+    const isIframeSource = url.includes('youtube.com') || url.includes('youtu.be') ||
+                           url.includes('vimeo.com') || url.includes('drive.google.com') ||
+                           url.includes('redetoons.fun');
+
     resetCustomSubtitles();
 
-    if (!isDirectVideo || url.includes('youtube.com') || url.includes('youtu.be') || url.includes('vimeo.com') || url.includes('drive.google.com')) {
+    if (!isDirectVideo || isIframeSource) {
       currentPlaybackItem = null;
       renderPlayerEpisodes();
       // Configurar modo Iframe
@@ -2221,6 +2225,9 @@ function initVideoPlayer() {
       } else if (url.includes('drive.google.com')) {
         // Tratar link do Google Drive (/preview)
         embedUrl = url.replace('/view', '/preview').replace('?usp=sharing', '');
+      } else if (url.includes('redetoons.fun')) {
+        // Usar o player original do GoatCine/RedetToons diretamente no iframe
+        embedUrl = url;
       }
       
       iframe.src = embedUrl;

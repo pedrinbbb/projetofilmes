@@ -101,11 +101,43 @@ const transporter = nodemailer.createTransport({
 
 function isEmailConfigured() {
   const hasResend = process.env.RESEND_API_KEY && process.env.RESEND_API_KEY !== 'SUA_CHAVE_AQUI';
+  const hasBrevo = process.env.BREVO_API_KEY && process.env.BREVO_API_KEY !== 'SUA_CHAVE_AQUI';
   const hasSmtp = process.env.EMAIL_USER && process.env.EMAIL_PASS && process.env.EMAIL_USER !== 'seu_email@gmail.com';
-  return hasResend || hasSmtp;
+  return hasResend || hasBrevo || hasSmtp;
 }
 
 async function sendMailWithTimeout(mailOptions) {
+  const BREVO_API_KEY = String(process.env.BREVO_API_KEY || '').trim();
+  if (BREVO_API_KEY && BREVO_API_KEY !== 'SUA_CHAVE_AQUI') {
+    try {
+      console.log('[EMAIL] Enviando via Brevo HTTPS API...');
+      const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'api-key': BREVO_API_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          sender: { 
+            name: 'GOATCINE', 
+            email: process.env.EMAIL_FROM || 'goatcineempresa@gmail.com' 
+          },
+          to: [{ email: mailOptions.to }],
+          subject: mailOptions.subject,
+          htmlContent: mailOptions.html
+        })
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Erro retornado pela API do Brevo');
+      }
+      return data;
+    } catch (err) {
+      console.error('[BREVO API ERROR] Falha ao enviar via Brevo API:', err.message);
+      throw err;
+    }
+  }
+
   const RESEND_API_KEY = String(process.env.RESEND_API_KEY || '').trim();
   if (RESEND_API_KEY && RESEND_API_KEY !== 'SUA_CHAVE_AQUI') {
     try {

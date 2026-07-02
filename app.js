@@ -1620,6 +1620,7 @@ function openModal(movie) {
   currentModalMovie = movie;
   const modalTitle = $('modal-title');
   const modalDesc = $('modal-desc');
+  const modalDescToggle = $('modal-desc-toggle');
   const modalMeta = $('modal-meta');
   const modalBackdrop = $('modal-backdrop');
   const modalDetailList = $('modal-detail-list');
@@ -1640,6 +1641,16 @@ function openModal(movie) {
   setModalDynamicBackground(movie.backdrop || movie.poster);
   modalTitle.textContent = movie.title;
   modalDesc.textContent = movie.desc;
+  if (modalDescToggle) {
+    const shouldCollapseDesc = String(movie.desc || '').length > 150;
+    modalDesc.classList.toggle('is-collapsed', shouldCollapseDesc);
+    modalDescToggle.hidden = !shouldCollapseDesc;
+    modalDescToggle.textContent = 'Ver mais...';
+    modalDescToggle.onclick = () => {
+      const isCollapsed = modalDesc.classList.toggle('is-collapsed');
+      modalDescToggle.textContent = isCollapsed ? 'Ver mais...' : 'Ver menos';
+    };
+  }
   modalBackdrop.src = movie.backdrop || movie.poster;
   modalBackdrop.alt = `Imagem de ${movie.title}`;
 

@@ -60,7 +60,8 @@ const DEFAULT_TRAILER_URLS = {
   'Obsess\u00e3o': 'https://www.youtube.com/watch?v=rUx-4RIScYg',
   'Entrevista com Deus': 'https://www.youtube.com/watch?v=JbQh11oUh6s',
   'O Pacto': 'https://www.youtube.com/watch?v=02PPMPArNEQ',
-  'American Pie: A Primeira Vez \u00e9 Inesquec\u00edvel': 'https://www.youtube.com/watch?v=iUZ3Yxok6N8'
+  'American Pie: A Primeira Vez \u00e9 Inesquec\u00edvel': 'https://www.youtube.com/watch?v=iUZ3Yxok6N8',
+  'Invoca\u00e7\u00e3o do Mal': 'https://www.youtube.com/watch?v=k10ETZ41q5o'
 };
 
 // URL de conexão do PostgreSQL
@@ -2376,6 +2377,78 @@ async function runMigrationsAndSeeds() {
     if (!IS_POSTGRES) saveDb();
   } catch (err) {
     console.error("[DB SEED ERROR] Erro ao garantir American Pie:", err);
+  }
+
+  // --- GARANTIR QUE INVOCACAO DO MAL SEJA ADICIONADO SE ESTIVER AUSENTE ---
+  try {
+    const invocacaoDoMalData = {
+      title: "Invoca\u00e7\u00e3o do Mal",
+      year: 2013,
+      duration: "1h 52min",
+      rating: 7.5,
+      genre: "Terror / Thriller",
+      desc: "Os investigadores paranormais Ed e Lorraine Warren ajudam uma fam\u00edlia aterrorizada por uma presen\u00e7a sombria em uma fazenda isolada, enfrentando um dos casos mais assustadores de suas vidas.",
+      poster: "https://media.themoviedb.org/t/p/w600_and_h900_face/1NxHKZW5DPbUFtbF3MxbdSyxRqU.jpg",
+      backdrop: "https://media.themoviedb.org/t/p/w1920_and_h800_multi_faces/ecKQlAEG95k62SMGhvX83oEqANK.jpg",
+      director: "James Wan",
+      cast: "Vera Farmiga, Patrick Wilson, Lili Taylor, Ron Livingston, Joey King, Shanley Caswell, Hayley McFarland",
+      category: "new",
+      type: "movie",
+      videoUrl: "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/invocacao-do-mal-2013.mp4",
+      subtitlesUrl: null,
+      trailerUrl: DEFAULT_TRAILER_URLS["Invoca\u00e7\u00e3o do Mal"]
+    };
+    const existingInvocacaoDoMal = await dbGetAsync("SELECT id FROM movies WHERE title = ?", [invocacaoDoMalData.title]);
+    if (existingInvocacaoDoMal) {
+      await dbRunAsync(`
+        UPDATE movies
+        SET year=?, duration=?, rating=?, genre=?, "desc"=?, poster=?, backdrop=?, director=?, "cast"=?, category=?, type=?, videoUrl=?, subtitlesUrl=?, trailerUrl=?
+        WHERE id=?
+      `, [
+        invocacaoDoMalData.year,
+        invocacaoDoMalData.duration,
+        invocacaoDoMalData.rating,
+        invocacaoDoMalData.genre,
+        invocacaoDoMalData.desc,
+        invocacaoDoMalData.poster,
+        invocacaoDoMalData.backdrop,
+        invocacaoDoMalData.director,
+        invocacaoDoMalData.cast,
+        invocacaoDoMalData.category,
+        invocacaoDoMalData.type,
+        invocacaoDoMalData.videoUrl,
+        invocacaoDoMalData.subtitlesUrl,
+        invocacaoDoMalData.trailerUrl,
+        existingInvocacaoDoMal.id
+      ]);
+      console.log("  \u2705 Invoca\u00e7\u00e3o do Mal atualizado no cat\u00e1logo.");
+    } else {
+      console.log("  \ud83d\udce6 Adicionando Invoca\u00e7\u00e3o do Mal ao cat\u00e1logo...");
+      await dbRunAsync(`
+        INSERT INTO movies (title, year, duration, rating, genre, "desc", poster, backdrop, director, "cast", category, type, videoUrl, subtitlesUrl, trailerUrl)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        invocacaoDoMalData.title,
+        invocacaoDoMalData.year,
+        invocacaoDoMalData.duration,
+        invocacaoDoMalData.rating,
+        invocacaoDoMalData.genre,
+        invocacaoDoMalData.desc,
+        invocacaoDoMalData.poster,
+        invocacaoDoMalData.backdrop,
+        invocacaoDoMalData.director,
+        invocacaoDoMalData.cast,
+        invocacaoDoMalData.category,
+        invocacaoDoMalData.type,
+        invocacaoDoMalData.videoUrl,
+        invocacaoDoMalData.subtitlesUrl,
+        invocacaoDoMalData.trailerUrl
+      ]);
+      console.log("  \u2705 Invoca\u00e7\u00e3o do Mal adicionado com sucesso!");
+    }
+    if (!IS_POSTGRES) saveDb();
+  } catch (err) {
+    console.error("[DB SEED ERROR] Erro ao garantir Invoca\u00e7\u00e3o do Mal:", err);
   }
 
   try {

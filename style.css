@@ -1183,7 +1183,7 @@ ul {
 @media (max-width: 1024px) {
   #continue-watching-carousel {
     display: grid !important;
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    grid-template-columns: minmax(0, 1fr) !important;
     gap: 14px 8px !important;
     overflow: visible !important;
     padding: 12px 0 18px !important;
@@ -4448,7 +4448,7 @@ ul {
 
   .carousel {
     display: grid !important;
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    grid-template-columns: minmax(0, 1fr) !important;
     gap: 14px 8px !important;
     overflow: visible !important;
     padding: 12px 0 18px !important;
@@ -4476,7 +4476,7 @@ ul {
 
   .top10-grid {
     display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-columns: minmax(0, 1fr) !important;
     gap: 14px 10px !important;
     overflow: visible !important;
     padding: 12px 0 18px !important;

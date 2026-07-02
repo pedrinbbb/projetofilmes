@@ -1182,20 +1182,22 @@ ul {
 
 @media (max-width: 1024px) {
   #continue-watching-carousel {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) !important;
-    gap: 14px 8px !important;
-    overflow: visible !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 10px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
     padding: 12px 0 18px !important;
-    scroll-snap-type: none !important;
-    overscroll-behavior: auto !important;
-    touch-action: pan-y !important;
+    scroll-snap-type: x proximity !important;
+    overscroll-behavior-x: contain !important;
+    touch-action: none !important;
   }
 
   #continue-watching-carousel .movie-card {
-    width: 100% !important;
-    scroll-snap-align: none !important;
-    touch-action: pan-y !important;
+    flex: 0 0 136px !important;
+    width: 136px !important;
+    scroll-snap-align: start !important;
+    touch-action: none !important;
   }
 
   #continue-watching-carousel .card-poster-wrapper,
@@ -4440,27 +4442,45 @@ ul {
 
 @media (max-width: 760px) {
   .carousel-wrapper {
-    overflow: visible !important;
+    overflow: hidden !important;
     padding-left: 14px !important;
     padding-right: 14px !important;
-    touch-action: pan-y !important;
+    touch-action: none !important;
   }
 
   .carousel {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) !important;
-    gap: 14px 8px !important;
-    overflow: visible !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 10px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
     padding: 12px 0 18px !important;
-    scroll-snap-type: none !important;
-    overscroll-behavior: auto !important;
-    touch-action: pan-y !important;
+    scroll-snap-type: x proximity !important;
+    overscroll-behavior-x: contain !important;
+    touch-action: none !important;
   }
 
   .carousel .movie-card {
-    width: 100% !important;
-    scroll-snap-align: none !important;
-    touch-action: pan-y !important;
+    flex: 0 0 136px !important;
+    width: 136px !important;
+    scroll-snap-align: start !important;
+    touch-action: none !important;
+  }
+
+  #continue-watching-carousel {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scroll-snap-type: x proximity !important;
+    touch-action: none !important;
+  }
+
+  #continue-watching-carousel .movie-card {
+    flex: 0 0 136px !important;
+    width: 136px !important;
+    scroll-snap-align: start !important;
+    touch-action: none !important;
   }
 
   .carousel-arrow {
@@ -4468,38 +4488,39 @@ ul {
   }
 
   .top10-scroll-shell {
-    overflow: visible !important;
+    overflow: hidden !important;
     padding-left: 14px !important;
     padding-right: 14px !important;
-    touch-action: pan-y !important;
+    touch-action: none !important;
   }
 
   .top10-grid {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) !important;
-    gap: 14px 10px !important;
-    overflow: visible !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 12px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
     padding: 12px 0 18px !important;
-    scroll-snap-type: none !important;
-    overscroll-behavior: auto !important;
-    touch-action: pan-y !important;
+    scroll-snap-type: x proximity !important;
+    overscroll-behavior-x: contain !important;
+    touch-action: none !important;
   }
 
   .top10-grid .top10-card {
-    display: block !important;
-    width: 100% !important;
-    height: auto !important;
+    display: flex !important;
+    flex: 0 0 210px !important;
+    width: 210px !important;
+    height: 188px !important;
     min-height: 0 !important;
-    flex: initial !important;
-    touch-action: pan-y !important;
+    touch-action: none !important;
   }
 
   .top10-poster {
-    position: static !important;
-    width: 100% !important;
-    height: auto !important;
-    aspect-ratio: 2 / 3 !important;
-    right: auto !important;
+    position: absolute !important;
+    width: 124px !important;
+    height: 182px !important;
+    aspect-ratio: auto !important;
+    right: 8px !important;
   }
 
   .top10-number {

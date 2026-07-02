@@ -406,10 +406,12 @@ function initMobileSectionScrollFix() {
   document.documentElement.dataset.mobileSectionScrollFix = 'true';
 
   let activeArea = null;
+  let activeScroller = null;
   let startX = 0;
   let startY = 0;
+  let lastX = 0;
   let lastY = 0;
-  let isVerticalScroll = false;
+  let gestureMode = null;
   let suppressNextClick = false;
 
   const getScrollElement = () => document.scrollingElement || document.documentElement;
@@ -422,11 +424,16 @@ function initMobileSectionScrollFix() {
     if (!area) return;
 
     const touch = event.touches[0];
+    const scroller = event.target.closest('.carousel, .top10-grid')
+      || area.querySelector('.carousel, .top10-grid');
+
     activeArea = area;
-    isVerticalScroll = false;
+    activeScroller = scroller;
+    gestureMode = null;
     suppressNextClick = false;
     startX = touch.clientX;
     startY = touch.clientY;
+    lastX = touch.clientX;
     lastY = touch.clientY;
   }, { capture: true, passive: true });
 
@@ -439,25 +446,32 @@ function initMobileSectionScrollFix() {
     const absX = Math.abs(deltaX);
     const absY = Math.abs(deltaY);
 
-    if (!isVerticalScroll && absY > 5 && absY >= absX) {
-      isVerticalScroll = true;
+    if (!gestureMode && Math.max(absX, absY) > 5) {
+      gestureMode = absX > absY ? 'horizontal' : 'vertical';
       suppressNextClick = true;
       activeArea.querySelectorAll('.touch-active').forEach(item => item.classList.remove('touch-active'));
     }
 
-    if (!isVerticalScroll) return;
+    if (!gestureMode) return;
 
     if (event.cancelable) event.preventDefault();
     event.stopPropagation();
 
-    const scrollElement = getScrollElement();
-    scrollElement.scrollTop += lastY - touch.clientY;
+    if (gestureMode === 'horizontal' && activeScroller) {
+      activeScroller.scrollLeft += lastX - touch.clientX;
+    } else {
+      const scrollElement = getScrollElement();
+      scrollElement.scrollTop += lastY - touch.clientY;
+    }
+
+    lastX = touch.clientX;
     lastY = touch.clientY;
   }, { capture: true, passive: false });
 
   const reset = () => {
     activeArea = null;
-    isVerticalScroll = false;
+    activeScroller = null;
+    gestureMode = null;
   };
 
   document.addEventListener('touchend', reset, { capture: true, passive: true });

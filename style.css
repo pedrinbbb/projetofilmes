@@ -2035,9 +2035,9 @@ ul {
     display: inline-flex;
     align-items: center;
     gap: 3px;
-    flex: 1 1 auto;
+    flex: 0 1 auto;
     min-width: 0;
-    max-width: calc(100vw - 104px);
+    max-width: calc(100vw - 132px);
     min-height: 40px;
     padding: 3px;
     overflow-x: auto;
@@ -2162,8 +2162,13 @@ ul {
 
   .nav-logo,
   .nav-hamburger,
-  .nav-links li:not(:first-child) {
+  .nav-links li {
     display: none !important;
+  }
+
+  .nav-links li:first-child,
+  .nav-links li.nav-mobile-goat-item {
+    display: list-item !important;
   }
 
   .nav-links {
@@ -2211,6 +2216,14 @@ ul {
 
   #nav-home::before {
     content: "\f015";
+  }
+
+  #nav-my-goat {
+    width: 74px;
+  }
+
+  #nav-my-goat::before {
+    content: "\f521";
   }
 
   .nav-search-container {

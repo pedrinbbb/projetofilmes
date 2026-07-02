@@ -1194,14 +1194,15 @@ ul {
     padding: 12px 0 18px !important;
     scroll-snap-type: x proximity !important;
     overscroll-behavior-x: contain !important;
-    touch-action: none !important;
+    touch-action: pan-x pan-y !important;
+    -webkit-overflow-scrolling: touch !important;
   }
 
   #continue-watching-carousel .movie-card {
     flex: 0 0 136px !important;
     width: 136px !important;
     scroll-snap-align: start !important;
-    touch-action: none !important;
+    touch-action: pan-x pan-y !important;
   }
 
   #continue-watching-carousel .card-poster-wrapper,
@@ -4525,7 +4526,7 @@ ul {
     overflow: hidden !important;
     padding-left: 14px !important;
     padding-right: 14px !important;
-    touch-action: none !important;
+    touch-action: pan-x pan-y !important;
   }
 
   .carousel {
@@ -4537,14 +4538,15 @@ ul {
     padding: 12px 0 18px !important;
     scroll-snap-type: x proximity !important;
     overscroll-behavior-x: contain !important;
-    touch-action: none !important;
+    touch-action: pan-x pan-y !important;
+    -webkit-overflow-scrolling: touch !important;
   }
 
   .carousel .movie-card {
     flex: 0 0 136px !important;
     width: 136px !important;
     scroll-snap-align: start !important;
-    touch-action: none !important;
+    touch-action: pan-x pan-y !important;
   }
 
   #continue-watching-carousel {
@@ -4553,14 +4555,15 @@ ul {
     overflow-x: auto !important;
     overflow-y: hidden !important;
     scroll-snap-type: x proximity !important;
-    touch-action: none !important;
+    touch-action: pan-x pan-y !important;
+    -webkit-overflow-scrolling: touch !important;
   }
 
   #continue-watching-carousel .movie-card {
     flex: 0 0 136px !important;
     width: 136px !important;
     scroll-snap-align: start !important;
-    touch-action: none !important;
+    touch-action: pan-x pan-y !important;
   }
 
   .carousel-arrow {
@@ -4571,7 +4574,7 @@ ul {
     overflow: hidden !important;
     padding-left: 14px !important;
     padding-right: 14px !important;
-    touch-action: none !important;
+    touch-action: pan-x pan-y !important;
   }
 
   .top10-grid {
@@ -4583,7 +4586,8 @@ ul {
     padding: 12px 0 18px !important;
     scroll-snap-type: x proximity !important;
     overscroll-behavior-x: contain !important;
-    touch-action: none !important;
+    touch-action: pan-x pan-y !important;
+    -webkit-overflow-scrolling: touch !important;
   }
 
   .top10-grid .top10-card {
@@ -4592,7 +4596,7 @@ ul {
     width: 210px !important;
     height: 188px !important;
     min-height: 0 !important;
-    touch-action: none !important;
+    touch-action: pan-x pan-y !important;
   }
 
   .top10-poster {

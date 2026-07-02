@@ -75,21 +75,23 @@ const activeUsers = new Map();
 // =============================================
 //  EMAIL TRANSPORTER
 // =============================================
-const EMAIL_HOST = process.env.EMAIL_HOST || 'smtp.gmail.com';
+const EMAIL_HOST = String(process.env.EMAIL_HOST || 'smtp.gmail.com').trim();
 const EMAIL_PORT = Number(process.env.EMAIL_PORT || 587);
 const EMAIL_SECURE = String(process.env.EMAIL_SECURE || '').toLowerCase() === 'true' || EMAIL_PORT === 465;
 const EMAIL_TIMEOUT_MS = Number(process.env.EMAIL_TIMEOUT_MS || 25000);
+
+const EMAIL_USER = String(process.env.EMAIL_USER || '').trim();
+const EMAIL_PASS = String(process.env.EMAIL_PASS || '').trim();
 
 const transporter = nodemailer.createTransport({
   host: EMAIL_HOST,
   port: EMAIL_PORT,
   secure: EMAIL_SECURE,
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    user: EMAIL_USER,
+    pass: EMAIL_PASS,
   },
   tls: {
-    ciphers: 'SSLv3',
     rejectUnauthorized: false
   },
   connectionTimeout: EMAIL_TIMEOUT_MS,
@@ -98,12 +100,41 @@ const transporter = nodemailer.createTransport({
 });
 
 function isEmailConfigured() {
-  return process.env.EMAIL_USER &&
-         process.env.EMAIL_PASS &&
-         process.env.EMAIL_USER !== 'seu_email@gmail.com';
+  const hasResend = process.env.RESEND_API_KEY && process.env.RESEND_API_KEY !== 'SUA_CHAVE_AQUI';
+  const hasSmtp = process.env.EMAIL_USER && process.env.EMAIL_PASS && process.env.EMAIL_USER !== 'seu_email@gmail.com';
+  return hasResend || hasSmtp;
 }
 
-function sendMailWithTimeout(mailOptions) {
+async function sendMailWithTimeout(mailOptions) {
+  const RESEND_API_KEY = String(process.env.RESEND_API_KEY || '').trim();
+  if (RESEND_API_KEY && RESEND_API_KEY !== 'SUA_CHAVE_AQUI') {
+    try {
+      console.log('[EMAIL] Enviando via Resend HTTPS API...');
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${RESEND_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          from: mailOptions.from || `GOATCINE <onboarding@resend.dev>`,
+          to: mailOptions.to,
+          subject: mailOptions.subject,
+          html: mailOptions.html
+        })
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Erro retornado pela API do Resend');
+      }
+      return data;
+    } catch (err) {
+      console.error('[RESEND API ERROR] Falha ao enviar via Resend API:', err.message);
+      throw err;
+    }
+  }
+
+  // Fallback para SMTP normal
   return Promise.race([
     transporter.sendMail(mailOptions),
     new Promise((_, reject) => {

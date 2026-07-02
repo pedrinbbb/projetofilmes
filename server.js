@@ -61,7 +61,10 @@ const DEFAULT_TRAILER_URLS = {
   'Entrevista com Deus': 'https://www.youtube.com/watch?v=JbQh11oUh6s',
   'O Pacto': 'https://www.youtube.com/watch?v=02PPMPArNEQ',
   'American Pie: A Primeira Vez \u00e9 Inesquec\u00edvel': 'https://www.youtube.com/watch?v=iUZ3Yxok6N8',
-  'Invoca\u00e7\u00e3o do Mal': 'https://www.youtube.com/watch?v=k10ETZ41q5o'
+  'Invoca\u00e7\u00e3o do Mal': 'https://www.youtube.com/watch?v=k10ETZ41q5o',
+  'Invoca\u00e7\u00e3o do Mal 2': 'https://www.youtube.com/watch?v=VFsmuRPClr4',
+  'Invoca\u00e7\u00e3o do Mal 3: A Ordem do Dem\u00f4nio': 'https://www.youtube.com/watch?v=h9Q4zZS2v1k',
+  'O Exorcista do Papa': 'https://www.youtube.com/watch?v=YJXqvnT_rsk'
 };
 
 // URL de conexão do PostgreSQL
@@ -2449,6 +2452,114 @@ async function runMigrationsAndSeeds() {
     if (!IS_POSTGRES) saveDb();
   } catch (err) {
     console.error("[DB SEED ERROR] Erro ao garantir Invoca\u00e7\u00e3o do Mal:", err);
+  }
+
+  // --- GARANTIR FILMES DE TERROR ADICIONAIS SE ESTIVEREM AUSENTES ---
+  try {
+    const horrorMovieSeeds = [
+      {
+        title: "Invoca\u00e7\u00e3o do Mal 2",
+        year: 2016,
+        duration: "2h 14min",
+        rating: 7.3,
+        genre: "Terror / Thriller",
+        desc: "Ed e Lorraine Warren viajam para Londres para ajudar uma m\u00e3e solteira e seus filhos, atormentados por uma presen\u00e7a sobrenatural em um caso conhecido como o Poltergeist de Enfield.",
+        poster: "https://i.postimg.cc/XYmg2gjb/image.png",
+        backdrop: "https://i.postimg.cc/Wp8wRVN1/image.png",
+        director: "James Wan",
+        cast: "Vera Farmiga, Patrick Wilson, Madison Wolfe, Frances O'Connor, Simon McBurney, Franka Potente",
+        category: "new",
+        type: "movie",
+        videoUrl: "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/invocacao-do-mal-2-2016.mp4",
+        subtitlesUrl: null,
+        trailerUrl: DEFAULT_TRAILER_URLS["Invoca\u00e7\u00e3o do Mal 2"]
+      },
+      {
+        title: "Invoca\u00e7\u00e3o do Mal 3: A Ordem do Dem\u00f4nio",
+        year: 2021,
+        duration: "1h 52min",
+        rating: 6.3,
+        genre: "Terror / Mist\u00e9rio / Thriller",
+        desc: "Ed e Lorraine Warren investigam um caso sombrio de assassinato e possess\u00e3o demon\u00edaca, no qual a defesa de um jovem acusado afirma que o mal o levou ao crime.",
+        poster: "https://media.themoviedb.org/t/p/w600_and_h900_face/fNu88PdpStJGe09AUYmqTn6NEXB.jpg",
+        backdrop: "https://media.themoviedb.org/t/p/w1920_and_h800_multi_faces/p26c040MErns7DJYhisa1CpVB5i.jpg",
+        director: "Michael Chaves",
+        cast: "Patrick Wilson, Vera Farmiga, Ruairi O'Connor, Sarah Catherine Hook, Julian Hilliard, John Noble",
+        category: "new",
+        type: "movie",
+        videoUrl: "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/invocacao-do-mal-3-a-ordem-do-demonio-2021.mp4",
+        subtitlesUrl: null,
+        trailerUrl: DEFAULT_TRAILER_URLS["Invoca\u00e7\u00e3o do Mal 3: A Ordem do Dem\u00f4nio"]
+      },
+      {
+        title: "O Exorcista do Papa",
+        year: 2023,
+        duration: "1h 43min",
+        rating: 6.1,
+        genre: "Terror / Thriller",
+        desc: "Inspirado nos arquivos do padre Gabriele Amorth, exorcista-chefe do Vaticano, o filme acompanha uma investiga\u00e7\u00e3o que revela uma conspira\u00e7\u00e3o antiga e aterrorizante.",
+        poster: "https://media.themoviedb.org/t/p/w600_and_h900_face/hqIIoGsKKGWK7HjpgCSvV6mgKyT.jpg",
+        backdrop: "https://media.themoviedb.org/t/p/w1920_and_h800_multi_faces/3oqmk6mNWPatBKcjOOJLp5WW9zN.jpg",
+        director: "Julius Avery",
+        cast: "Russell Crowe, Daniel Zovatto, Alexandra Essoe, Franco Nero, Laurel Marsden, Peter DeSouza-Feighoney",
+        category: "new",
+        type: "movie",
+        videoUrl: "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/o-exorcista-do-papa-2023.mp4",
+        subtitlesUrl: null,
+        trailerUrl: DEFAULT_TRAILER_URLS["O Exorcista do Papa"]
+      }
+    ];
+
+    for (const seedMovie of horrorMovieSeeds) {
+      const existingMovie = await dbGetAsync("SELECT id FROM movies WHERE title = ?", [seedMovie.title]);
+      if (existingMovie) {
+        await dbRunAsync(`
+          UPDATE movies
+          SET year=?, duration=?, rating=?, genre=?, "desc"=?, poster=?, backdrop=?, director=?, "cast"=?, category=?, type=?, videoUrl=?, subtitlesUrl=?, trailerUrl=?
+          WHERE id=?
+        `, [
+          seedMovie.year,
+          seedMovie.duration,
+          seedMovie.rating,
+          seedMovie.genre,
+          seedMovie.desc,
+          seedMovie.poster,
+          seedMovie.backdrop,
+          seedMovie.director,
+          seedMovie.cast,
+          seedMovie.category,
+          seedMovie.type,
+          seedMovie.videoUrl,
+          seedMovie.subtitlesUrl,
+          seedMovie.trailerUrl,
+          existingMovie.id
+        ]);
+      } else {
+        await dbRunAsync(`
+          INSERT INTO movies (title, year, duration, rating, genre, "desc", poster, backdrop, director, "cast", category, type, videoUrl, subtitlesUrl, trailerUrl)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `, [
+          seedMovie.title,
+          seedMovie.year,
+          seedMovie.duration,
+          seedMovie.rating,
+          seedMovie.genre,
+          seedMovie.desc,
+          seedMovie.poster,
+          seedMovie.backdrop,
+          seedMovie.director,
+          seedMovie.cast,
+          seedMovie.category,
+          seedMovie.type,
+          seedMovie.videoUrl,
+          seedMovie.subtitlesUrl,
+          seedMovie.trailerUrl
+        ]);
+      }
+    }
+    if (!IS_POSTGRES) saveDb();
+  } catch (err) {
+    console.error("[DB SEED ERROR] Erro ao garantir filmes de terror adicionais:", err);
   }
 
   try {

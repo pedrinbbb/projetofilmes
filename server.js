@@ -56,7 +56,11 @@ const DEFAULT_TRAILER_URLS = {
   '60 Segundos': 'https://www.youtube.com/watch?v=ap5RqRzjS6g',
   'Enola Holmes': 'https://www.youtube.com/watch?v=1d0Zf9sXlHk',
   'Enola Holmes 2': 'https://www.youtube.com/watch?v=KKXNmYoPkx0',
-  'Enola Holmes 3': 'https://www.youtube.com/watch?v=n_pEJjq-9xQ'
+  'Enola Holmes 3': 'https://www.youtube.com/watch?v=n_pEJjq-9xQ',
+  'Obsess\u00e3o': 'https://www.youtube.com/watch?v=rUx-4RIScYg',
+  'Entrevista com Deus': 'https://www.youtube.com/watch?v=JbQh11oUh6s',
+  'O Pacto': 'https://www.youtube.com/watch?v=02PPMPArNEQ',
+  'American Pie: A Primeira Vez \u00e9 Inesquec\u00edvel': 'https://www.youtube.com/watch?v=iUZ3Yxok6N8'
 };
 
 // URL de conexão do PostgreSQL
@@ -2084,6 +2088,294 @@ async function runMigrationsAndSeeds() {
     if (!IS_POSTGRES) saveDb();
   } catch (err) {
     console.error("[DB SEED ERROR] Erro ao garantir Enola Holmes 3:", err);
+  }
+
+  // --- GARANTIR QUE OBSESSAO SEJA ADICIONADO SE ESTIVER AUSENTE ---
+  try {
+    const obsessaoData = {
+      title: "Obsess\u00e3o",
+      year: 2026,
+      duration: "1h 48min",
+      rating: 7.6,
+      genre: "Terror / Romance / Thriller",
+      desc: "Depois de usar um objeto sobrenatural para fazer sua paix\u00e3o se apaixonar por ele, um jovem rom\u00e2ntico descobre que o desejo abriu caminho para uma obsess\u00e3o perigosa.",
+      poster: "https://i.postimg.cc/2SKkb1CK/image.png",
+      backdrop: "https://i.postimg.cc/HsWd6wns/image.png",
+      director: "Curry Barker",
+      cast: "Michael Johnston, Inde Navarrette, Cooper Tomlinson, Megan Lawless, Andy Richter",
+      category: "releases",
+      type: "movie",
+      videoUrl: "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/obsessao-2026.mp4",
+      subtitlesUrl: null,
+      trailerUrl: DEFAULT_TRAILER_URLS["Obsess\u00e3o"]
+    };
+    const existingObsessao = await dbGetAsync("SELECT id FROM movies WHERE title = ?", [obsessaoData.title]);
+    if (existingObsessao) {
+      await dbRunAsync(`
+        UPDATE movies
+        SET year=?, duration=?, rating=?, genre=?, "desc"=?, poster=?, backdrop=?, director=?, "cast"=?, category=?, type=?, videoUrl=?, subtitlesUrl=?, trailerUrl=?
+        WHERE id=?
+      `, [
+        obsessaoData.year,
+        obsessaoData.duration,
+        obsessaoData.rating,
+        obsessaoData.genre,
+        obsessaoData.desc,
+        obsessaoData.poster,
+        obsessaoData.backdrop,
+        obsessaoData.director,
+        obsessaoData.cast,
+        obsessaoData.category,
+        obsessaoData.type,
+        obsessaoData.videoUrl,
+        obsessaoData.subtitlesUrl,
+        obsessaoData.trailerUrl,
+        existingObsessao.id
+      ]);
+      console.log("  \u2705 Obsess\u00e3o atualizado no cat\u00e1logo.");
+    } else {
+      console.log("  \ud83d\udce6 Adicionando Obsess\u00e3o ao cat\u00e1logo...");
+      await dbRunAsync(`
+        INSERT INTO movies (title, year, duration, rating, genre, "desc", poster, backdrop, director, "cast", category, type, videoUrl, subtitlesUrl, trailerUrl)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        obsessaoData.title,
+        obsessaoData.year,
+        obsessaoData.duration,
+        obsessaoData.rating,
+        obsessaoData.genre,
+        obsessaoData.desc,
+        obsessaoData.poster,
+        obsessaoData.backdrop,
+        obsessaoData.director,
+        obsessaoData.cast,
+        obsessaoData.category,
+        obsessaoData.type,
+        obsessaoData.videoUrl,
+        obsessaoData.subtitlesUrl,
+        obsessaoData.trailerUrl
+      ]);
+      console.log("  \u2705 Obsess\u00e3o adicionado com sucesso!");
+    }
+    if (!IS_POSTGRES) saveDb();
+  } catch (err) {
+    console.error("[DB SEED ERROR] Erro ao garantir Obsess\u00e3o:", err);
+  }
+
+  // --- GARANTIR QUE ENTREVISTA COM DEUS SEJA ADICIONADO SE ESTIVER AUSENTE ---
+  try {
+    const entrevistaComDeusData = {
+      title: "Entrevista com Deus",
+      year: 2018,
+      duration: "1h 37min",
+      rating: 5.8,
+      genre: "Drama / F\u00e9 / Mist\u00e9rio",
+      desc: "Depois de voltar de uma cobertura de guerra e enfrentar uma crise pessoal, um jornalista recebe a chance de entrevistar um homem misterioso que afirma ser Deus.",
+      poster: "https://i.postimg.cc/yxLqMGdn/image.png",
+      backdrop: "https://i.postimg.cc/D0xV9N0n/image.png",
+      director: "Perry Lang",
+      cast: "David Strathairn, Brenton Thwaites, Hill Harper, Yael Grobglas, Charlbi Dean, Bobby Di Cicco",
+      category: "new",
+      type: "movie",
+      videoUrl: "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/entrevista-com-deus-2018.mp4",
+      subtitlesUrl: null,
+      trailerUrl: DEFAULT_TRAILER_URLS["Entrevista com Deus"]
+    };
+    const existingEntrevistaComDeus = await dbGetAsync("SELECT id FROM movies WHERE title = ?", [entrevistaComDeusData.title]);
+    if (existingEntrevistaComDeus) {
+      await dbRunAsync(`
+        UPDATE movies
+        SET year=?, duration=?, rating=?, genre=?, "desc"=?, poster=?, backdrop=?, director=?, "cast"=?, category=?, type=?, videoUrl=?, subtitlesUrl=?, trailerUrl=?
+        WHERE id=?
+      `, [
+        entrevistaComDeusData.year,
+        entrevistaComDeusData.duration,
+        entrevistaComDeusData.rating,
+        entrevistaComDeusData.genre,
+        entrevistaComDeusData.desc,
+        entrevistaComDeusData.poster,
+        entrevistaComDeusData.backdrop,
+        entrevistaComDeusData.director,
+        entrevistaComDeusData.cast,
+        entrevistaComDeusData.category,
+        entrevistaComDeusData.type,
+        entrevistaComDeusData.videoUrl,
+        entrevistaComDeusData.subtitlesUrl,
+        entrevistaComDeusData.trailerUrl,
+        existingEntrevistaComDeus.id
+      ]);
+      console.log("  \u2705 Entrevista com Deus atualizado no cat\u00e1logo.");
+    } else {
+      console.log("  \ud83d\udce6 Adicionando Entrevista com Deus ao cat\u00e1logo...");
+      await dbRunAsync(`
+        INSERT INTO movies (title, year, duration, rating, genre, "desc", poster, backdrop, director, "cast", category, type, videoUrl, subtitlesUrl, trailerUrl)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        entrevistaComDeusData.title,
+        entrevistaComDeusData.year,
+        entrevistaComDeusData.duration,
+        entrevistaComDeusData.rating,
+        entrevistaComDeusData.genre,
+        entrevistaComDeusData.desc,
+        entrevistaComDeusData.poster,
+        entrevistaComDeusData.backdrop,
+        entrevistaComDeusData.director,
+        entrevistaComDeusData.cast,
+        entrevistaComDeusData.category,
+        entrevistaComDeusData.type,
+        entrevistaComDeusData.videoUrl,
+        entrevistaComDeusData.subtitlesUrl,
+        entrevistaComDeusData.trailerUrl
+      ]);
+      console.log("  \u2705 Entrevista com Deus adicionado com sucesso!");
+    }
+    if (!IS_POSTGRES) saveDb();
+  } catch (err) {
+    console.error("[DB SEED ERROR] Erro ao garantir Entrevista com Deus:", err);
+  }
+
+  // --- GARANTIR QUE O PACTO SEJA ADICIONADO SE ESTIVER AUSENTE ---
+  try {
+    const oPactoData = {
+      title: "O Pacto",
+      year: 2023,
+      duration: "2h 3min",
+      rating: 7.5,
+      genre: "A\u00e7\u00e3o / Drama / Guerra",
+      desc: "Durante a guerra no Afeganist\u00e3o, o sargento John Kinley \u00e9 salvo por seu int\u00e9rprete Ahmed. Ao descobrir que Ahmed ficou para tr\u00e1s, Kinley retorna para cumprir uma promessa de vida ou morte.",
+      poster: "https://i.postimg.cc/N0qnztDL/image.png",
+      backdrop: "https://i.postimg.cc/wvFbMmp7/image.png",
+      director: "Guy Ritchie",
+      cast: "Jake Gyllenhaal, Dar Salim, Sean Sagar, Jason Wong, Antony Starr, Alexander Ludwig, Emily Beecham, Jonny Lee Miller",
+      category: "new",
+      type: "movie",
+      videoUrl: "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/o-pacto-2023.mp4",
+      subtitlesUrl: null,
+      trailerUrl: DEFAULT_TRAILER_URLS["O Pacto"]
+    };
+    const existingOPacto = await dbGetAsync("SELECT id FROM movies WHERE title = ?", [oPactoData.title]);
+    if (existingOPacto) {
+      await dbRunAsync(`
+        UPDATE movies
+        SET year=?, duration=?, rating=?, genre=?, "desc"=?, poster=?, backdrop=?, director=?, "cast"=?, category=?, type=?, videoUrl=?, subtitlesUrl=?, trailerUrl=?
+        WHERE id=?
+      `, [
+        oPactoData.year,
+        oPactoData.duration,
+        oPactoData.rating,
+        oPactoData.genre,
+        oPactoData.desc,
+        oPactoData.poster,
+        oPactoData.backdrop,
+        oPactoData.director,
+        oPactoData.cast,
+        oPactoData.category,
+        oPactoData.type,
+        oPactoData.videoUrl,
+        oPactoData.subtitlesUrl,
+        oPactoData.trailerUrl,
+        existingOPacto.id
+      ]);
+      console.log("  \u2705 O Pacto atualizado no cat\u00e1logo.");
+    } else {
+      console.log("  \ud83d\udce6 Adicionando O Pacto ao cat\u00e1logo...");
+      await dbRunAsync(`
+        INSERT INTO movies (title, year, duration, rating, genre, "desc", poster, backdrop, director, "cast", category, type, videoUrl, subtitlesUrl, trailerUrl)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        oPactoData.title,
+        oPactoData.year,
+        oPactoData.duration,
+        oPactoData.rating,
+        oPactoData.genre,
+        oPactoData.desc,
+        oPactoData.poster,
+        oPactoData.backdrop,
+        oPactoData.director,
+        oPactoData.cast,
+        oPactoData.category,
+        oPactoData.type,
+        oPactoData.videoUrl,
+        oPactoData.subtitlesUrl,
+        oPactoData.trailerUrl
+      ]);
+      console.log("  \u2705 O Pacto adicionado com sucesso!");
+    }
+    if (!IS_POSTGRES) saveDb();
+  } catch (err) {
+    console.error("[DB SEED ERROR] Erro ao garantir O Pacto:", err);
+  }
+
+  // --- GARANTIR QUE AMERICAN PIE SEJA ADICIONADO SE ESTIVER AUSENTE ---
+  try {
+    const americanPieData = {
+      title: "American Pie: A Primeira Vez \u00e9 Inesquec\u00edvel",
+      year: 1999,
+      duration: "1h 35min",
+      rating: 7.0,
+      genre: "Com\u00e9dia / Romance",
+      desc: "Quatro amigos do ensino m\u00e9dio fazem um pacto para perder a virgindade antes do baile de formatura, entrando em uma sequ\u00eancia de situa\u00e7\u00f5es constrangedoras e inesquec\u00edveis.",
+      poster: "https://i.postimg.cc/sXnwsCYp/image.png",
+      backdrop: "https://i.postimg.cc/tJYDgvkL/image.png",
+      director: "Paul Weitz",
+      cast: "Jason Biggs, Chris Klein, Thomas Ian Nicholas, Alyson Hannigan, Shannon Elizabeth, Tara Reid, Seann William Scott, Eugene Levy",
+      category: "new",
+      type: "movie",
+      videoUrl: "https://pub-288bd4ecd7e6445fa9db9fb2c7c0b087.r2.dev/american-pie-a-primeira-vez-e-inesquecivel-1999.mp4",
+      subtitlesUrl: null,
+      trailerUrl: DEFAULT_TRAILER_URLS["American Pie: A Primeira Vez \u00e9 Inesquec\u00edvel"]
+    };
+    const existingAmericanPie = await dbGetAsync("SELECT id FROM movies WHERE title = ?", [americanPieData.title]);
+    if (existingAmericanPie) {
+      await dbRunAsync(`
+        UPDATE movies
+        SET year=?, duration=?, rating=?, genre=?, "desc"=?, poster=?, backdrop=?, director=?, "cast"=?, category=?, type=?, videoUrl=?, subtitlesUrl=?, trailerUrl=?
+        WHERE id=?
+      `, [
+        americanPieData.year,
+        americanPieData.duration,
+        americanPieData.rating,
+        americanPieData.genre,
+        americanPieData.desc,
+        americanPieData.poster,
+        americanPieData.backdrop,
+        americanPieData.director,
+        americanPieData.cast,
+        americanPieData.category,
+        americanPieData.type,
+        americanPieData.videoUrl,
+        americanPieData.subtitlesUrl,
+        americanPieData.trailerUrl,
+        existingAmericanPie.id
+      ]);
+      console.log("  \u2705 American Pie atualizado no cat\u00e1logo.");
+    } else {
+      console.log("  \ud83d\udce6 Adicionando American Pie ao cat\u00e1logo...");
+      await dbRunAsync(`
+        INSERT INTO movies (title, year, duration, rating, genre, "desc", poster, backdrop, director, "cast", category, type, videoUrl, subtitlesUrl, trailerUrl)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        americanPieData.title,
+        americanPieData.year,
+        americanPieData.duration,
+        americanPieData.rating,
+        americanPieData.genre,
+        americanPieData.desc,
+        americanPieData.poster,
+        americanPieData.backdrop,
+        americanPieData.director,
+        americanPieData.cast,
+        americanPieData.category,
+        americanPieData.type,
+        americanPieData.videoUrl,
+        americanPieData.subtitlesUrl,
+        americanPieData.trailerUrl
+      ]);
+      console.log("  \u2705 American Pie adicionado com sucesso!");
+    }
+    if (!IS_POSTGRES) saveDb();
+  } catch (err) {
+    console.error("[DB SEED ERROR] Erro ao garantir American Pie:", err);
   }
 
   try {

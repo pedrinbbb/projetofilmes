@@ -1169,6 +1169,26 @@ a { color: inherit; text-decoration: none; }
     width: 100%;
   }
 
+  .settings-view > .profile-section + .profile-section,
+  .settings-view > .profile-section + .save-bar {
+    margin-top: 24px;
+  }
+
+  .profile-form {
+    gap: 24px;
+  }
+
+  .subscription-summary,
+  .plans-grid,
+  .billing-list,
+  .devices-list {
+    gap: 20px;
+  }
+
+  .device-meta {
+    gap: 16px;
+  }
+
   .account-header,
   .section-hero {
     margin-bottom: 28px;
@@ -1258,10 +1278,6 @@ a { color: inherit; text-decoration: none; }
   .profile-section,
   .save-bar {
     border-radius: 14px;
-  }
-
-  .profile-form {
-    gap: 18px;
   }
 
   .avatar-grid {
